@@ -7,12 +7,12 @@
 "함수에 값을 넣어 실행한다"는 흐름을 이해하면 됩니다.
 """
 
-
-def greet(name):
+# argument
+def greet(name: str):
     print(name, "님, 안녕하세요.")
 
 
-def print_score(name, score):
+def print_score(name: str, score: float):
     print(name, "님의 점수는", score, "점입니다.")
 
 

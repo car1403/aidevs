@@ -6,7 +6,7 @@
 이 예제에서는 list 안에 dict를 넣어 여러 명의 학생 정보를 표현합니다.
 백엔드 API 응답이나 데이터베이스 조회 결과도 이런 모양으로 자주 다룹니다.
 """
-
+# JSON(JavaScript Object Notation)과 모양이 비슷합니다.
 students = [
     {"name": "Jean", "score": 95, "passed": True},
     {"name": "Mina", "score": 72, "passed": True},

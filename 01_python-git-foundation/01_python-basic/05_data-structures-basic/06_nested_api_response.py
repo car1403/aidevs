@@ -9,7 +9,8 @@ LLM API에서 응답을 받을 때도 비슷한 구조를 만나게 됩니다.
 필요한 값을 하나씩 꺼내 봅니다.
 """
 
-api_response = {
+
+api_response: dict[str, object] = {
     "status": "success",
     "count": 2,
     "data": [
@@ -27,6 +28,27 @@ api_response = {
         },
     ],
 }
+
+status_str:str = api_response["status"]
+count_num :int = api_response["count"]
+# data_list: list[dict[str, object]] = 
+
+# tags가 몇개인지를 출력 해라
+for message in api_response["data"]:
+    tags_list: list[str] = message["tags"]
+    print(f"message id:{message['id']}의 tags 개수:", len(tags_list))
+
+
+
+
+
+
+
+
+
+
+
+
 
 print("응답 상태:", api_response["status"])
 print("데이터 개수:", api_response["count"])
