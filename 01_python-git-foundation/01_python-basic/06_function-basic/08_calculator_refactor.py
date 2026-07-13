@@ -11,9 +11,20 @@
 
 
 def calculate(a:int, b:int, operator:str)->float:
-    result = 0
-    
-    return result
+    if operator == "+":
+        return a + b
+    if operator == "-":
+        return a - b
+    if operator == "*":
+        return a * b
+    if operator == "/":
+        if b == 0:
+            return None
+        return a / b
+    if operator == "%":
+        return a % b
+    return None
+
    
 
 
