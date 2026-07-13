@@ -7,22 +7,20 @@
 """
 
 
-def calculate_average(scores):
-    total = 0
-
-    for score in scores:
-        total += score
-
+def calculate_average(scores:list[int]) -> float:
+    total = sum(scores)
     return total / len(scores)
 
 
-def print_user(user):
+def print_user(user: dict[str, object]) -> None:
     print("이름:", user["name"])
     print("역할:", user["role"])
     print("활성 상태:", user["active"])
 
 
 score_list = [90, 85, 77, 92]
+average = calculate_average(score_list)
+print("평균 점수:", average)
 average = calculate_average(score_list)
 print("평균 점수:", average)
 
