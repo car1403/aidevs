@@ -11,22 +11,21 @@
 이렇게 단순하게 시작하면 main.py와 services.py의 역할 차이를 먼저 익힐 수 있습니다.
 """
 
-from app.models import ChatMessage
+from app.models import RequestChatMessage as RequestMsg,ResponseChatMessage as ResponseMsg
 
 
-def create_mock_answer(question: str) -> str:
+def create_mock_answer(question: RequestMsg) -> ResponseMsg:
     """실제 AI API 대신 연습용 답변 문장을 만듭니다."""
 
-    return f"'{question}'에 대한 첫 번째 프로젝트 구조 연습 답변입니다."
+    return f"'{question.prompt} {question.method}'에 대한 첫 번째 프로젝트 구조 연습 답변입니다."
 
 
-def create_chat_message(question: str) -> ChatMessage:
+def create_chat_message(question: RequestMsg) -> ResponseMsg:
     """질문을 받아 ChatMessage object를 만듭니다."""
-
+    print(f"{question.user}질문 저장 {question.prompt}")
     answer = create_mock_answer(question)
-
-    return ChatMessage(
-        question=question,
+    print(f"{answer}응답 저장")
+    return ResponseMsg(
         answer=answer,
         model="practice-model",
     )

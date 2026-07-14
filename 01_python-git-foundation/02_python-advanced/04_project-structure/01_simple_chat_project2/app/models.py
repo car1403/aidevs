@@ -16,9 +16,21 @@ from dataclasses import dataclass
 
 
 @dataclass
-class ChatMessage:
-    """질문과 답변 하나를 담는 단순한 데이터 object입니다."""
+class RequestChatMessage:
+    """
+    사용자가 입력한 prompt를 전송 한다. \n
+    사용자 ID, 방법을 같이 전송 한다.
+    """
+    prompt: str
+    user: str
+    method: str = "온화하게"
 
-    question: str
+@dataclass
+class ResponseChatMessage:
+    """
+    LLM을 통해 질문의 답변을 응답 합니다.\n
+    응답, 상태메시지, 모델을 전송 합니다.
+    """
     answer: str
     model: str
+    msg: str = "OK"
