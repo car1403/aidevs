@@ -29,9 +29,12 @@ def read_json_safely(file_name: str) -> dict:
         text = file_path.read_text(encoding="utf-8")
     except FileNotFoundError:
         raise FileNotFoundError("파일이 없어요")
-    # JSON 파일을 Dict로 변경
-    return json.loads(text)
 
+    try:
+        # JSON 파일을 Dict로 변경
+        return json.loads(text)
+    except json.decoder.JSONDecodeError:
+        raise json.decoder.JSONDecodeError
 
 
 def main() -> None:
@@ -40,7 +43,7 @@ def main() -> None:
     # print(type(file1))
     # print(file1["app_name"])
     try:
-        file = read_json_safely("config.json")
+        file = read_json_safely("broken_config.json")
     except FileNotFoundError:
         print("파일이 없습니다")
         return
