@@ -14,7 +14,7 @@
 from app.models import RequestChatMessage as RequestMsg,ResponseChatMessage as ResponseMsg
 
 
-def create_mock_answer(question: RequestMsg) -> ResponseMsg:
+def create_mock_answer(question: RequestMsg) -> str:
     """실제 AI API 대신 연습용 답변 문장을 만듭니다."""
 
     return f"'{question.prompt} {question.method}'에 대한 첫 번째 프로젝트 구조 연습 답변입니다."
