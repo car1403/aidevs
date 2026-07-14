@@ -23,9 +23,13 @@ def build_chat_response(request_data: dict) -> dict:
         }
     """
 
-    user = request_data.get("user", "anonymous")
-    message = request_data.get("message", "").strip()
-    model = request_data.get("model", "practice-model")
+    user = request_data["user"]
+    message = request_data["message"]
+    model = request_data["model"]
+
+    print("LLM에 물어보는중 ...........")
+    print("LLM에 답변을 받았습니다..........")
+
 
     return {
         "user": user,
@@ -36,19 +40,24 @@ def build_chat_response(request_data: dict) -> dict:
 
 
 def main() -> None:
+    msg = input("뭐가 궁금해 ? ")
+
+    if msg == "":
+        return
+
     request_data = {
         "user": "kim",
-        "message": "  Python dict는 어디에 쓰나요?  ",
-        "model": "practice-model",
+        "message": f"{msg}",
+        "model": "GPT5.0",
     }
 
     response = build_chat_response(request_data)
 
     print("요청 dict:")
-    print(request_data)
+    print(request_data["message"])
     print()
     print("응답 dict:")
-    print(response)
+    print(response["answer"])
 
 
 main()
