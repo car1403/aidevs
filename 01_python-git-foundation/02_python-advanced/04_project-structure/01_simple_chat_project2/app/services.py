@@ -22,9 +22,15 @@ def create_mock_answer(question: RequestMsg) -> str:
 
 def create_chat_message(question: RequestMsg) -> ResponseMsg:
     """질문을 받아 ChatMessage object를 만듭니다."""
+    print("------------------------------------------")
     print(f"{question.user}질문 저장 {question.prompt}")
+    print("------------------------------------------")
+
     answer = create_mock_answer(question)
+    print("------------------------------------------")
     print(f"{answer}응답 저장")
+    print("------------------------------------------")
+
     return ResponseMsg(
         answer=answer,
         model="practice-model",
