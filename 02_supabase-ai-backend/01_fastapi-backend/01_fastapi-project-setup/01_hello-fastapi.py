@@ -41,7 +41,7 @@ def read_root():
 
     # FastAPI는 Python dict를 자동으로 JSON 응답으로 변환합니다.
     return {
-        "message": "Hello, FastAPI",
+        "message": "Hello, FastAPI Im Hungry",
         "next": "Open /docs to see Swagger UI",
     }
 
@@ -50,4 +50,16 @@ def read_root():
 def health_check():
     """서버가 살아 있는지 확인하는 가장 기본적인 점검용 API입니다."""
 
-    return {"status": "ok"}
+    return {"status": "okbary"}
+
+@app.get("/login")
+def health_check():
+    """서버가 살아 있는지 확인하는 가장 기본적인 점검용 API입니다."""
+
+    return {"status": "login ok"}
+
+@app.get("/logout")
+def health_check():
+    """서버가 살아 있는지 확인하는 가장 기본적인 점검용 API입니다."""
+
+    return {"status": "logout ok"}

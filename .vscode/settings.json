@@ -10,5 +10,12 @@
       ]
     }
   },
-  "terminal.integrated.defaultProfile.windows": "PowerShell (venv)"
+  "terminal.integrated.defaultProfile.windows": "PowerShell (venv)",
+  "python-envs.pythonProjects": [
+    {
+      "path": "02_supabase-ai-backend",
+      "envManager": "ms-python.python:venv",
+      "packageManager": "ms-python.python:pip"
+    }
+  ]
 }
