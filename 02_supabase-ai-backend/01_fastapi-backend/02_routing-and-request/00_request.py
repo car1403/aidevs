@@ -52,7 +52,7 @@ def get(input_id : str):
     response = ApiResponse(
         success = True,
         message = "정상조회",
-        data =  CustomerDetail(
+        data =  CustomerDetail( 
                     id=customer_data["id"],
                     name=customer_data["name"],
                     age=customer_data["age"],
@@ -73,5 +73,28 @@ def search(
     print(f"{name}로 검색 합니다.")
     print(f"{age}로 검색 합니다.")
 
-    return {"result":"검색 결과"}
+    customers = [
+        {
+            "id" : "id01",
+            "name" : "name1",
+            "age" : 10
+        },
+        {
+            "id" : "id02",
+            "name" : "name2",
+            "age" : 20
+        },
+        {
+            "id" : "id03",
+            "name" : "name3",
+            "age" : 30
+        },
+    ]
+
+    response = ApiResponse(
+        success = True,
+        message = "정상조회",
+        data =  customers
+    )
+    return response
 
