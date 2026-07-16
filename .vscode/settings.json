@@ -19,6 +19,7 @@
     }
   ],
   "python.analysis.extraPaths": [
-    "./05_llm-agent-orchestration/02_prompt-and-response-quality/02_structured-output-json/02_structured-output-"
+    "./05_llm-agent-orchestration/02_prompt-and-response-quality/02_structured-output-json/02_structured-output-",
+    "./02_supabase-ai-backend/01_fastapi-backend/01_fastapi-project-setup/01_hello-"
   ]
 }

@@ -30,16 +30,17 @@ def register(customer:Customer):
 # Path Paramter
 # 127.0.0.1:8000/get/id01
 # get , delete
-@app.get("/get/{input_id}")
+@app.get("/get/{input_id}", response_type=CustomerDetail)
 def get(input_id : str):
     if input_id != "id01":
         # return "없어요"
         raise HTTPException(status_code=404, detail="ID가 존재 안함")
-    customer_detail = CustomerDetail(
-        id = input_id,
-        name = "james",
-        age = 20
-    )
+    customer_detail = {
+        "id":"id01",
+        "pwd":"xsfafdsa",
+        "name":"james",
+        "age":20
+    }
     return {"data":customer_detail}
 
 
