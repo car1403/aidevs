@@ -15,7 +15,7 @@ app = FastAPI(
 
 
 @app.get("/health")
-def health():
+async def health():
     response = ApiResponse(
         success=True,
         message="OK",
@@ -24,6 +24,20 @@ def health():
 
 # Request Body
 # insert, update
+@app.put("/update")
+async def update(customer:Customer):
+    print(customer.id)
+    print(customer.name)
+    print(customer.age)
+    if customer.id == "id88":
+        raise HTTPException(status_code=404, detail="ID가 존재 안함")
+    await print("수정 진행 ...")
+    response = ApiResponse(
+        success = True,
+        message = f"{customer.name} 수정 완료!",
+        data = customer
+    )
+    return response
 @app.post("/register")
 async def register(customer:Customer):
     print(customer.id)
@@ -39,6 +53,18 @@ async def register(customer:Customer):
 # Path Paramter
 # 127.0.0.1:8000/get/id01
 # get , delete
+@app.delete("/delete/{input_id}")
+async def delete(input_id : str):
+    if input_id == "id99":
+        raise HTTPException(status_code=404, detail="ID가 존재 안함")
+    await print("삭제처리 완료")
+    response = ApiResponse(
+        success = True,
+        message = "정상삭제",
+        data =  None
+    )
+    return response
+
 @app.get("/get/{input_id}")
 async def get(input_id : str):
     if input_id != "id01":
