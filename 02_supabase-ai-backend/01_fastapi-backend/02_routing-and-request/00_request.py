@@ -47,13 +47,13 @@ def get(input_id : str):
 # 검색
 @app.get("/search")
 def search(
-    id : str,
-    name : str,
-    age : int
+    id : str | None = None,
+    name : str | None = None,
+    age : int | None = None,
 ):
     print(f"{id}로 검색 합니다.")
     print(f"{name}로 검색 합니다.")
     print(f"{age}로 검색 합니다.")
-    
+
     return {"result":"검색 결과"}
 
