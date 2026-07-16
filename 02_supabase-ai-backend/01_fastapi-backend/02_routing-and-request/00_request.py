@@ -2,6 +2,8 @@
 uvicorn 00_request:app --reload
 """
 
+from http.client import HTTPException
+
 from fastapi import FastAPI
 from mymodels import Customer, CustomerDetail
 
@@ -28,9 +30,12 @@ def register(customer:Customer):
 # 127.0.0.1:8000/get/id01
 @app.get("/get/{input_id}")
 def get(input_id : str):
-    customer = Customer(
+    if input_id != "id01":
+        # return "없어요"
+        raise HTTPException(status_code=404, detail="ID가 존재 안함")
+    customer_detail = CustomerDetail(
         id = input_id,
         name = "james",
         age = 20
     )
-    return customer
+    return {"data":customer_detail}
