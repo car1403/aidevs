@@ -2,9 +2,8 @@
 uvicorn 00_request:app --reload
 """
 
-from http.client import HTTPException
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from mymodels import Customer, CustomerDetail
 
 
@@ -19,6 +18,7 @@ app = FastAPI(
 def health():
     return {"msg":"OK"}
 
+# Request Body
 @app.post("/register")
 def register(customer:Customer):
     print(customer.id)
@@ -26,8 +26,9 @@ def register(customer:Customer):
     print(customer.age)
     return {"msg":f"{customer.name} 가입축하!"}
 
-# path paramter
+# Path Paramter
 # 127.0.0.1:8000/get/id01
+# get , delete
 @app.get("/get/{input_id}")
 def get(input_id : str):
     if input_id != "id01":
