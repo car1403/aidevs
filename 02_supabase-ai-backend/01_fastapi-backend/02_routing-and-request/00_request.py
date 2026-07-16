@@ -25,11 +25,12 @@ def health():
 # Request Body
 # insert, update
 @app.post("/register")
-def register(customer:Customer):
+async def register(customer:Customer):
     print(customer.id)
     print(customer.name)
     print(customer.age)
-    response = ApiResponse(
+    response = None
+    await response = ApiResponse(
         success = True,
         message = f"{customer.name} 가입축하!",
     )
@@ -39,11 +40,12 @@ def register(customer:Customer):
 # 127.0.0.1:8000/get/id01
 # get , delete
 @app.get("/get/{input_id}")
-def get(input_id : str):
+async def get(input_id : str):
     if input_id != "id01":
         # return "없어요"
         raise HTTPException(status_code=404, detail="ID가 존재 안함")
-    customer_data = {
+    customer_data = None
+    await customer_data = {
         "id":"id01",
         "pwd":"xsfafdsa",
         "name":"james",
@@ -64,7 +66,7 @@ def get(input_id : str):
 # Query Parameter
 # 검색
 @app.get("/search")
-def search(
+async def search(
     id : str | None = None,
     name : str | None = None,
     age : int | None = None,
@@ -72,8 +74,8 @@ def search(
     print(f"{id}로 검색 합니다.")
     print(f"{name}로 검색 합니다.")
     print(f"{age}로 검색 합니다.")
-
-    customers = [
+    customers = None
+    await customers = [
         {
             "id" : "id01",
             "name" : "name1",
