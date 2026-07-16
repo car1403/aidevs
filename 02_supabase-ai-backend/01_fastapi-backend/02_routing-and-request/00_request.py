@@ -4,7 +4,7 @@ uvicorn 00_request:app --reload
 
 
 from fastapi import FastAPI, HTTPException
-from mymodels import Customer, CustomerDetail
+from mymodels import Customer, CustomerDetail, ApiResponse
 
 
 app = FastAPI(
@@ -16,7 +16,11 @@ app = FastAPI(
 
 @app.get("/health")
 def health():
-    return {"msg":"OK"}
+    response = ApiResponse(
+        success=True,
+        message="OK",
+    )
+    return response
 
 # Request Body
 # insert, update
@@ -25,23 +29,36 @@ def register(customer:Customer):
     print(customer.id)
     print(customer.name)
     print(customer.age)
-    return {"msg":f"{customer.name} 가입축하!"}
+    response = ApiResponse(
+        success = True,
+        message = f"{customer.name} 가입축하!",
+    )
+    return response
 
 # Path Paramter
 # 127.0.0.1:8000/get/id01
 # get , delete
-@app.get("/get/{input_id}", response_type=CustomerDetail)
+@app.get("/get/{input_id}")
 def get(input_id : str):
     if input_id != "id01":
         # return "없어요"
         raise HTTPException(status_code=404, detail="ID가 존재 안함")
-    customer_detail = {
+    customer_data = {
         "id":"id01",
         "pwd":"xsfafdsa",
         "name":"james",
         "age":20
     }
-    return {"data":customer_detail}
+    response = ApiResponse(
+        success = True,
+        message = "정상조회",
+        data =  CustomerDetail(
+                    id=customer_data["id"],
+                    name=customer_data["name"],
+                    age=customer_data["age"],
+        )
+    )
+    return response
 
 
 # Query Parameter
