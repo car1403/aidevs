@@ -36,22 +36,23 @@ model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
 # 여기서 api_key가 비어 있거나 잘못되어 있으면 실제 호출 시 오류가 날 수 있습니다.
 client = genai.Client(api_key=api_key)
 
+while(True):
 
-# 싱글턴 호출은 "현재 질문 1개 -> 모델 응답 1개" 흐름입니다.
-prompt = "오늘 날씨 어때?"
-
-
-# Gemini 모델에 prompt를 보내고 응답을 받습니다.
-response = client.models.generate_content(
-    model=model,
-    contents=prompt,
-)
+    # 싱글턴 호출은 "현재 질문 1개 -> 모델 응답 1개" 흐름입니다.
+    prompt = input("질문하세요: ")
 
 
-# SDK는 응답 텍스트를 response.text로 꺼낼 수 있습니다.
-print("1.----------------------------------------")
-print(type(response))
-print("2.----------------------------------------")
-print(response)
-print("3.----------------------------------------")
-print(response.text)
+    # Gemini 모델에 prompt를 보내고 응답을 받습니다.
+    response = client.models.generate_content(
+        model=model,
+        contents=prompt,
+    )
+
+
+    # SDK는 응답 텍스트를 response.text로 꺼낼 수 있습니다.
+    # print("1.----------------------------------------")
+    # print(type(response))
+    # print("2.----------------------------------------")
+    # print(response)
+    # print("3.----------------------------------------")
+    print(response.text)
