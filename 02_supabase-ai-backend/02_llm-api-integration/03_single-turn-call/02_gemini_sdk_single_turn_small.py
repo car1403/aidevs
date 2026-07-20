@@ -38,7 +38,7 @@ client = genai.Client(api_key=api_key)
 
 
 # 싱글턴 호출은 "현재 질문 1개 -> 모델 응답 1개" 흐름입니다.
-prompt = "FastAPI에서 Pydantic을 왜 사용하나요? 초보자에게 짧게 설명해 주세요."
+prompt = "오늘 날씨 어때?"
 
 
 # Gemini 모델에 prompt를 보내고 응답을 받습니다.
@@ -49,4 +49,9 @@ response = client.models.generate_content(
 
 
 # SDK는 응답 텍스트를 response.text로 꺼낼 수 있습니다.
+print("1.----------------------------------------")
+print(type(response))
+print("2.----------------------------------------")
+print(response)
+print("3.----------------------------------------")
 print(response.text)
