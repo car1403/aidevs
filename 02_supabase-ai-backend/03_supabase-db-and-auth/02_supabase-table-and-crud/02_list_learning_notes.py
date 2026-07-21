@@ -23,6 +23,7 @@ def main() -> None:
             supabase.table("learning_notes")
             .select("*")
             .order("created_at", desc=True)
+            .limit(3)
             .execute()
         )
     except:

@@ -37,7 +37,6 @@ def main() -> None:
     # [{}]
    
     created_data = result.data[0]
-    created_at = datetime.fromisoformat(created_data["created_at"])
 
     print(f"id: {created_data['id']}")
     print(f"title: {created_data['title']}")
