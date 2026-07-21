@@ -7,6 +7,7 @@ r"""learning_notes 전체 조회 예제입니다.
 """
 
 from supabase_client import get_supabase
+from datetime import datetime
 
 
 def main() -> None:
@@ -16,6 +17,7 @@ def main() -> None:
 
     # select("*")는 모든 컬럼을 조회한다는 뜻입니다.
     # order("created_at", desc=True)는 최신 데이터가 먼저 보이도록 정렬합니다.
+    #[{},{},{}]
     result = (
         supabase.table("learning_notes")
         .select("*")
@@ -28,8 +30,14 @@ def main() -> None:
         print("저장된 메모가 없습니다. 먼저 01_create_learning_note.py를 실행해 보세요.")
         return
 
-    for index, note in enumerate(result.data, start=1):
-        print(f"{index}. {note.get('id')} | {note.get('title')} | {note.get('content')}")
+    for note in result.data:
+        value = note["created_at"]
+        result = datetime.fromisoformat(value).strftime("%Y년 %m월 %d일")
+
+        print(f" {note["id"]}  {note["title"]} {result}")
+
+    # for index, note in enumerate(result.data, start=1):
+    #     print(f"{index}. {note.get('id')} | {note.get('title')} | {note.get('content')}")
 
 
 if __name__ == "__main__":

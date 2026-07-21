@@ -19,16 +19,10 @@ def main() -> None:
     result = (
         supabase.table("learning_notes")
         .insert(
-            [
-                {
-                    "title": "title1",
-                    "content": "content1",
-                },
-                {
-                    "title": "title2",
-                    "content": "content2",
-                }
-            ]
+            {
+                "title": "제목",
+                "content": "내용",
+            }
         )
         .execute()
     )
