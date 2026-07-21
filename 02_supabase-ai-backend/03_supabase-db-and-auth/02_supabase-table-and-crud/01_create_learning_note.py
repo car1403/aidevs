@@ -22,7 +22,7 @@ def main() -> None:
         supabase.table("learning_notes")
         .insert(
             {
-                "id": now.strftime("%Y%m%d%H%M%S"),
+                "id": now.strftime("%Y%m%d%H%M%S%f"),
                 "title": "제목",
                 "content": "내용",
                 "created_at": now.isoformat(),   # timestamptz

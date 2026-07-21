@@ -18,7 +18,8 @@ def main() -> None:
     latest_result = (
         supabase.table("learning_notes")
         .select("*")
-        .eq("id", "4a255696-36a6-4f44-a2ec-1d00fa7c982f")
+        # .select("id,title")
+        .eq("id", "20260721140424127812")
         .execute()
     )
     # latest_result = (
@@ -32,21 +33,24 @@ def main() -> None:
     if not latest_result.data:
         print("조회할 메모가 없습니다. 먼저 01_create_learning_note.py를 실행해 보세요.")
         return
+    # [{}]
+    note = latest_result.data[0]
+    print(f"{note["id"]}  {note["title"]} {note["content"]} {note["created_at"]}")
 
-    note_id = latest_result.data[0]["id"]
-
+    print("--------------------------------------------------------")
     # eq("id", note_id)는 id가 같은 행 1개만 조회하겠다는 조건입니다.
-    result = supabase.table("learning_notes").select("*").eq("id", note_id).execute()
+    
+    result = supabase.table("learning_notes").select("*").eq("id", "20260721140424127812").execute()
 
-    if not result.data:
-        raise RuntimeError(f"id={note_id} 메모를 다시 조회하지 못했습니다.")
+    # if not result.data:
+    #     raise RuntimeError(f"id={note_id} 메모를 다시 조회하지 못했습니다.")
 
-    note = result.data[0]
-    print("[one learning_note]")
-    print(f"id: {note.get('id')}")
-    print(f"title: {note.get('title')}")
-    print(f"content: {note.get('content')}")
-    print(f"created_at: {note.get('created_at')}")
+    # note = result.data[0]
+    # print("[one learning_note]")
+    # print(f"id: {note.get('id')}")
+    # print(f"title: {note.get('title')}")
+    # print(f"content: {note.get('content')}")
+    # print(f"created_at: {note.get('created_at')}")
 
 
 if __name__ == "__main__":
