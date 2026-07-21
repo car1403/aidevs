@@ -18,12 +18,15 @@ def main() -> None:
     # select("*")는 모든 컬럼을 조회한다는 뜻입니다.
     # order("created_at", desc=True)는 최신 데이터가 먼저 보이도록 정렬합니다.
     #[{},{},{}]
-    result = (
-        supabase.table("learning_notes")
-        .select("*")
-        .order("created_at", desc=True)
-        .execute()
-    )
+    try:
+        result = (
+            supabase.table("learning_notes")
+            .select("*")
+            .order("created_at", desc=True)
+            .execute()
+        )
+    except:
+        raise RuntimeError("DB가 없습니다.")
 
     print("[all learning_notes]")
     if not result.data:
@@ -31,13 +34,12 @@ def main() -> None:
         return
 
     for note in result.data:
+        # from datetime import datetime
+
         value = note["created_at"]
-        result = datetime.fromisoformat(value).strftime("%Y년 %m월 %d일")
+        result = datetime.fromisoformat(value).strftime("%Y년 %m월 %d일 %H시 %M분 %S초")
 
         print(f" {note["id"]}  {note["title"]} {result}")
-
-    # for index, note in enumerate(result.data, start=1):
-    #     print(f"{index}. {note.get('id')} | {note.get('title')} | {note.get('content')}")
 
 
 if __name__ == "__main__":
