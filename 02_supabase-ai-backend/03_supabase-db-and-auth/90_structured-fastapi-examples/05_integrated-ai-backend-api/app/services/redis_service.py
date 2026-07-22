@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import os
 from urllib.parse import quote
 
 import httpx
 from fastapi import HTTPException
 
-from app.core.config import get_settings
+import app.core.config  # .env 파일을 읽습니다.
 
 
 TTL_SECONDS = 60
@@ -20,13 +21,16 @@ def redis_command(*parts: str) -> dict:
     Upstash REST API는 Redis 명령을 URL 경로 형태로 보낼 수 있습니다.
     """
 
-    settings = get_settings()
-    if not settings.redis_rest_url or not settings.redis_rest_token:
-        raise HTTPException(status_code=500, detail="Upstash Redis 환경변수를 확인하세요.")
+    rest_url = os.getenv("UPSTASH_REDIS_REST_URL")
+    rest_token = os.getenv("UPSTASH_REDIS_REST_TOKEN")
+    if not rest_url:
+        raise HTTPException(status_code=500, detail="UPSTASH_REDIS_REST_URL이 없습니다. .env 파일을 확인하세요.")
+    if not rest_token:
+        raise HTTPException(status_code=500, detail="UPSTASH_REDIS_REST_TOKEN이 없습니다. .env 파일을 확인하세요.")
     # 질문에는 한글이나 공백이 들어갈 수 있으므로 URL-safe하게 인코딩합니다.
     encoded = [quote(part, safe="") for part in parts]
-    url = f"{settings.redis_rest_url}/{'/'.join(encoded)}"
-    headers = {"Authorization": f"Bearer {settings.redis_rest_token}"}
+    url = f"{rest_url.rstrip('/')}/{'/'.join(encoded)}"
+    headers = {"Authorization": f"Bearer {rest_token}"}
     try:
         response = httpx.get(url, headers=headers, timeout=10)
         response.raise_for_status()

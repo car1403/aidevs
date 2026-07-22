@@ -1,12 +1,12 @@
 r"""03_cached-ai-answer-api 라우트 테스트입니다.
 
 실행 방법:
-    cd C:\aidev\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\03_cached-ai-answer-api
+    cd C:\aidevs\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\03_cached-ai-answer-api
     python -m pytest tests
 
 이 테스트는 Redis나 외부 LLM을 실제로 호출하지 않습니다.
 FastAPI 앱이 정상적으로 import되는지, /health API가 응답하는지,
-캐시 없는 mock 응답 API와 캐시 기반 mock 응답 API가 문서에 등록되어 있는지를 확인합니다.
+Gemini 답변 API와 Redis 캐시 API가 문서에 등록되어 있는지를 확인합니다.
 초보자는 여기서 "기능 내부 구현을 다 검증하기 전에 API 경로부터 확인할 수 있다"는 흐름을 보면 됩니다.
 """
 
@@ -28,8 +28,8 @@ def test_health_route_is_ready() -> None:
 
 
 def test_openapi_has_cache_routes() -> None:
-    """AI mock 응답과 캐시 mock 응답 URL이 OpenAPI 문서에 있는지 확인합니다."""
+    """Gemini 답변과 캐시 삭제 URL이 OpenAPI 문서에 있는지 확인합니다."""
 
     schema = client.get("/openapi.json").json()
-    assert "/ai/mock-answer" in schema["paths"]
-    assert "/ai/mock-answer-cache" in schema["paths"]
+    assert "/ai/answer" in schema["paths"]
+    assert "/ai/answer-cache" in schema["paths"]

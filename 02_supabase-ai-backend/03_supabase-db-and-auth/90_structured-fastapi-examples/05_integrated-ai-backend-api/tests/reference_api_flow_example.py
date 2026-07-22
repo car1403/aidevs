@@ -16,7 +16,7 @@
 r"""05_integrated-ai-backend-api 핵심 API 흐름 테스트입니다.
 
 실행 방법:
-    cd C:\aidev\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\05_integrated-ai-backend-api
+    cd C:\aidevs\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\05_integrated-ai-backend-api
     python -m pytest tests
 
 이 테스트는 실제 Supabase, Redis, Gemini를 호출하지 않습니다.
@@ -51,9 +51,9 @@ def test_auth_chat_and_logs_flow(monkeypatch) -> None:
         user_message="Redis 캐시는 언제 쓰나요?",
         assistant_message="반복 질문의 응답을 빠르게 돌려줄 때 사용합니다.",
         cached=False,
-        provider="mock",
-        model="mock-integrated-example",
-        actual_api_called=False,
+        provider="gemini",
+        model="gemini-2.5-flash-lite",
+        actual_api_called=True,
         log_id="log-1",
     )
     log_row = ChatLogPublic(
@@ -61,9 +61,9 @@ def test_auth_chat_and_logs_flow(monkeypatch) -> None:
         user_id="user-1",
         user_message="Redis 캐시는 언제 쓰나요?",
         assistant_message="반복 질문의 응답을 빠르게 돌려줄 때 사용합니다.",
-        provider="mock",
-        model="mock-integrated-example",
-        actual_api_called=False,
+        provider="gemini",
+        model="gemini-2.5-flash-lite",
+        actual_api_called=True,
         cached=False,
         status="success",
         created_at="2026-07-01T00:00:00Z",
@@ -95,8 +95,8 @@ def test_auth_chat_and_logs_flow(monkeypatch) -> None:
             json={"message": "Redis 캐시는 언제 쓰나요?"},
         )
         assert chat_api_response.status_code == 200
-        assert chat_api_response.json()["provider"] == "mock"
-        assert chat_api_response.json()["actual_api_called"] is False
+        assert chat_api_response.json()["provider"] == "gemini"
+        assert chat_api_response.json()["actual_api_called"] is True
 
         logs_response = client.get("/logs", headers={"Authorization": "Bearer test-token"})
         assert logs_response.status_code == 200

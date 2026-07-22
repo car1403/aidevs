@@ -12,7 +12,7 @@
     사용자별 로그 저장은 Auth/JWT를 연결한 뒤 user_id 컬럼을 추가하는 방식으로 확장합니다.
 
 실행 전 준비:
-    1. C:/aidev/02_supabase-ai-backend/.env 파일에 아래 값이 있어야 합니다.
+    1. C:/aidevs/02_supabase-ai-backend/.env 파일에 아래 값이 있어야 합니다.
        - SUPABASE_URL
        - SUPABASE_SERVICE_ROLE_KEY
        - GEMINI_API_KEY
@@ -32,7 +32,7 @@
        );
 
 실행:
-    cd C:/aidev/02_supabase-ai-backend/03_supabase-db-and-auth/05_conversation-history-and-service-logs
+    cd C:/aidevs/02_supabase-ai-backend/03_supabase-db-and-auth/05_conversation-history-and-service-logs
     ../../.venv/Scripts/Activate.ps1
     uvicorn 02_fastapi_llm_chat_log:app --reload --host 127.0.0.1 --port 8003
     # 위 명령에서 오류가 나면 아래처럼 실행합니다.
@@ -51,7 +51,7 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from supabase import Client, create_client
 
@@ -111,20 +111,6 @@ class ChatLogItem(BaseModel):
     created_at: str
 
 
-def get_required_env(name: str) -> str:
-    """필수 환경 변수를 읽고, 비어 있거나 예시 값이면 오류를 냅니다."""
-
-    value = os.getenv(name, "").strip()
-
-    if not value:
-        raise RuntimeError(f"{name} 값이 없습니다. C:/aidev/02_supabase-ai-backend/.env 파일을 확인하세요.")
-
-    if value.startswith(("your-", "https://your-")):
-        raise RuntimeError(f"{name} 값이 예시 값입니다. 실제 값을 .env에 입력하세요.")
-
-    return value
-
-
 def get_supabase() -> Client:
     """로그 저장에 사용할 Supabase client를 만듭니다.
 
@@ -135,8 +121,15 @@ def get_supabase() -> Client:
     service role key는 프론트엔드나 GitHub에 노출하면 안 됩니다.
     """
 
-    url = get_required_env("SUPABASE_URL")
-    service_role_key = get_required_env("SUPABASE_SERVICE_ROLE_KEY")
+    url = os.getenv("SUPABASE_URL")
+    service_role_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+
+    if not url:
+        raise HTTPException(500, "SUPABASE_URL이 없습니다. .env 파일을 확인하세요.")
+
+    if not service_role_key:
+        raise HTTPException(500, "SUPABASE_SERVICE_ROLE_KEY가 없습니다. .env 파일을 확인하세요.")
+
     return create_client(url, service_role_key)
 
 
@@ -151,14 +144,14 @@ def create_gemini_answer(message: str) -> tuple[str, str]:
         answer는 Gemini가 생성한 답변이고, model은 사용한 모델 이름입니다.
     """
 
-    api_key = get_required_env("GEMINI_API_KEY")
+    # .env를 load_dotenv()로 읽었으므로 os.getenv()에서 값을 가져올 수 있습니다.
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(500, "GEMINI_API_KEY가 없습니다. .env 파일을 확인하세요.")
+
     model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
 
-    try:
-        from google import genai
-    except ModuleNotFoundError as error:
-        raise RuntimeError("google-genai 패키지가 설치되어 있지 않습니다. pip install -r requirements.txt를 실행하세요.") from error
-
+    from google import genai
     client = genai.Client(api_key=api_key)
 
     # Gemini에게 보낼 최종 프롬프트입니다.
@@ -214,17 +207,18 @@ def save_chat_log(
         .execute()
     )
 
-    if not result.data:
-        raise RuntimeError("simple_chat_logs 저장 결과가 비어 있습니다.")
-
     return result.data[0]
 
 
 @app.get("/health")
-def health_check() -> dict[str, str]:
-    """FastAPI 서버가 실행 중인지 확인합니다."""
+def health_check() -> dict[str, str | bool]:
+    """서버 실행과 .env 설정 여부를 확인합니다."""
 
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "supabase_configured": bool(os.getenv("SUPABASE_URL")),
+        "gemini_configured": bool(os.getenv("GEMINI_API_KEY")),
+    }
 
 
 @app.post("/chat", response_model=ChatResponse)
@@ -234,45 +228,19 @@ def chat(request: ChatRequest) -> ChatResponse:
     provider = "gemini"
     model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
 
-    try:
-        # 1. Supabase client를 만듭니다.
-        supabase = get_supabase()
+    # 1. .env 설정을 읽고 Gemini 답변을 만듭니다.
+    supabase = get_supabase()
+    answer, model = create_gemini_answer(request.message)
 
-        # 2. Gemini SDK로 답변을 생성합니다.
-        answer, model = create_gemini_answer(request.message)
-
-        # 3. 질문과 답변을 로그 테이블에 저장합니다.
-        saved_log = save_chat_log(
-            supabase=supabase,
-            user_message=request.message,
-            assistant_message=answer,
-            provider=provider,
-            model=model,
-            status_value="success",
-        )
-    except Exception as error:
-        # 오류가 나도 가능하면 simple_chat_logs에 실패 로그를 남깁니다.
-        # 예: GEMINI_API_KEY 없음, Gemini 503 오류, Supabase insert 실패 등
-        error_message = str(error)
-        try:
-            supabase = get_supabase()
-            saved_log = save_chat_log(
-                supabase=supabase,
-                user_message=request.message,
-                assistant_message=None,
-                provider=provider,
-                model=model,
-                status_value="error",
-                error_message=error_message,
-            )
-        except Exception:
-            # Supabase 연결 자체가 안 되는 경우에는 로그를 남길 수 없으므로 log_id가 None입니다.
-            saved_log = {"id": None}
-
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"LLM 대화 또는 로그 저장 중 오류가 발생했습니다. log_id={saved_log.get('id')}, error={error_message}",
-        ) from error
+    # 3. 질문과 답변을 Supabase에 저장합니다.
+    saved_log = save_chat_log(
+        supabase=supabase,
+        user_message=request.message,
+        assistant_message=answer,
+        provider=provider,
+        model=model,
+        status_value="success",
+    )
 
     return ChatResponse(
         answer=answer,

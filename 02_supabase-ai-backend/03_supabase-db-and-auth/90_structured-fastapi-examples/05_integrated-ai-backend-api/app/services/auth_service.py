@@ -7,7 +7,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.core.config import get_settings
+from app.core.supabase import get_supabase_client
 from app.schemas.auth_schema import AuthRequest, AuthResponse, UserPublic
 
 
@@ -17,28 +17,14 @@ from app.schemas.auth_schema import AuthRequest, AuthResponse, UserPublic
 bearer_security = HTTPBearer(auto_error=False)
 
 
-def get_supabase_client():
-    """Supabase Auth API를 호출할 client를 만듭니다.
-
-    이 예제에서는 회원가입/로그인/token 확인을 모두 Supabase Auth에 맡깁니다.
-    FastAPI는 비밀번호를 직접 저장하거나 검사하지 않습니다.
-    """
-
-    from supabase import create_client
-
-    settings = get_settings()
-    if not settings.supabase_url or not settings.supabase_service_role_key:
-        raise HTTPException(status_code=500, detail="Supabase 환경변수를 확인하세요.")
-    return create_client(settings.supabase_url, settings.supabase_service_role_key)
-
-
 def signup(request: AuthRequest) -> UserPublic:
     """Supabase Auth에 회원가입을 요청합니다."""
 
+    client = get_supabase_client()
     try:
         # auth.sign_up은 auth.users에 사용자를 만드는 Supabase Auth 기능입니다.
         # Confirm email 설정이 켜져 있으면 이메일 인증 전까지 로그인에 실패할 수 있습니다.
-        response = get_supabase_client().auth.sign_up(
+        response = client.auth.sign_up(
             {"email": request.email, "password": request.password}
         )
     except Exception as error:
@@ -51,10 +37,11 @@ def signup(request: AuthRequest) -> UserPublic:
 def signin(request: AuthRequest) -> AuthResponse:
     """Supabase Auth에 로그인하고 access token을 받습니다."""
 
+    client = get_supabase_client()
     try:
         # 로그인 성공 시 Supabase는 session을 반환합니다.
         # session.access_token이 이후 Bearer token으로 사용됩니다.
-        response = get_supabase_client().auth.sign_in_with_password(
+        response = client.auth.sign_in_with_password(
             {"email": request.email, "password": request.password}
         )
     except Exception as error:
@@ -97,10 +84,11 @@ def get_current_user(
             detail="Bearer token 값이 비어 있습니다.",
         )
 
+    client = get_supabase_client()
     try:
         # token이 유효한지 Supabase Auth에 확인합니다.
         # 유효하면 response.user.id가 현재 로그인한 사용자의 uuid입니다.
-        response = get_supabase_client().auth.get_user(token)
+        response = client.auth.get_user(token)
     except Exception as error:
         raise HTTPException(status_code=401, detail=f"token 확인 실패: {error}") from error
     if response.user is None:

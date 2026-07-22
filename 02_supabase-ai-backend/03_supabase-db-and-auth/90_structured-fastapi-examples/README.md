@@ -122,4 +122,4 @@ core:
 
 처음에는 `01`부터 순서대로 보는 것을 권장합니다.
 
-`05_integrated-ai-backend-api`는 기본값으로 mock 답변을 사용합니다. `.env`에서 `USE_GEMINI=true`로 바꾸면 Gemini SDK 호출 흐름까지 확인할 수 있습니다.
+`05_integrated-ai-backend-api`는 Redis 캐시가 없을 때 Gemini SDK를 호출합니다. `.env`에 `GEMINI_API_KEY`를 설정하면 실제 Gemini 답변 생성 흐름을 확인할 수 있습니다.

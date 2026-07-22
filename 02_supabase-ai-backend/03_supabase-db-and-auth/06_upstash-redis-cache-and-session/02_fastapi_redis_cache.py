@@ -2,7 +2,7 @@ r"""
 FastAPI 응답을 Upstash Redis에 잠깐 저장하는 최소 예제입니다.
 
 실행 위치:
-    C:\aidev\02_supabase-ai-backend\03_supabase-db-and-auth\06_upstash-redis-cache-and-session
+    C:\aidevs\02_supabase-ai-backend\03_supabase-db-and-auth\06_upstash-redis-cache-and-session
 
 실행 명령:
     ..\..\.venv\Scripts\Activate.ps1
@@ -14,7 +14,7 @@ Swagger 확인:
     http://127.0.0.1:8004/docs
 
 실행 전 준비:
-    C:\aidev\02_supabase-ai-backend\.env 파일에 아래 값이 있어야 합니다.
+    C:\aidevs\02_supabase-ai-backend\.env 파일에 아래 값이 있어야 합니다.
 
     UPSTASH_REDIS_REST_URL=https://...
     UPSTASH_REDIS_REST_TOKEN=...
@@ -38,38 +38,6 @@ load_dotenv(ENV_PATH)
 app = FastAPI(title="FastAPI Upstash Redis Cache Practice")
 
 
-def get_upstash_env() -> tuple[str, str]:
-    """Upstash Redis REST URL과 token을 읽고, 비어 있거나 예시 값이면 오류를 냅니다."""
-
-    rest_url = os.getenv("UPSTASH_REDIS_REST_URL", "").strip().rstrip("/")
-    rest_token = os.getenv("UPSTASH_REDIS_REST_TOKEN", "").strip()
-
-    if not rest_url or not rest_token:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=(
-                "Upstash Redis 환경변수가 준비되지 않았습니다. "
-                ".env 파일의 UPSTASH_REDIS_REST_URL, "
-                "UPSTASH_REDIS_REST_TOKEN 값을 확인하세요."
-            ),
-        )
-
-    if rest_url.startswith(("your-", "https://your-")) or rest_token.startswith(("your-", "https://your-")):
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Upstash Redis 환경변수에 예시 값이 들어 있습니다. Upstash Console에서 실제 값을 복사해 넣어 주세요.",
-        )
-
-    return rest_url, rest_token
-
-
-def is_configured_value(value: str | None) -> bool:
-    """health check에서 환경변수가 실제 값으로 설정되었는지 True/False로 확인합니다."""
-
-    cleaned = (value or "").strip()
-    return bool(cleaned) and not cleaned.startswith(("your-", "https://your-"))
-
-
 def redis_command(*parts: str) -> dict:
     """
     Upstash Redis REST API로 Redis 명령을 실행합니다.
@@ -77,20 +45,28 @@ def redis_command(*parts: str) -> dict:
     이 함수 하나로 get, set, ttl, del 같은 Redis 명령을 보냅니다.
     """
 
-    rest_url, rest_token = get_upstash_env()
+    rest_url = os.getenv("UPSTASH_REDIS_REST_URL")
+    rest_token = os.getenv("UPSTASH_REDIS_REST_TOKEN")
+
+    if not rest_url:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="UPSTASH_REDIS_REST_URL이 없습니다. .env 파일을 확인하세요.",
+        )
+
+    if not rest_token:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="UPSTASH_REDIS_REST_TOKEN이 없습니다. .env 파일을 확인하세요.",
+        )
+
+    rest_url = rest_url.rstrip("/")
     encoded_parts = [quote(part, safe="") for part in parts]
     command_url = f"{rest_url}/{'/'.join(encoded_parts)}"
     headers = {"Authorization": f"Bearer {rest_token}"}
 
-    try:
-        response = httpx.get(command_url, headers=headers, timeout=10)
-        response.raise_for_status()
-    except httpx.HTTPError as error:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Upstash Redis 호출에 실패했습니다: {error}",
-        ) from error
-
+    response = httpx.get(command_url, headers=headers, timeout=10)
+    response.raise_for_status()
     return response.json()
 
 
@@ -115,8 +91,8 @@ def health() -> dict[str, str | bool]:
     return {
         "status": "ok",
         "redis": "upstash",
-        "redis_url_configured": is_configured_value(rest_url),
-        "redis_token_configured": is_configured_value(rest_token),
+        "redis_url_configured": bool(rest_url),
+        "redis_token_configured": bool(rest_token),
     }
 
 

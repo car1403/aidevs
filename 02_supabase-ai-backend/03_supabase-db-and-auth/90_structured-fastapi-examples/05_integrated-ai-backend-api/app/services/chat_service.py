@@ -1,13 +1,15 @@
-"""채팅 답변 생성, Gemini 선택 호출, Redis 캐시, Supabase 로그 저장을 연결합니다."""
+"""Gemini 답변 생성, Redis 캐시, Supabase 로그 저장을 연결합니다."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 
 import httpx
 from fastapi import HTTPException
 
-from app.core.config import get_settings
+import app.core.config  # .env 파일을 읽습니다.
+from app.core.gemini import get_gemini_client
 from app.schemas.auth_schema import UserPublic
 from app.schemas.chat_schema import ChatLogPublic, ChatRequest, ChatResponse
 from app.services import redis_service
@@ -29,7 +31,10 @@ class AnswerResult:
 def table_url() -> str:
     """Supabase REST API에서 채팅 로그 테이블을 호출할 URL을 만듭니다."""
 
-    return f"{get_settings().supabase_url}/rest/v1/{TABLE_NAME}"
+    supabase_url = os.getenv("SUPABASE_URL")
+    if not supabase_url:
+        raise HTTPException(status_code=500, detail="SUPABASE_URL이 없습니다. .env 파일을 확인하세요.")
+    return f"{supabase_url.rstrip('/')}/rest/v1/{TABLE_NAME}"
 
 
 def service_headers() -> dict[str, str]:
@@ -39,12 +44,12 @@ def service_headers() -> dict[str, str]:
     따라서 이 헤더는 FastAPI 서버 안에서만 사용하고 프론트엔드로 보내면 안 됩니다.
     """
 
-    settings = get_settings()
-    if not settings.supabase_url or not settings.supabase_service_role_key:
-        raise HTTPException(status_code=500, detail="Supabase 환경변수를 확인하세요.")
+    service_role_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    if not service_role_key:
+        raise HTTPException(status_code=500, detail="SUPABASE_SERVICE_ROLE_KEY가 없습니다. .env 파일을 확인하세요.")
     return {
-        "apikey": settings.supabase_service_role_key,
-        "Authorization": f"Bearer {settings.supabase_service_role_key}",
+        "apikey": service_role_key,
+        "Authorization": f"Bearer {service_role_key}",
         "Content-Type": "application/json",
         "Prefer": "return=representation",
     }
@@ -57,11 +62,13 @@ def user_headers(access_token: str | None) -> dict[str, str]:
     이 방식으로 조회하면 Supabase RLS가 auth.uid()를 기준으로 적용됩니다.
     """
 
-    settings = get_settings()
-    if not settings.supabase_url or not settings.supabase_anon_key or not access_token:
-        raise HTTPException(status_code=500, detail="Supabase anon key 또는 token을 확인하세요.")
+    anon_key = os.getenv("SUPABASE_ANON_KEY")
+    if not anon_key:
+        raise HTTPException(status_code=500, detail="SUPABASE_ANON_KEY가 없습니다. .env 파일을 확인하세요.")
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Bearer token이 없습니다.")
     return {
-        "apikey": settings.supabase_anon_key,
+        "apikey": anon_key,
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json",
     }
@@ -76,46 +83,27 @@ def cache_key(user_id: str, message: str) -> str:
     return f"ex90:chat:{user_id}:{message}"
 
 
-def create_mock_answer(message: str) -> AnswerResult:
-    """실제 Gemini API를 호출하지 않고 수업용 답변을 만듭니다."""
+def create_gemini_answer(message: str) -> AnswerResult:
+    """Gemini SDK로 답변을 만듭니다."""
 
-    return AnswerResult(
-        answer=f"'{message}'에 대한 통합 예제용 mock 답변입니다.",
-        provider="mock",
-        model="mock-integrated-example",
-        actual_api_called=False,
-    )
-
-
-def call_gemini(message: str) -> AnswerResult:
-    """USE_GEMINI=true일 때 Gemini SDK를 호출합니다."""
-
-    settings = get_settings()
-    if not settings.gemini_api_key:
-        raise RuntimeError("USE_GEMINI=true이지만 GEMINI_API_KEY가 없습니다.")
-
-    from google import genai
-
-    client = genai.Client(api_key=settings.gemini_api_key)
+    model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
+    client = get_gemini_client()
     response = client.models.generate_content(
-        model=settings.gemini_model,
+        model=model,
         contents=message,
     )
     return AnswerResult(
         answer=response.text or "",
         provider="gemini",
-        model=settings.gemini_model,
+        model=model,
         actual_api_called=True,
     )
 
 
 def create_answer(message: str) -> AnswerResult:
-    """환경변수 USE_GEMINI 값에 따라 mock 또는 Gemini 답변을 생성합니다."""
+    """Gemini 답변을 생성합니다."""
 
-    settings = get_settings()
-    if settings.use_gemini:
-        return call_gemini(message)
-    return create_mock_answer(message)
+    return create_gemini_answer(message)
 
 
 def insert_log(
@@ -186,29 +174,10 @@ def answer_with_cache_and_log(user: UserPublic, request: ChatRequest) -> ChatRes
         )
 
     try:
-        # 3. 캐시가 없으면 mock 또는 Gemini로 새 답변을 만듭니다.
+        # 3. 캐시가 없으면 Gemini로 새 답변을 만듭니다.
         answer_result = create_answer(request.message)
     except Exception as error:
-        settings = get_settings()
-        log_id = insert_log(
-            user=user,
-            request=request,
-            answer=None,
-            cached=False,
-            provider="gemini" if settings.use_gemini else "mock",
-            model=settings.gemini_model if settings.use_gemini else "mock-integrated-example",
-            actual_api_called=settings.use_gemini,
-            status="error",
-            error_message=str(error),
-        )
-        raise HTTPException(
-            status_code=502,
-            detail={
-                "message": "AI 답변 생성에 실패했습니다.",
-                "log_id": log_id,
-                "error": str(error),
-            },
-        ) from error
+        raise HTTPException(status_code=502, detail=f"AI 답변 생성 실패: {error}") from error
 
     # 4. 새로 만든 답변은 다음 요청에서 재사용할 수 있도록 Redis에 저장합니다.
     redis_service.set_answer(key, answer_result.answer)

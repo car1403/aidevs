@@ -2,7 +2,7 @@
 --
 -- 이 예제의 목표:
 -- 1. Supabase Auth로 로그인한 사용자별 채팅 로그를 저장합니다.
--- 2. Redis 캐시를 사용했는지, Gemini/mock 중 무엇을 사용했는지 함께 기록합니다.
+-- 2. Redis 캐시를 사용했는지, Gemini 응답인지 함께 기록합니다.
 -- 3. GET /logs 조회에서는 사용자 access token으로 RLS가 적용되는 흐름을 확인합니다.
 
 create table if not exists ex90_user_chat_logs (
@@ -18,7 +18,7 @@ create table if not exists ex90_user_chat_logs (
   assistant_message text,
 
   -- provider/model은 응답 출처를 기록합니다.
-  provider text not null default 'mock',
+  provider text not null default 'gemini',
   model text,
 
   -- actual_api_called는 실제 Gemini API 호출 여부입니다.

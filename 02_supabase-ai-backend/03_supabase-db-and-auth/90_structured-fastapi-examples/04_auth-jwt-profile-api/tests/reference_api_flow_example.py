@@ -16,7 +16,7 @@
 r"""04_auth-jwt-profile-api 핵심 API 흐름 테스트입니다.
 
 실행 방법:
-    cd C:\aidev\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\04_auth-jwt-profile-api
+    cd C:\aidevs\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\04_auth-jwt-profile-api
     python -m pytest tests
 
 이 테스트는 실제 Supabase Auth나 RLS 테이블을 호출하지 않습니다.

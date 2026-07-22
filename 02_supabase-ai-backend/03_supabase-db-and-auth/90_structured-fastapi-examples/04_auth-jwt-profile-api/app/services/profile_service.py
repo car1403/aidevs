@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import os
+
 import httpx
 from fastapi import HTTPException
 
-from app.core.config import get_settings
+import app.core.config  # .env 파일을 읽습니다.
 from app.schemas.profile_schema import ProfilePublic, ProfileUpdate
 
 
@@ -19,12 +21,15 @@ def auth_headers(access_token: str | None) -> dict[str, str]:
     이 조합이어야 Supabase RLS가 "현재 사용자"를 판단할 수 있습니다.
     """
 
-    settings = get_settings()
-    if not settings.supabase_url or not settings.supabase_anon_key or not access_token:
-        raise HTTPException(status_code=500, detail="Supabase 환경변수 또는 token을 확인하세요.")
+    anon_key = os.getenv("SUPABASE_ANON_KEY")
+    if not anon_key:
+        raise HTTPException(status_code=500, detail="SUPABASE_ANON_KEY가 없습니다. .env 파일을 확인하세요.")
+
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Bearer token이 없습니다.")
 
     return {
-        "apikey": settings.supabase_anon_key,
+        "apikey": anon_key,
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json",
         "Prefer": "return=representation",
@@ -34,7 +39,10 @@ def auth_headers(access_token: str | None) -> dict[str, str]:
 def table_url() -> str:
     """ex90_profiles 테이블의 Supabase REST API URL을 만듭니다."""
 
-    return f"{get_settings().supabase_url}/rest/v1/{TABLE_NAME}"
+    supabase_url = os.getenv("SUPABASE_URL")
+    if not supabase_url:
+        raise HTTPException(status_code=500, detail="SUPABASE_URL이 없습니다. .env 파일을 확인하세요.")
+    return f"{supabase_url.rstrip('/')}/rest/v1/{TABLE_NAME}"
 
 
 def to_profile(row: dict) -> ProfilePublic:

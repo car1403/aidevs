@@ -46,7 +46,6 @@ from pathlib import Path
 from pprint import pprint
 
 from dotenv import load_dotenv
-from postgrest.exceptions import APIError
 from supabase import Client, create_client
 
 
@@ -61,24 +60,7 @@ from supabase import Client, create_client
 # .env 파일은 02_supabase-ai-backend 폴더에 있으므로 parents[2]를 사용합니다.
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ENV_PATH = PROJECT_ROOT / ".env"
-
-
-def get_required_env(name: str) -> str:
-    """필수 환경 변수를 읽고, 비어 있거나 예시 값이면 오류를 냅니다.
-
-    `.env.example`에는 `your-supabase-service-role-key` 같은 안내용 값이 들어 있습니다.
-    이런 값으로는 실제 Supabase에 연결할 수 없으므로 미리 걸러 냅니다.
-    """
-
-    value = os.getenv(name, "").strip()
-
-    if not value:
-        raise RuntimeError(f"{name} 값이 없습니다. C:/aidev/02_supabase-ai-backend/.env 파일을 확인하세요.")
-
-    if value.startswith(("your-", "https://your-")):
-        raise RuntimeError(f"{name} 값이 예시 값입니다. Supabase Dashboard에서 실제 값을 복사해 넣어 주세요.")
-
-    return value
+load_dotenv(ENV_PATH)
 
 
 def get_supabase() -> Client:
@@ -93,11 +75,13 @@ def get_supabase() -> Client:
     프론트엔드 코드, README, GitHub에 절대 노출하면 안 됩니다.
     """
 
-    # .env 파일의 값을 현재 Python 프로세스의 환경 변수로 불러옵니다.
-    load_dotenv(ENV_PATH)
+    url = os.getenv("SUPABASE_URL")
+    service_role_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
-    url = get_required_env("SUPABASE_URL")
-    service_role_key = get_required_env("SUPABASE_SERVICE_ROLE_KEY")
+    if not url:
+        raise RuntimeError("SUPABASE_URL이 없습니다. .env 파일을 확인하세요.")
+    if not service_role_key:
+        raise RuntimeError("SUPABASE_SERVICE_ROLE_KEY가 없습니다. .env 파일을 확인하세요.")
 
     # create_client(url, key)는 Supabase에 요청을 보낼 수 있는 client 객체를 만듭니다.
     return create_client(url, service_role_key)
@@ -148,9 +132,6 @@ def insert_chat_log(
         .execute()
     )
 
-    if not result.data:
-        raise RuntimeError("simple_chat_logs 저장 결과가 비어 있습니다. 테이블과 권한을 확인하세요.")
-
     # insert 결과는 리스트 형태로 돌아옵니다.
     # 여기서는 1건만 저장했으므로 첫 번째 행만 반환합니다.
     return result.data[0]
@@ -170,18 +151,6 @@ def list_recent_chat_logs(supabase: Client, limit: int = 5) -> list[dict]:
     return result.data
 
 
-def print_supabase_setup_help(error: APIError) -> None:
-    """Supabase 테이블 또는 연결 문제가 있을 때 확인할 내용을 출력합니다."""
-
-    print("[Supabase 실행 오류]")
-    print(error)
-    print("\n확인할 내용:")
-    print("1. Supabase Dashboard -> SQL Editor를 엽니다.")
-    print("2. simple_chat_logs 테이블 생성 SQL을 실행했는지 확인합니다.")
-    print("3. C:/aidev/02_supabase-ai-backend/.env에 SUPABASE_URL과 SUPABASE_SERVICE_ROLE_KEY가 있는지 확인합니다.")
-    print("4. Table Editor에서 simple_chat_logs 테이블이 보이는지 확인합니다.")
-
-
 def main() -> None:
     """샘플 질문/답변 로그를 저장하고 최근 로그를 조회합니다."""
 
@@ -192,21 +161,18 @@ def main() -> None:
     user_message = "Supabase에는 어떤 데이터를 저장하면 좋나요?"
     assistant_message = "나중에 다시 조회하거나 분석해야 하는 대화 이력과 서비스 로그를 저장하면 좋습니다."
 
-    try:
-        saved_log = insert_chat_log(
-            supabase=supabase,
-            user_message=user_message,
-            assistant_message=assistant_message,
-        )
-        print("[chat log saved]")
-        pprint(saved_log, width=100)
+    saved_log = insert_chat_log(
+        supabase=supabase,
+        user_message=user_message,
+        assistant_message=assistant_message,
+    )
+    print("[chat log saved]")
+    pprint(saved_log, width=100)
 
-        print("\n[recent chat logs]")
-        pprint(list_recent_chat_logs(supabase), width=100)
+    print("\n[recent chat logs]")
+    pprint(list_recent_chat_logs(supabase), width=100)
 
-        print("\nResult: simple_chat_logs 테이블에 채팅 로그 저장 흐름을 확인했습니다.")
-    except APIError as error:
-        print_supabase_setup_help(error)
+    print("\nResult: simple_chat_logs 테이블에 채팅 로그 저장 흐름을 확인했습니다.")
 
 
 if __name__ == "__main__":

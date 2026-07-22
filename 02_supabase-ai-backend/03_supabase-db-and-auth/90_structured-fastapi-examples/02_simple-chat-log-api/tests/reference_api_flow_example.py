@@ -14,7 +14,7 @@
 r"""02_simple-chat-log-api 핵심 API 흐름 테스트입니다.
 
 실행 방법:
-    cd C:\aidev\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\02_simple-chat-log-api
+    cd C:\aidevs\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\02_simple-chat-log-api
     python -m pytest tests
 
 이 테스트는 실제 Supabase 로그 테이블에 데이터를 저장하지 않습니다.
@@ -37,19 +37,19 @@ def test_chat_and_logs_flow(monkeypatch) -> None:
 
     chat_response = ChatResponse(
         user_message="오늘 배운 내용을 요약해줘",
-        assistant_message="mock 응답입니다.",
-        provider="mock",
-        model="mock-structured-example",
-        actual_api_called=False,
+        assistant_message="Gemini 응답입니다.",
+        provider="gemini",
+        model="gemini-2.5-flash-lite",
+        actual_api_called=True,
         log_id="log-1",
     )
     log_row = ChatLogPublic(
         id="log-1",
         user_message="오늘 배운 내용을 요약해줘",
-        assistant_message="mock 응답입니다.",
-        provider="mock",
-        model="mock-structured-example",
-        actual_api_called=False,
+        assistant_message="Gemini 응답입니다.",
+        provider="gemini",
+        model="gemini-2.5-flash-lite",
+        actual_api_called=True,
         status="success",
         created_at="2026-07-01T00:00:00Z",
     )
@@ -59,7 +59,7 @@ def test_chat_and_logs_flow(monkeypatch) -> None:
 
     response = client.post("/chat", json={"message": "오늘 배운 내용을 요약해줘"})
     assert response.status_code == 200
-    assert response.json()["provider"] == "mock"
+    assert response.json()["provider"] == "gemini"
     assert response.json()["actual_api_called"] is False
 
     logs_response = client.get("/logs")

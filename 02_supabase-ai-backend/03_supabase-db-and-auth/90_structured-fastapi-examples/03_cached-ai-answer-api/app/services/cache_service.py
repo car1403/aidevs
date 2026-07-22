@@ -1,13 +1,15 @@
-"""Upstash Redis에 mock AI 답변을 캐시합니다."""
+"""Gemini AI 답변을 Upstash Redis에 캐시합니다."""
 
 from __future__ import annotations
 
+import os
 from urllib.parse import quote
 
 import httpx
 from fastapi import HTTPException, status
 
-from app.core.config import get_settings
+import app.core.config  # .env 파일을 읽습니다.
+from app.core.gemini import get_gemini_client
 from app.schemas.cache_schema import CachedAnswerResponse
 
 
@@ -20,17 +22,25 @@ def redis_command(*parts: str) -> dict:
     예: redis_command("get", "my-key")는 Redis의 GET my-key와 같은 의미입니다.
     """
 
-    settings = get_settings()
-    if not settings.redis_rest_url or not settings.redis_rest_token:
+    rest_url = os.getenv("UPSTASH_REDIS_REST_URL")
+    rest_token = os.getenv("UPSTASH_REDIS_REST_TOKEN")
+
+    if not rest_url:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=".env의 UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN을 확인하세요.",
+            detail="UPSTASH_REDIS_REST_URL이 없습니다. .env 파일을 확인하세요.",
+        )
+
+    if not rest_token:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="UPSTASH_REDIS_REST_TOKEN이 없습니다. .env 파일을 확인하세요.",
         )
 
     # key나 value에 한글, 공백, 특수문자가 있어도 URL이 깨지지 않도록 인코딩합니다.
     encoded = [quote(part, safe="") for part in parts]
-    url = f"{settings.redis_rest_url}/{'/'.join(encoded)}"
-    headers = {"Authorization": f"Bearer {settings.redis_rest_token}"}
+    url = f"{rest_url.rstrip('/')}/{'/'.join(encoded)}"
+    headers = {"Authorization": f"Bearer {rest_token}"}
 
     try:
         response = httpx.get(url, headers=headers, timeout=10)
@@ -47,10 +57,17 @@ def cache_key(question: str) -> str:
     return f"ex90:answer:{question}"
 
 
-def create_mock_answer(question: str) -> str:
-    """실제 LLM 호출 없이 캐시 흐름만 확인하기 위한 답변을 만듭니다."""
+def create_gemini_answer(question: str) -> str:
+    """Gemini SDK로 답변을 만듭니다."""
 
-    return f"'{question}'에 대한 Redis 캐시 예제용 mock 답변입니다."
+    model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
+    client = get_gemini_client()
+    try:
+        response = client.models.generate_content(model=model, contents=question)
+    except Exception as error:
+        raise HTTPException(status_code=502, detail=f"Gemini 호출 실패: {error}") from error
+
+    return response.text or ""
 
 
 def get_or_create_answer(question: str) -> CachedAnswerResponse:
@@ -68,7 +85,7 @@ def get_or_create_answer(question: str) -> CachedAnswerResponse:
             ttl_seconds=TTL_SECONDS,
         )
 
-    answer = create_mock_answer(question)
+    answer = create_gemini_answer(question)
     # ex 옵션은 TTL(Time To Live)을 초 단위로 설정합니다.
     # 여기서는 60초 뒤 캐시가 자동 삭제됩니다.
     redis_command("set", key, answer, "ex", str(TTL_SECONDS))

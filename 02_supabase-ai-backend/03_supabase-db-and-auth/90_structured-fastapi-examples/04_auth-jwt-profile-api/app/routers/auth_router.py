@@ -1,9 +1,11 @@
 """Auth 관련 API 경로입니다."""
 
+import os
+
 from fastapi import APIRouter
 
-from app.core.config import is_configured
-from app.schemas.auth_schema import AuthRequest, AuthResponse, UserPublic
+import app.core.config  # .env 파일을 읽습니다.
+from app.schemas.auth_schema import AuthRequest, AuthResponse, SignupRequest, UserPublic
 from app.services import auth_service
 
 
@@ -15,11 +17,16 @@ router = APIRouter()
 def health() -> dict[str, str | bool]:
     """서버 실행 여부와 Supabase Auth 환경변수 준비 상태를 확인합니다."""
 
-    return {"status": "ok", "supabase_configured": is_configured()}
+    return {
+        "status": "ok",
+        "supabase_configured": bool(os.getenv("SUPABASE_URL"))
+        and bool(os.getenv("SUPABASE_ANON_KEY"))
+        and bool(os.getenv("SUPABASE_SERVICE_ROLE_KEY")),
+    }
 
 
 @router.post("/auth/signup", response_model=UserPublic)
-def signup(request: AuthRequest) -> UserPublic:
+def signup(request: SignupRequest) -> UserPublic:
     """Supabase Auth에 회원가입을 요청합니다."""
 
     return auth_service.signup(request)

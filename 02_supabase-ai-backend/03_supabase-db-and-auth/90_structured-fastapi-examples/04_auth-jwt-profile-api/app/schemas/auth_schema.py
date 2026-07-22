@@ -4,10 +4,16 @@ from pydantic import BaseModel, Field
 
 
 class AuthRequest(BaseModel):
-    """회원가입과 로그인 요청 Body입니다."""
+    """로그인 요청 Body입니다."""
 
     email: str = Field(min_length=3, examples=["student@example.com"])
     password: str = Field(min_length=6, examples=["password123"])
+
+
+class SignupRequest(AuthRequest):
+    """회원가입 시 이메일/비밀번호와 함께 받을 사용자 표시 이름입니다."""
+
+    display_name: str = Field(min_length=1, max_length=50, examples=["수강생"])
 
 
 class UserPublic(BaseModel):
@@ -15,8 +21,11 @@ class UserPublic(BaseModel):
 
     id: str
     email: str | None = None
-    # access_token은 로그인 직후나 인증 흐름 설명을 위해 포함합니다.
-    # 실제 운영 화면에서는 token을 화면에 그대로 오래 노출하지 않습니다.
+
+
+class AuthenticatedUser(UserPublic):
+    """서버 내부에서만 Bearer token을 함께 사용하는 인증 사용자입니다."""
+
     access_token: str | None = None
 
 

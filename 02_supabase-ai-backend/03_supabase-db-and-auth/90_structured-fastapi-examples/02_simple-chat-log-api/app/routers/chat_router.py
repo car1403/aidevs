@@ -1,8 +1,10 @@
 """채팅 로그 API 경로를 정의합니다."""
 
+import os
+
 from fastapi import APIRouter
 
-from app.core.config import is_configured
+import app.core.config  # .env 파일을 읽습니다.
 from app.schemas.chat_schema import ChatRequest, ChatResponse, ChatLogPublic
 from app.services import chat_service
 
@@ -13,14 +15,19 @@ router = APIRouter()
 
 @router.get("/health")
 def health() -> dict[str, str | bool]:
-    """서버 실행 여부와 Supabase 환경변수 준비 여부를 확인합니다."""
+    """서버 실행 여부와 Supabase/Gemini 환경변수 준비 여부를 확인합니다."""
 
-    return {"status": "ok", "supabase_configured": is_configured()}
+    return {
+        "status": "ok",
+        "supabase_configured": bool(os.getenv("SUPABASE_URL"))
+        and bool(os.getenv("SUPABASE_SERVICE_ROLE_KEY")),
+        "gemini_configured": bool(os.getenv("GEMINI_API_KEY")),
+    }
 
 
 @router.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
-    """사용자 질문을 mock 답변으로 처리하고 Supabase에 로그를 남깁니다."""
+    """사용자 질문을 Gemini로 처리하고 Supabase에 로그를 남깁니다."""
 
     return chat_service.answer_and_log(request)
 

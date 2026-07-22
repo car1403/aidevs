@@ -1,7 +1,7 @@
 r"""02_simple-chat-log-api 라우트 테스트입니다.
 
 실행 방법:
-    cd C:\aidev\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\02_simple-chat-log-api
+    cd C:\aidevs\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\02_simple-chat-log-api
     python -m pytest tests
 
 이 테스트는 채팅 로그를 실제 Supabase에 저장하는 통합 테스트가 아닙니다.

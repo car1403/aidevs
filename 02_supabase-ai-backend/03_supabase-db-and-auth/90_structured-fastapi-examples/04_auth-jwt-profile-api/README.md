@@ -9,7 +9,7 @@ Supabase Auth, JWT, Bearer token, RLS SQL을 하나의 작은 profile 예제로 
 Supabase SQL Editor에서 `schema.sql`을 실행합니다.
 
 ```text
-C:\aidev\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\04_auth-jwt-profile-api\schema.sql
+C:\aidevs\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\04_auth-jwt-profile-api\schema.sql
 ```
 
 이 SQL은 `ex90_profiles` 테이블을 만들고, 로그인한 사용자가 자기 profile만 읽고 수정할 수 있도록 RLS 정책을 설정합니다.
@@ -34,7 +34,7 @@ SUPABASE_SERVICE_ROLE_KEY=...
 ## 3. 서버 실행
 
 ```powershell
-cd C:\aidev\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\04_auth-jwt-profile-api
+cd C:\aidevs\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\04_auth-jwt-profile-api
 ..\..\..\.venv\Scripts\Activate.ps1
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8014
 # 위 명령에서 오류가 나면 아래처럼 실행합니다.

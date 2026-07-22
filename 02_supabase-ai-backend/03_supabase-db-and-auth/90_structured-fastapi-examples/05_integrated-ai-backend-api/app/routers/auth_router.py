@@ -1,8 +1,10 @@
 """Auth와 상태 확인 API입니다."""
 
+import os
+
 from fastapi import APIRouter
 
-from app.core.config import config_status
+import app.core.config  # .env 파일을 읽습니다.
 from app.schemas.auth_schema import AuthRequest, AuthResponse, UserPublic
 from app.services import auth_service
 
@@ -12,10 +14,18 @@ router = APIRouter()
 
 
 @router.get("/health")
-def health() -> dict[str, str | dict[str, bool]]:
+def health() -> dict[str, str | bool]:
     """서버 실행 여부와 Supabase/Redis/Gemini 환경변수 준비 상태를 확인합니다."""
 
-    return {"status": "ok", "configured": config_status()}
+    return {
+        "status": "ok",
+        "supabase_configured": bool(os.getenv("SUPABASE_URL"))
+        and bool(os.getenv("SUPABASE_ANON_KEY"))
+        and bool(os.getenv("SUPABASE_SERVICE_ROLE_KEY")),
+        "redis_configured": bool(os.getenv("UPSTASH_REDIS_REST_URL"))
+        and bool(os.getenv("UPSTASH_REDIS_REST_TOKEN")),
+        "gemini_configured": bool(os.getenv("GEMINI_API_KEY")),
+    }
 
 
 @router.post("/auth/signup", response_model=UserPublic)

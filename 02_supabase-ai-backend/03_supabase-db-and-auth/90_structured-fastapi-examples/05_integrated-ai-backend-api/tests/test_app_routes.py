@@ -1,7 +1,7 @@
 r"""05_integrated-ai-backend-api 라우트 테스트입니다.
 
 실행 방법:
-    cd C:\aidev\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\05_integrated-ai-backend-api
+    cd C:\aidevs\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\05_integrated-ai-backend-api
     python -m pytest tests
 
 이 테스트는 통합 예제의 모든 기능을 실제로 끝까지 호출하지 않습니다.

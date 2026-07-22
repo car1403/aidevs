@@ -3,7 +3,7 @@
 -- 이 예제의 목표:
 -- 1. 사용자의 질문과 AI 답변을 한 테이블에 저장합니다.
 -- 2. 아직 로그인 사용자 구분은 하지 않습니다.
--- 3. 실제 LLM 호출 대신 mock 답변을 저장해 로그 구조를 먼저 익힙니다.
+-- 3. Gemini가 생성한 답변을 저장합니다.
 
 create table if not exists ex90_simple_chat_logs (
   -- 로그 1건을 구분하는 고유 id입니다.
@@ -14,7 +14,7 @@ create table if not exists ex90_simple_chat_logs (
   assistant_message text,
 
   -- provider/model은 응답 출처를 구분할 때 사용합니다.
-  provider text not null default 'mock',
+  provider text not null default 'gemini',
   model text,
 
   -- 실제 외부 AI API를 호출했는지 표시합니다.

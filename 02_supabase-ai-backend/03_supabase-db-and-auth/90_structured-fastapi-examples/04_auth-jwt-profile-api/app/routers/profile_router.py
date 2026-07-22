@@ -2,7 +2,6 @@
 
 from fastapi import APIRouter
 
-from app.schemas.auth_schema import UserPublic
 from app.schemas.profile_schema import ProfilePublic, ProfileUpdate
 from app.services import auth_service, profile_service
 

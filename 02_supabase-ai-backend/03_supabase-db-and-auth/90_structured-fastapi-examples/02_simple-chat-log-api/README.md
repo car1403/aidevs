@@ -12,9 +12,11 @@
 ```text
 SUPABASE_URL=...
 SUPABASE_SERVICE_ROLE_KEY=...
+GEMINI_API_KEY=...
+GEMINI_MODEL=gemini-2.5-flash-lite
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY`는 실제 `/chat`, `/logs` API가 Supabase의 `ex90_simple_chat_logs` 테이블에 데이터를 저장하고 조회할 때 필요합니다.
+`SUPABASE_SERVICE_ROLE_KEY`는 실제 `/chat`, `/logs` API가 Supabase의 `ex90_simple_chat_logs` 테이블에 데이터를 저장하고 조회할 때 필요합니다. `GEMINI_API_KEY`는 `/chat`에서 답변을 생성할 때 필요합니다.
 
 이 예제에는 `SUPABASE_ANON_KEY`를 사용하지 않습니다. 로그인한 사용자 권한으로 RLS를 확인하는 예제가 아니라, FastAPI 서버가 서버 권한으로 로그를 저장하는 구조이기 때문입니다. `SUPABASE_ANON_KEY`는 `04_auth-jwt-profile-api`, `05_integrated-ai-backend-api`처럼 사용자 JWT와 RLS 흐름을 확인할 때 사용합니다.
 
@@ -31,7 +33,7 @@ python -m pytest tests
 ## 서버 실행
 
 ```powershell
-cd C:\aidev\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\02_simple-chat-log-api
+cd C:\aidevs\02_supabase-ai-backend\03_supabase-db-and-auth\90_structured-fastapi-examples\02_simple-chat-log-api
 ..\..\..\.venv\Scripts\Activate.ps1
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8012
 ```
@@ -47,7 +49,7 @@ http://127.0.0.1:8012/docs
 | Method | URL | 설명 |
 |---|---|---|
 | GET | `/health` | 서버 상태 확인 |
-| POST | `/chat` | mock AI 답변 생성 후 로그 저장 |
+| POST | `/chat` | Gemini AI 답변 생성 후 로그 저장 |
 | GET | `/logs` | 최근 로그 조회 |
 
 ## 테스트
