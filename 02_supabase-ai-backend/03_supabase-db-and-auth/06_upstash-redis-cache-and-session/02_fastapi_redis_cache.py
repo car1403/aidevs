@@ -77,7 +77,7 @@ def create_mock_ai_answer(question: str) -> str:
     이 예제의 목표는 LLM이 아니라 Redis 캐시 흐름입니다.
     그래서 비용이 드는 외부 AI API 호출은 하지 않습니다.
     """
-
+    
     return f"'{question}'에 대한 임시 AI 답변입니다. Redis 캐시 흐름을 확인합니다."
 
 
@@ -110,7 +110,7 @@ def mock_answer(
         같은 question이면 Redis에 저장된 답변을 바로 사용합니다.
     """
 
-    ttl_seconds = 60
+    ttl_seconds = 600
     cache_key = f"aidev:06:mock-answer:{question}"
 
     cached_result = redis_command("get", cache_key)

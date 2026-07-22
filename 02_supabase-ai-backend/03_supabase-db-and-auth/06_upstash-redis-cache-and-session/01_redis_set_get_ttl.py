@@ -64,6 +64,7 @@ def main() -> None:
 
     # Redis는 데이터를 key/value 형태로 저장합니다.
     # key는 데이터를 찾기 위한 이름이고, value는 실제 저장할 값입니다.
+    # dict
     cache_key = "aidev:06:greeting"
     cache_value = "hello upstash redis"
 
