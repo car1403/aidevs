@@ -57,13 +57,9 @@ def answer_and_log(request: ChatRequest) -> ChatResponse:
         "status": "success",
     }
     supabase = get_supabase_client()
-    try:
-        result = supabase.table(TABLE_NAME).insert(payload).execute()
-    except Exception as error:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Supabase 로그 저장 실패: {error}",
-        ) from error
+
+    result = supabase.table(TABLE_NAME).insert(payload).execute()
+
     log_id = str(result.data[0]["id"]) if result.data else None
 
     # API 응답은 DB 저장 결과 전체가 아니라 화면에 필요한 값만 돌려줍니다.

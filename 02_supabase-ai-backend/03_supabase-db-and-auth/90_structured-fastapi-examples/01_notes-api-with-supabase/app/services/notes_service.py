@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 from app.core.config import supabase
-from app.schemas.note_schema import NoteCreate, NotePublic, NoteUpdate
+from app.schemas.note_schema import (
+    NoteCreate, 
+    NotePublic, 
+    NoteUpdate
+)
 
 
 TABLE_NAME = "ex90_notes"
@@ -18,6 +22,7 @@ def list_notes() -> list[NotePublic]:
         .limit(20)
         .execute()
     )
+    # [{},{},{}]
     return [NotePublic.model_validate(row) for row in result.data]
 
 
