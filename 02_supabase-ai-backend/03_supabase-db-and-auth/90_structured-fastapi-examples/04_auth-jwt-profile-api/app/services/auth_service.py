@@ -102,3 +102,4 @@ def get_current_user(
 
 
 CurrentUser = Annotated[AuthenticatedUser, Depends(get_current_user)]
+#age = Annotated[int, Query(ge=0, le=120)]
