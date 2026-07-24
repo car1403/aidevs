@@ -25,7 +25,7 @@ if loginout == "logout":
         with submit_area:
             login_submit = st.form_submit_button("LOGIN")
         with reset_area:
-            reset = st.form_submit_button("RESET", on_click=reset)
+            reset_submit = st.form_submit_button("RESET", on_click=reset)
 
         if login_submit:
             if input_id == "id01" and input_pwd == "pwd01":
