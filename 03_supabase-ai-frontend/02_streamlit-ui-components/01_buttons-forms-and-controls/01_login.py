@@ -16,6 +16,7 @@ if loginout == "logout":
         if login_submit:
             if input_id == "id01" and input_pwd == "pwd01":
                st.query_params["loginout"] = "login"
+               st.rerun()
             else:
                 st.toast("로그인 실패")
 else:
@@ -23,6 +24,7 @@ else:
     logout = st.button("LOGOUT")
     if logout:
         st.query_params["loginout"] = "logout"
+        st.rerun()
     
 # 코드 --------------------------
 
