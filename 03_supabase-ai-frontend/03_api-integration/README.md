@@ -22,6 +22,8 @@ Gemini SDK와 Supabase 저장은 이 단원에서 깊게 다루지 않습니다.
 -> 01_httpx-api-call
 -> 02_fastapi-backend-connect
 -> 03_error-loading-and-response-handling
+-> 04_xxx
+-> 05_weather_df
 -> 10_labs
 -> 20_assignments
 ```
@@ -36,6 +38,8 @@ Gemini SDK와 Supabase 저장은 이 단원에서 깊게 다루지 않습니다.
 ├─ 01_httpx-api-call
 ├─ 02_fastapi-backend-connect
 ├─ 03_error-loading-and-response-handling
+├─ 04_xxx
+├─ 05_weather_df
 ├─ 10_labs
 └─ 20_assignments
 ```

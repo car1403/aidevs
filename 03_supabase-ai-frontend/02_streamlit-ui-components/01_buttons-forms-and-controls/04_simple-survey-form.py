@@ -9,6 +9,8 @@ with st.form("survey_form"):  # form 영역 안의 입력값은 제출 버튼을
     comment = st.text_area("추가 의견")  # 여러 줄 입력창에 작성한 의견을 문자열로 저장합니다.
     submitted = st.form_submit_button("설문 제출")  # 제출 버튼을 누르면 submitted 값이 True가 됩니다.
 
+#---------------------------------------------------------
+
 if submitted:  # 제출 버튼을 누른 뒤에만 설문 결과를 화면에 표시합니다.
     st.subheader("설문 결과")  # 결과 영역의 제목을 표시합니다.
     st.write(f"이름: {name if name else '미입력'}")  # 이름이 비어 있으면 '미입력'으로 표시합니다.
