@@ -1,8 +1,12 @@
 # 01_login_local.py
 import streamlit as st
+from streamlit_local_storage import LocalStorage
 
 # 선언 --------------------------
-loginout = st.query_params.get("loginout","logout")
+# loginout = st.query_params.get("loginout","logout")
+
+storage = LocalStorage()
+loginout = storage.getItem("loginout")
 
 if "input_login_id" not in st.session_state:
     st.session_state.input_login_id = ""
@@ -15,7 +19,7 @@ def reset():
     st.session_state.input_login_pwd = ""
 
 # 화면 --------------------------
-if loginout == "logout":
+if loginout == "logout" or loginout is None:
     st.title("LOGIN")
     with st.form("login_form"):
         input_id = st.text_input("ID입력", key="input_login_id")
@@ -29,16 +33,16 @@ if loginout == "logout":
 
         if login_submit:
             if input_id == "id01" and input_pwd == "pwd01":
-               st.query_params["loginout"] = "login"
-               st.rerun()
+                storage.setItem("loginout","login")
+            #    st.rerun()
             else:
                 st.toast("로그인 실패")
 else:
     st.info("로그인 했습니다.")
     logout = st.button("LOGOUT")
     if logout:
-        st.query_params["loginout"] = "logout"
-        st.rerun()
+        storage.setItem("loginout","logout")
+        # st.rerun()
     
 # 코드 --------------------------
 
