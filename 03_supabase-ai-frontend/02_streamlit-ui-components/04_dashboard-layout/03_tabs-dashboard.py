@@ -17,6 +17,6 @@ with tab_table:  # 파일, 화면 영역, 로딩 상태처럼 시작과 종료�
     st.dataframe(df)  # 표 형태의 데이터를 스크롤 가능한 DataFrame UI로 표시합니다.
 
 with tab_chart:  # 파일, 화면 영역, 로딩 상태처럼 시작과 종료가 있는 작업 범위를 만듭니다.
-    chart_df = df.set_index("course")[["students", "average"]]  # 계산 결과나 입력값을 이후 코드에서 다시 쓰기 위해 변수에 저장합니다.
+    chart_df = df.set_index("course")["average"]  # 계산 결과나 입력값을 이후 코드에서 다시 쓰기 위해 변수에 저장합니다.
     st.bar_chart(chart_df)  # 숫자 데이터를 막대 차트로 시각화합니다.
 

@@ -2,7 +2,6 @@ import pandas as pd  # 목록 데이터를 표와 차트로 다루기 위해 pan
 import streamlit as st  # Python 코드로 웹 화면을 만들기 위해 Streamlit을 st라는 별칭으로 가져옵니다.
 
 st.set_page_config(page_title="학습 진도 대시보드", layout="wide")  # 대시보드가 넓게 보이도록 페이지 레이아웃을 wide로 설정합니다.
-st.title("학습 진도 대시보드")  # Streamlit 화면의 가장 큰 제목을 표시합니다.
 
 df = pd.DataFrame(  # 학습자 목록을 DataFrame으로 만들어 표, 지표, 차트에 함께 사용합니다.
     [
@@ -13,14 +12,19 @@ df = pd.DataFrame(  # 학습자 목록을 DataFrame으로 만들어 표, 지표,
     ]
 )
 
-with st.sidebar:  # 화면 왼쪽 사이드바에는 필터 조건을 배치합니다.
-    selected_course = st.selectbox("과정", ["전체"] + sorted(df["course"].unique()))  # 전체 또는 특정 과정을 선택합니다.
-    min_progress = st.slider("최소 진도율", 0, 100, 0)  # 표시할 데이터의 최소 진도율을 선택합니다.
+# with st.sidebar:  # 화면 왼쪽 사이드바에는 필터 조건을 배치합니다.
+#     selected_course = st.selectbox("과정", ["전체"] + sorted(df["course"].unique()))  # 전체 또는 특정 과정을 선택합니다.
+#     min_progress = st.slider("최소 진도율", 0, 100, 0)  # 표시할 데이터의 최소 진도율을 선택합니다.
+
+st.title("학습 진도 대시보드")  # Streamlit 화면의 가장 큰 제목을 표시합니다.
+
+selected_course = st.selectbox("과정", ["전체"] + sorted(df["course"].unique()))  # 전체 또는 특정 과정을 선택합니다.
+min_progress = st.slider("최소 진도율", 0, 100, 0)  # 표시할 데이터의 최소 진도율을 선택합니다.
 
 filtered_df = df[df["progress"] >= min_progress]  # 먼저 최소 진도율 조건에 맞는 행만 남깁니다.
 if selected_course != "전체":  # 특정 과정이 선택된 경우에는 과정 조건을 추가로 적용합니다.
     filtered_df = filtered_df[filtered_df["course"] == selected_course]  # 선택한 과정에 해당하는 행만 남깁니다.
-
+#---------------------------------------------------------
 col_count, col_progress, col_score = st.columns(3)  # 상단 지표 영역을 세 개의 열로 나눕니다.
 
 with col_count:  # 첫 번째 열에는 필터 결과에 포함된 학습자 수를 표시합니다.
@@ -33,7 +37,7 @@ with col_progress:  # 두 번째 열에는 평균 진도율을 표시합니다.
 with col_score:  # 세 번째 열에는 평균 점수를 표시합니다.
     average_score = filtered_df["score"].mean() if not filtered_df.empty else 0  # 데이터가 없으면 평균 대신 0을 사용합니다.
     st.metric("평균 점수", f"{average_score:.1f}")  # 평균 점수를 소수점 한 자리로 표시합니다.
-
+#-------------------------------------------------------
 tab_table, tab_chart = st.tabs(["학습자 목록", "진도 차트"])  # 표와 차트를 탭으로 나누어 화면을 깔끔하게 유지합니다.
 
 with tab_table:  # 첫 번째 탭에는 필터링된 원본 데이터를 표로 표시합니다.
