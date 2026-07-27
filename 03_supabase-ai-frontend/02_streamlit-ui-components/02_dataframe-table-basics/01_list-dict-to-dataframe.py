@@ -15,3 +15,4 @@ st.write("원본 데이터")  # 문자열, 숫자, 객체를 Streamlit 화면에
 st.dataframe(df)  # 표 형태의 데이터를 스크롤 가능한 DataFrame UI로 표시합니다.
 st.write("컬럼 목록:", list(df.columns))  # 문자열, 숫자, 객체를 Streamlit 화면에 출력합니다.
 
+

@@ -1,3 +1,4 @@
+
 import streamlit as st
 from streamlit_session_browser_storage import SessionStorage
 
@@ -29,9 +30,10 @@ if st.session_state.loginout != stored_loginout:
     storage.setItem(
         "loginout",
         st.session_state.loginout,
-        key=f"save_{st.session_state.loginout}",
+        key=f"save{st.session_state.loginout}",
     )
 
+# ------------------------------------------------------------------
 
 if st.session_state.loginout == "logout":
     st.title("LOGIN")
