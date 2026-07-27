@@ -13,7 +13,7 @@ Python 기반 웹 API 개발에서 시작해 Supabase AI 서비스, Streamlit �
 | 02 | Supabase AI Backend | FastAPI, Pydantic, Gemini API, Supabase DB/Auth/RLS, Upstash Redis, 백엔드 API | [README](./02_supabase-ai-backend/README.md) / [SETUP](./02_supabase-ai-backend/SETUP.md) |
 | 03 | Supabase AI Frontend | Streamlit UI, API 호출, 로그인 상태, 챗봇 화면, 멀티페이지/탭 구조 | [README](./03_supabase-ai-frontend/README.md) / [SETUP](./03_supabase-ai-frontend/SETUP.md) |
 | 04 | Supabase AI Mini Project | AI 서비스 로그 분석, Supabase 저장, Upstash Redis 이벤트 전달, SSE, 운영 대시보드 | [README](./04_supabase-ai-mini-project/README.md) / [SETUP](./04_supabase-ai-mini-project/SETUP.md) |
-| 05 | LLM Agent Orchestration | Prompt, Structured Output, Tool Use, MCP, RAG, Memory, LangGraph | [README](./05_llm-agent-orchestration/README.md) / [SETUP](./05_llm-agent-orchestration/SETUP.md) |
+| 05 | LLM Agent Orchestration | Structured Output, LangChain, Tool Use, RAG, Memory, LangGraph, 승인·평가, FastAPI·Streamlit 연결 | [README](./05_llm-agent-orchestration/README.md) / [SETUP](./05_llm-agent-orchestration/SETUP.md) |
 | 06 | LLM Agent Mini Project | 복합 API 연계 일정 조정 Agent, 자기 성찰, 피드백 루프, 결과 검증 | [README](./06_llm-agent-mini-project/README.md) / [SETUP](./06_llm-agent-mini-project/SETUP.md) |
 | 07 | Multi-Agent Service Ops | 멀티 에이전트 협업, Docker Compose, GitHub Actions, AWS 배포, 모니터링, 보안 가드레일 | [README](./07_multi-agent-service-ops/README.md) / [SETUP](./07_multi-agent-service-ops/SETUP.md) |
 | 08 | Multi-Agent Service Mini Project | Auto Healing 워크플로우, 장애 복구, 배포 검증, 파이프라인 결과 보고 | [README](./08_multi-agent-service-mini-project/README.md) / [SETUP](./08_multi-agent-service-mini-project/SETUP.md) |

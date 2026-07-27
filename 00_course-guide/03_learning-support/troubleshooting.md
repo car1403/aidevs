@@ -22,7 +22,7 @@
 | Streamlit에서 백엔드 연결 실패 | `API_BASE_URL`, 백엔드 `/docs`, `.env` 위치 |
 | Supabase 프로젝트 생성, RLS, service role key 구분 | [Supabase 계정과 프로젝트](../02_setup-guides/09_supabase-account-guide.md), `02_supabase-ai-backend/SETUP.md` |
 | Gemini/OpenAI API key, 비용, 호출 제한 | [Gemini/OpenAI 계정과 비용](../02_setup-guides/08_gemini-openai-account-guide.md), `02_llm-api-integration/02_api-key-and-billing` |
-| LangGraph 상태 흐름 이해 | `05_llm-agent-orchestration/06_langgraph-state-flow` |
+| LangGraph 상태 흐름 이해 | `05_llm-agent-orchestration/07_langgraph-workflow` |
 | Docker Compose, 포트 충돌, `.env` 위치 | [Docker Desktop 설치 가이드](../02_setup-guides/14_docker-desktop-guide.md), `07_multi-agent-service-ops/SETUP.md` |
 | AWS 계정과 비용 | [AWS 계정과 비용 관리](../02_setup-guides/15_aws-account-and-cost-guide.md), `07_multi-agent-service-ops/SETUP.md` |
 | GitHub Actions 실패 | [GitHub Actions 가이드](../02_setup-guides/16_github-actions-guide.md), GitHub 저장소의 Actions 탭 |
