@@ -19,6 +19,7 @@ llm_page = st.Page("app_pages/03_llm.py", title="LLM과 구조화")
 tool_page = st.Page("app_pages/04_tool.py", title="Tool")
 knowledge_page = st.Page("app_pages/05_knowledge_memory.py", title="RAG와 Memory")
 agent_page = st.Page("app_pages/06_agent.py", title="Agent 실행")
+evaluation_page = st.Page("app_pages/07_evaluation.py", title="Provider 평가")
 
 pages = [
     home_page,
@@ -27,6 +28,7 @@ pages = [
     tool_page,
     knowledge_page,
     agent_page,
+    evaluation_page,
 ]
 
 navigation = st.navigation(pages, position="hidden")
@@ -41,5 +43,6 @@ with st.sidebar:
     st.page_link(tool_page, label="🧰 Tool")
     st.page_link(knowledge_page, label="📚 RAG와 Memory")
     st.page_link(agent_page, label="🧭 Agent 실행")
+    st.page_link(evaluation_page, label="📊 Provider 평가")
 
 navigation.run()

@@ -31,6 +31,10 @@ START → extract_request
 Streamlit Sidebar의 `Backend 선택`에서 두 Backend를 번갈아 실행하면
 응답 계약은 같지만 내부 실행 방식이 다른 것을 확인할 수 있습니다.
 
+실제 Backend Graph State에는 `provider`, `model`, `provider_calls`가 포함됩니다.
+LLM Node만 Provider Factory를 사용하며 검증·RAG·Memory·승인 Node는
+Provider와 독립적인 Python 코드로 실행합니다.
+
 ## 핵심 구조
 
 ```text

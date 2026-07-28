@@ -111,3 +111,8 @@ class LlmCallTrace(BaseModel):
     success: bool
     retry_count: int = Field(default=0, ge=0)
     error_code: str | None = None
+
+
+class EvaluationRunRequest(BaseModel):
+    providers: list[ProviderName] = Field(min_length=1, max_length=3)
+    scenario_set: Literal["tool_selection"] = "tool_selection"

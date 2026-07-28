@@ -79,6 +79,20 @@ Mock 결과 확인
 → 장애와 fallback 확인
 ```
 
+멀티 LLM은 초반 비교 예제로 끝나지 않고 다음 단원까지 같은 Provider 계약으로
+이어집니다.
+
+```text
+03 LangChain Runnable
+→ 04 Tool Calling
+→ 07 Python/LangGraph Agent State
+→ 09 동일 시나리오 평가
+→ 12 공용 Frontend
+```
+
+Provider가 바뀌어도 Pydantic Schema, Tool 권한 검사, Graph 흐름, 평가
+시나리오는 동일하게 유지합니다.
+
 ## 빠른 시작
 
 ```powershell

@@ -11,6 +11,7 @@ from app.schemas.models import (
     AgentDecisionRequest,
     AgentRunRequest,
     ApiResponse,
+    EvaluationRunRequest,
     KnowledgeSearchRequest,
     MemoryCreateRequest,
     ProviderGenerateRequest,
@@ -19,6 +20,7 @@ from app.schemas.models import (
     TravelExtractRequest,
     TravelPlan,
 )
+from app.services.evaluation_service import evaluate_tool_selection
 from app.services.travel_service import (
     add_memory,
     create_agent_run,
@@ -26,7 +28,7 @@ from app.services.travel_service import (
     extract_travel_request,
     new_trace_id,
 )
-from app.tools.travel_tools import run_tool, select_tool
+from app.tools.travel_tools import run_tool
 from app.tools.definitions import TRAVEL_TOOL_DEFINITIONS
 
 
@@ -89,6 +91,11 @@ def generate_travel_plan(payload: ProviderGenerateRequest) -> ApiResponse:
         raise HTTPException(status_code=422, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=502, detail=f"LLM 호출 실패: {error}") from error
+
+
+@router.post("/api/evaluations/run", response_model=ApiResponse)
+def run_evaluation(payload: EvaluationRunRequest) -> ApiResponse:
+    return ok(evaluate_tool_selection(payload.providers))
 
 
 @router.post("/api/travel/extract", response_model=ApiResponse)

@@ -22,6 +22,7 @@
    ├─ 04_tool.py
    ├─ 05_knowledge_memory.py
    └─ 06_agent.py
+   └─ 07_evaluation.py
 ```
 
 로그인·회원가입은 포함하지 않으며 교육용 `demo-user`를 사용합니다.
@@ -36,6 +37,9 @@
 | `ui.py` | 공통 Sidebar, Spinner, JSON 표시 |
 
 페이지 파일은 입력·버튼·결과 표시에 집중하고 재사용 로직은 `core`에 둡니다.
+
+Sidebar의 LLM Provider 선택은 LLM·Tool·Agent 화면에서 공통으로 사용합니다.
+평가 화면은 선택한 여러 Provider에 동일한 Tool 시나리오를 실행합니다.
 
 ## Backend 실행
 
@@ -69,3 +73,7 @@ LANGGRAPH_AGENT_API_URL=http://127.0.0.1:8001
 
 Frontend는 Sidebar에서 선택한 Backend 주소만 변경합니다. API Key와 실행 엔진
 변수는 전송하지 않으며, 두 Backend는 동일한 API 계약을 제공합니다.
+
+Sidebar에서는 Backend와 LLM Provider를 별도로 선택합니다. Provider 선택은
+LLM·Tool·Agent 화면에 공통 적용되고, Backend 또는 Provider를 바꾸면 이전
+Agent 실행 상태를 표시하지 않습니다.

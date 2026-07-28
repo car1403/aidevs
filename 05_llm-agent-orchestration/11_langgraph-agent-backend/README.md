@@ -24,6 +24,10 @@ Graph 구현은 `app/workflows/langgraph_travel_workflow.py`에 있습니다. Ag
 요청에는 `engine` 값을 보내지 않습니다. 이 Backend를 호출하는 것 자체가
 LangGraph 실행을 의미합니다.
 
+Agent 요청의 `provider`는 Graph State에 저장됩니다. 일정 생성 Node는 선택한
+GPT·Gemini·Ollama를 사용하고 승인 재개 시에도 Checkpoint에 저장된 최초
+Provider를 유지합니다.
+
 ## 승인 재개
 
 1. 최초 실행은 `approval` Node에서 중단됩니다.

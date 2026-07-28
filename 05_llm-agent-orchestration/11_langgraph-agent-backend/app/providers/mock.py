@@ -2,7 +2,7 @@ from typing import TypeVar
 
 from pydantic import BaseModel
 
-from app.providers.base import ProviderResult, timed_call
+from app.providers.base import ProviderResult, ToolSelectionResult, timed_call
 
 
 T = TypeVar("T", bound=BaseModel)
@@ -40,3 +40,30 @@ class MockProvider:
             )
         )
         return ProviderResult(self.name, self.model, value.model_dump(), latency)
+
+    def select_tool(
+        self,
+        system_prompt: str,
+        message: str,
+        tools: list[dict],
+    ) -> ToolSelectionResult:
+        started_tool = None
+        arguments = {}
+        if any(word in message for word in ("날씨", "기온", "비")):
+            started_tool = "get_weather"
+            arguments = {"city": "부산", "target_date": "2026-08-10"}
+        elif any(word in message for word in ("호텔", "숙소")):
+            started_tool = "search_hotels"
+            arguments = {
+                "city": "부산",
+                "check_in": "2026-08-10",
+                "check_out": "2026-08-12",
+                "guests": 2,
+            }
+        return ToolSelectionResult(
+            self.name,
+            self.model,
+            started_tool,
+            arguments,
+            0,
+        )

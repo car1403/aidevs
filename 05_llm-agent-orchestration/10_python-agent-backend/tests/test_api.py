@@ -33,6 +33,28 @@ def test_tool_allowlist_blocks_unknown_tool() -> None:
     assert response.status_code == 403
 
 
+def test_mock_provider_selects_tool() -> None:
+    response = client.post(
+        "/api/tools/select",
+        json={"provider": "mock", "message": "부산 호텔을 찾아줘"},
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["provider"] == "mock"
+    assert data["tool_name"] == "search_hotels"
+
+
+def test_mock_provider_evaluation() -> None:
+    response = client.post(
+        "/api/evaluations/run",
+        json={"providers": ["mock"], "scenario_set": "tool_selection"},
+    )
+    assert response.status_code == 200
+    result = response.json()["data"]["results"][0]
+    assert result["status"] == "completed"
+    assert result["accuracy"] == 1.0
+
+
 def test_agent_needs_input() -> None:
     response = client.post(
         "/api/agent/runs",

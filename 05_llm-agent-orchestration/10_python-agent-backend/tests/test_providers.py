@@ -21,6 +21,19 @@ def test_mock_provider_structured_contract() -> None:
     assert parsed.activities
 
 
+def test_mock_provider_tool_selection_contract() -> None:
+    from app.tools.definitions import TRAVEL_TOOL_DEFINITIONS
+
+    result = MockProvider().select_tool(
+        "필요한 Tool을 선택하세요.",
+        "부산 숙소를 찾아줘",
+        TRAVEL_TOOL_DEFINITIONS,
+    )
+    assert result.provider == "mock"
+    assert result.tool_name == "search_hotels"
+    assert result.arguments["city"] == "부산"
+
+
 def test_provider_status_api(client=None) -> None:
     from fastapi.testclient import TestClient
 

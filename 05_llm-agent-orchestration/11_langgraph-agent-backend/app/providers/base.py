@@ -20,6 +20,19 @@ class ProviderResult:
         return asdict(self)
 
 
+@dataclass
+class ToolSelectionResult:
+    provider: str
+    model: str
+    tool_name: str | None
+    arguments: dict[str, Any]
+    latency_ms: int
+    fallback_used: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
 class LlmProvider(Protocol):
     name: str
     model: str
@@ -32,6 +45,13 @@ class LlmProvider(Protocol):
         message: str,
         response_model: type[T],
     ) -> ProviderResult: ...
+
+    def select_tool(
+        self,
+        system_prompt: str,
+        message: str,
+        tools: list[dict[str, Any]],
+    ) -> ToolSelectionResult: ...
 
 
 def timed_call(call: Callable[[], Any]) -> tuple[Any, int]:

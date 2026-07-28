@@ -1,0 +1,14 @@
+[
+  {
+    "message": "8월 10일 부산 날씨를 알려줘",
+    "expected_tool": "get_weather"
+  },
+  {
+    "message": "8월 10일부터 12일까지 성인 2명 부산 숙소를 찾아줘",
+    "expected_tool": "search_hotels"
+  },
+  {
+    "message": "부산 여행을 한 문장으로 소개해줘",
+    "expected_tool": null
+  }
+]

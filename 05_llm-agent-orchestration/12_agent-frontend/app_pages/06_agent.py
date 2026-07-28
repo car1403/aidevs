@@ -1,12 +1,18 @@
 import streamlit as st
 
-from core.state import current_agent_run, save_agent_run, selected_backend
+from core.state import (
+    current_agent_run,
+    save_agent_run,
+    selected_backend,
+    selected_provider,
+)
 from core.ui import backend_request, run_api
 
 
 backend_name, _ = selected_backend()
+provider_label, provider = selected_provider()
 st.title("🧭 여행 Agent 실행")
-st.caption(f"현재 선택: {backend_name}")
+st.caption(f"현재 선택: {backend_name} · {provider_label}")
 
 user_id = st.text_input("사용자 ID", "demo-user")
 message = st.text_area(
@@ -20,7 +26,7 @@ if st.button("Agent 실행"):
             lambda: backend_request(
                 "POST",
                 "/api/agent/runs",
-                {"user_id": user_id, "message": message},
+                {"user_id": user_id, "provider": provider, "message": message},
             )
         )
     )

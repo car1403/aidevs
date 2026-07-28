@@ -4,6 +4,9 @@ from uuid import uuid4
 
 from app.rag.policies import search as search_policies
 from app.repositories.store import store
+from app.core.config import settings
+from app.providers.factory import get_provider
+from app.schemas.models import TravelPlan
 
 
 SENSITIVE_MEMORY_KEYS = {"card_number", "password", "passport_number", "api_key"}
@@ -30,6 +33,7 @@ def extract_travel_request(message: str, reference_date: date) -> dict:
 
 
 def create_agent_run(payload: dict) -> dict:
+    provider_name = payload.get("provider") or settings.llm_provider
     extracted = extract_travel_request(payload["message"], date(2026, 7, 27))
     for key in ("destination", "start_date", "nights", "adults", "budget"):
         if payload.get(key) is not None:
@@ -44,6 +48,7 @@ def create_agent_run(payload: dict) -> dict:
         return store.create_run(
             {
                 "user_id": payload["user_id"],
+                "provider": provider_name,
                 "status": "needs_input",
                 "current_node": "validate_request",
                 "request": extracted,
@@ -60,11 +65,32 @@ def create_agent_run(payload: dict) -> dict:
         estimated_budget = int(extracted["budget"])
     policy_docs = search_policies("숙소 취소 환불", 1)
     memories = store.list_memories(payload["user_id"])
+    generated_plan = None
+    provider_model = "deterministic-python-workflow"
+    provider_latency = 0
+    if provider_name != "mock":
+        provider = get_provider(provider_name)
+        llm_result = provider.generate_structured(
+            "검증 가능한 간결한 여행 일정을 생성하세요.",
+            payload["message"],
+            TravelPlan,
+        )
+        generated_plan = llm_result.content
+        provider_model = llm_result.model
+        provider_latency = llm_result.latency_ms
     trace.extend(
         [
             {"node": "load_memory", "status": "completed", "count": len(memories)},
             {"node": "search_policy", "status": "completed", "count": len(policy_docs)},
             {"node": "create_plan", "status": "completed"},
+            {
+                "node": "create_plan",
+                "operation": "structured_output",
+                "provider": provider_name,
+                "model": provider_model,
+                "latency_ms": provider_latency,
+                "success": True,
+            },
             {"node": "validate_plan", "status": "completed"},
             {"node": "approval", "status": "waiting_approval"},
         ]
@@ -72,6 +98,8 @@ def create_agent_run(payload: dict) -> dict:
     return store.create_run(
         {
             "user_id": payload["user_id"],
+            "provider": provider_name,
+            "model": provider_model,
             "status": "waiting_approval",
             "current_node": "approval",
             "request": extracted,
@@ -80,6 +108,7 @@ def create_agent_run(payload: dict) -> dict:
                 "days": nights + 1,
                 "estimated_budget": estimated_budget,
                 "warnings": warnings,
+                "llm_plan": generated_plan,
                 "memory_used": memories,
                 "sources": policy_docs,
                 "reservation_draft": {

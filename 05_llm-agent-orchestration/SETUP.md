@@ -154,6 +154,10 @@ LLM_PROVIDER=gemini
 LLM_PROVIDER=ollama
 ```
 
+Frontend에서는 Sidebar에서 Provider를 선택할 수 있습니다. 실제 비교 전에
+`환경 상태` 화면에서 설정 여부를 확인합니다. Tool 평가 1회는 Provider당
+3회의 실제 LLM 호출을 사용합니다.
+
 ## 10. 선택 환경
 
 pgvector, Redis, Ollama는 해당 단원의 확장 실습에서만 사용합니다. Dockerfile과 Docker Compose 운영은 `07_multi-agent-service-ops`에서 학습합니다.

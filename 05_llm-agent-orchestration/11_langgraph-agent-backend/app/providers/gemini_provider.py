@@ -1,10 +1,10 @@
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from google import genai
 from google.genai import types
 from pydantic import BaseModel
 
-from app.providers.base import ProviderResult, timed_call
+from app.providers.base import ProviderResult, ToolSelectionResult, timed_call
 
 
 T = TypeVar("T", bound=BaseModel)
@@ -50,3 +50,37 @@ class GeminiProvider:
         )
         parsed = response_model.model_validate_json(response.text or "{}")
         return ProviderResult(self.name, self.model, parsed.model_dump(), latency)
+
+    def select_tool(
+        self,
+        system_prompt: str,
+        message: str,
+        tools: list[dict[str, Any]],
+    ) -> ToolSelectionResult:
+        declarations = [
+            types.FunctionDeclaration(
+                name=tool["name"],
+                description=tool["description"],
+                parameters_json_schema=tool["input_schema"],
+            )
+            for tool in tools
+        ]
+        response, latency = timed_call(
+            lambda: self.client.models.generate_content(
+                model=self.model,
+                contents=message,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    tools=[types.Tool(function_declarations=declarations)],
+                ),
+            )
+        )
+        calls = response.function_calls or []
+        call = calls[0] if calls else None
+        return ToolSelectionResult(
+            self.name,
+            self.model,
+            call.name if call else None,
+            dict(call.args) if call else {},
+            latency,
+        )

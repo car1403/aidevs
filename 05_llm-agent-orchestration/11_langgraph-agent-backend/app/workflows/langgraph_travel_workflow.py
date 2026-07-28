@@ -7,12 +7,18 @@ from langgraph.types import Command, interrupt
 
 from app.rag.policies import search as search_policies
 from app.repositories.store import store
+from app.core.config import settings
+from app.providers.factory import get_provider
+from app.schemas.models import TravelPlan
 from app.services.travel_service import extract_travel_request
 
 
 class TravelAgentState(TypedDict, total=False):
     user_id: str
     message: str
+    provider: str
+    model: str
+    provider_calls: list[dict]
     destination: str | None
     start_date: str | None
     nights: int | None
@@ -43,6 +49,8 @@ def extract_request_node(state: TravelAgentState) -> dict:
         if not request.get(key)
     ]
     return {
+        "provider": state.get("provider") or settings.llm_provider,
+        "provider_calls": [],
         "request": request,
         "current_node": "extract_request",
         "trace": [{"node": "extract_request", "status": "completed"}],
@@ -90,12 +98,39 @@ def create_plan_node(state: TravelAgentState) -> dict:
     warnings = []
     if (nights + 1) * 110000 > int(request["budget"]):
         warnings.append("예상 비용이 입력 예산을 초과해 활동 수를 줄였습니다.")
+    provider_name = state.get("provider", "mock")
+    generated_plan = None
+    provider_model = "deterministic-langgraph-workflow"
+    latency_ms = 0
+    if provider_name != "mock":
+        provider = get_provider(provider_name)
+        llm_result = provider.generate_structured(
+            "검증 가능한 간결한 여행 일정을 생성하세요.",
+            state["message"],
+            TravelPlan,
+        )
+        generated_plan = llm_result.content
+        provider_model = llm_result.model
+        latency_ms = llm_result.latency_ms
+    provider_call = {
+        "node": "create_plan",
+        "provider": provider_name,
+        "model": provider_model,
+        "operation": "structured_output",
+        "latency_ms": latency_ms,
+        "success": True,
+        "retry_count": 0,
+        "error_code": None,
+    }
     return {
+        "model": provider_model,
+        "provider_calls": [*state.get("provider_calls", []), provider_call],
         "result": {
             "destination": request["destination"],
             "days": nights + 1,
             "estimated_budget": estimated_budget,
             "warnings": warnings,
+            "llm_plan": generated_plan,
             "memory_used": state["memories"],
             "sources": state["policy_docs"],
             "reservation_draft": {
@@ -107,6 +142,7 @@ def create_plan_node(state: TravelAgentState) -> dict:
         "trace": [
             *state["trace"],
             {"node": "create_plan", "status": "completed"},
+            provider_call,
             {"node": "validate_plan", "status": "completed"},
         ],
     }
@@ -172,6 +208,8 @@ def _public_state(run_id: str, state: dict) -> dict:
     return {
         "run_id": run_id,
         "user_id": state["user_id"],
+        "provider": state.get("provider", settings.llm_provider),
+        "model": state.get("model", ""),
         "status": "waiting_approval" if waiting else state.get("status", "completed"),
         "current_node": "approval" if waiting else state.get("current_node", "end"),
         "request": state.get("request", {}),
@@ -197,6 +235,8 @@ def start_langgraph_run(payload: dict) -> dict:
     placeholder = store.create_run(
         {
             "user_id": payload["user_id"],
+            "provider": payload.get("provider") or settings.llm_provider,
+            "model": "",
             "status": "running",
             "current_node": "start",
             "request": {},

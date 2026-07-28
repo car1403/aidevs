@@ -1,10 +1,12 @@
 import streamlit as st
 
 from core.ui import backend_request, run_api
+from core.state import selected_provider
 
 
 st.title("🤖 LLM과 Structured Output")
-provider = st.selectbox("Provider", ["mock", "openai", "gemini", "ollama"])
+provider_label, provider = selected_provider()
+st.caption(f"현재 Provider: {provider_label}")
 message = st.text_area(
     "여행 요청",
     "부산에서 대중교통으로 즐기는 2박 3일 여행을 제안해 주세요.",

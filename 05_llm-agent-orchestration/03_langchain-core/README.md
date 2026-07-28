@@ -11,7 +11,12 @@
 ```powershell
 python .\01_concept_example.py
 python .\02_travel_example.py
+python .\03_multi_provider_chain.py
+python .\04_structured_chain_comparison.py
 ```
+
+`01`, `02`는 Mock으로 Runnable을 이해하고 `03`, `04`에서 같은 Prompt와
+Pydantic Schema를 GPT·Gemini·Ollama/Llama에 적용합니다.
 
 두 예제는 기본적으로 Mock Runnable을 사용합니다. 실제 모델 연결은 선택 실습입니다.
 

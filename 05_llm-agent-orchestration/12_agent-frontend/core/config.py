@@ -18,3 +18,10 @@ API_URLS = {
     "Python Agent": PYTHON_AGENT_API_URL,
     "LangGraph Agent": LANGGRAPH_AGENT_API_URL,
 }
+
+PROVIDERS = {
+    "GPT": "openai",
+    "Gemini": "gemini",
+    "Ollama/Llama": "ollama",
+    "Mock(개념 확인)": "mock",
+}

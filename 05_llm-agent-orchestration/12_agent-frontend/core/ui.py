@@ -4,7 +4,7 @@ from typing import Any
 import streamlit as st
 
 from core.api_client import ApiClientError, request
-from core.config import API_URLS
+from core.config import API_URLS, PROVIDERS
 from core.state import init_state, selected_backend
 
 
@@ -31,6 +31,12 @@ def render_backend_selector() -> tuple[str, str]:
     )
     url = API_URLS[name]
     st.caption(f"연결 주소: {url}")
+    provider_label = st.radio(
+        "LLM Provider",
+        list(PROVIDERS),
+        key="selected_provider_label",
+    )
+    st.caption(f"Provider 값: {PROVIDERS[provider_label]}")
     return name, url
 
 

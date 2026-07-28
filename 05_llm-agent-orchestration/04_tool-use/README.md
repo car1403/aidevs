@@ -11,7 +11,12 @@
 ```powershell
 python .\01_concept_example.py
 python .\02_travel_example.py
+python .\03_multi_provider_tool_selection.py
+python .\04_travel_tool_execution.py
 ```
+
+`03`은 세 Provider의 Tool 선택을 비교하고 `04`는 모델의 선택과 Backend의
+allowlist·Pydantic 검증·실행이 분리되어 있음을 확인합니다.
 
 ## 실행 흐름
 

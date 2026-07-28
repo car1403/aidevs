@@ -3,13 +3,20 @@ from datetime import timedelta
 import streamlit as st
 
 from core.ui import backend_request, run_api, show_json
+from core.state import selected_provider
 
 
 st.title("🧰 Tool 선택과 실행")
+provider_label, provider = selected_provider()
+st.caption(f"Tool 선택 Provider: {provider_label}")
 message = st.text_input("요청", "부산 호텔을 찾아줘")
 if st.button("Tool 선택"):
     data = run_api(
-        lambda: backend_request("POST", "/api/tools/select", {"message": message})
+        lambda: backend_request(
+            "POST",
+            "/api/tools/select",
+            {"provider": provider, "message": message},
+        )
     )
     if data:
         show_json(data)

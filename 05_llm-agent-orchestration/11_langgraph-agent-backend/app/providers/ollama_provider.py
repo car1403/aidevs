@@ -3,7 +3,7 @@ from typing import TypeVar
 import httpx
 from pydantic import BaseModel
 
-from app.providers.base import ProviderResult, timed_call
+from app.providers.base import ProviderResult, ToolSelectionResult, timed_call
 
 
 T = TypeVar("T", bound=BaseModel)
@@ -31,6 +31,58 @@ class OllamaProvider:
         response = httpx.post(
             f"{self.base_url}/api/chat",
             json=payload,
+            timeout=self.timeout,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def select_tool(
+        self,
+        system_prompt: str,
+        message: str,
+        tools: list[dict],
+    ) -> ToolSelectionResult:
+        payload_tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": tool["name"],
+                    "description": tool["description"],
+                    "parameters": tool["input_schema"],
+                },
+            }
+            for tool in tools
+        ]
+        body, latency = timed_call(
+            lambda: self._chat_with_tools(system_prompt, message, payload_tools)
+        )
+        calls = body.get("message", {}).get("tool_calls", [])
+        call = calls[0].get("function", {}) if calls else {}
+        return ToolSelectionResult(
+            self.name,
+            self.model,
+            call.get("name"),
+            call.get("arguments", {}),
+            latency,
+        )
+
+    def _chat_with_tools(
+        self,
+        system_prompt: str,
+        message: str,
+        tools: list[dict],
+    ) -> dict:
+        response = httpx.post(
+            f"{self.base_url}/api/chat",
+            json={
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": message},
+                ],
+                "tools": tools,
+                "stream": False,
+            },
             timeout=self.timeout,
         )
         response.raise_for_status()
