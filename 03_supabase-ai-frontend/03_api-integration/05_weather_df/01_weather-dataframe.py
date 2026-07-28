@@ -49,9 +49,9 @@ if st.button("날씨 데이터 조회"):
 
         # 같은 길이의 JSON 배열들을 DataFrame의 각 컬럼으로 변환합니다.
         weather_df = pd.DataFrame(hourly_data)
-        weather_df["time"] = pd.to_datetime(weather_df["time"])
+        # weather_df["time"] = pd.to_datetime(weather_df["time"])
 
-        # 화면에서 이해하기 쉬운 한글 컬럼명으로 변경합니다.
+        # # 화면에서 이해하기 쉬운 한글 컬럼명으로 변경합니다.
         weather_df = weather_df.rename(
             columns={
                 "time": "시간",
@@ -74,7 +74,7 @@ if st.button("날씨 데이터 조회"):
         st.write("컬럼 목록:", list(weather_df.columns))
 
         st.subheader("시간별 기온")
-        chart_df = weather_df.set_index("시간")[["기온"]]
+        chart_df = weather_df.set_index("시간")[["기온","습도"]]
         st.line_chart(chart_df)
 
     except httpx.TimeoutException:

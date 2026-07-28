@@ -8,7 +8,8 @@ st.title("Status Code 처리")  # Streamlit 화면의 가장 큰 제목을 표�
 endpoint = st.text_input("API 경로", value="/health")  # 계산 결과나 입력값을 이후 코드에서 다시 쓰기 위해 변수에 저장합니다.
 
 if st.button("호출"):  # 조건식이 True일 때만 아래 들여쓰기 블록을 실행합니다.
-    response = httpx.get(f"{API_BASE_URL}{endpoint}", timeout=5.0)  # GET 요청의 응답을 response 변수에 저장해 상태 코드와 JSON 데이터를 확인합니다.
+    with st.spinner("호출중 ..."):
+        response = httpx.get(f"{API_BASE_URL}{endpoint}", timeout=5.0)  # GET 요청의 응답을 response 변수에 저장해 상태 코드와 JSON 데이터를 확인합니다.
 
     if response.status_code == 200:  # HTTP 응답 상태 코드를 확인해 성공과 실패 흐름을 나눕니다.
         st.success("정상 응답입니다.")  # 작업이 성공했음을 초록색 성공 메시지로 표시합니다.
