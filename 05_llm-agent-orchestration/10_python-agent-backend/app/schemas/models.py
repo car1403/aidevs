@@ -4,6 +4,9 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, model_validator
 
 
+ProviderName = Literal["mock", "openai", "gemini", "ollama"]
+
+
 class ErrorDetail(BaseModel):
     code: str
     message: str
@@ -22,7 +25,7 @@ class TextRequest(BaseModel):
 
 
 class ProviderGenerateRequest(TextRequest):
-    provider: Literal["mock", "openai", "gemini", "ollama"] | None = None
+    provider: ProviderName | None = None
     system_prompt: str = Field(
         default="당신은 초보자를 돕는 친절한 여행 상담 도우미입니다.",
         max_length=2000,
@@ -42,7 +45,7 @@ class TravelExtractRequest(TextRequest):
 
 
 class ToolSelectRequest(TextRequest):
-    pass
+    provider: ProviderName | None = None
 
 
 class ToolRunRequest(BaseModel):
@@ -63,6 +66,7 @@ class MemoryCreateRequest(BaseModel):
 class AgentRunRequest(BaseModel):
     user_id: str = Field(min_length=1, max_length=100)
     message: str = Field(min_length=1, max_length=2000)
+    provider: ProviderName | None = None
     destination: str | None = None
     start_date: date | None = None
     nights: int | None = Field(default=None, ge=1, le=30)
@@ -96,3 +100,14 @@ class HotelArgs(BaseModel):
 class AttractionArgs(BaseModel):
     city: str = Field(min_length=1)
     category: Literal["nature", "culture", "food", "all"] = "all"
+
+
+class LlmCallTrace(BaseModel):
+    node: str
+    provider: str
+    model: str
+    operation: str
+    latency_ms: int = Field(ge=0)
+    success: bool
+    retry_count: int = Field(default=0, ge=0)
+    error_code: str | None = None

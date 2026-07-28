@@ -1,9 +1,10 @@
-from typing import TypeVar
+import json
+from typing import Any, TypeVar
 
 from openai import OpenAI
 from pydantic import BaseModel
 
-from app.providers.base import ProviderResult, timed_call
+from app.providers.base import ProviderResult, ToolSelectionResult, timed_call
 
 
 T = TypeVar("T", bound=BaseModel)
@@ -46,3 +47,40 @@ class OpenAIProvider:
         if parsed is None:
             raise RuntimeError("OpenAI가 구조화된 결과를 반환하지 않았습니다.")
         return ProviderResult(self.name, self.model, parsed.model_dump(), latency)
+
+    def select_tool(
+        self,
+        system_prompt: str,
+        message: str,
+        tools: list[dict[str, Any]],
+    ) -> ToolSelectionResult:
+        openai_tools = [
+            {
+                "type": "function",
+                "name": tool["name"],
+                "description": tool["description"],
+                "parameters": tool["input_schema"],
+                "strict": True,
+            }
+            for tool in tools
+        ]
+        response, latency = timed_call(
+            lambda: self.client.responses.create(
+                model=self.model,
+                instructions=system_prompt,
+                input=message,
+                tools=openai_tools,
+                tool_choice="auto",
+            )
+        )
+        call = next(
+            (item for item in response.output if item.type == "function_call"),
+            None,
+        )
+        return ToolSelectionResult(
+            self.name,
+            self.model,
+            call.name if call else None,
+            json.loads(call.arguments) if call else {},
+            latency,
+        )

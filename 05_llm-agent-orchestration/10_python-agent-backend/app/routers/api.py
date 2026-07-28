@@ -27,6 +27,7 @@ from app.services.travel_service import (
     new_trace_id,
 )
 from app.tools.travel_tools import run_tool, select_tool
+from app.tools.definitions import TRAVEL_TOOL_DEFINITIONS
 
 
 router = APIRouter()
@@ -97,7 +98,20 @@ def extract(payload: TravelExtractRequest) -> ApiResponse:
 
 @router.post("/api/tools/select", response_model=ApiResponse)
 def choose_tool(payload: ToolSelectRequest) -> ApiResponse:
-    return ok(select_tool(payload.message))
+    try:
+        result = run_with_optional_fallback(
+            lambda provider: provider.select_tool(
+                "여행 요청에 필요한 Tool이 있을 때만 하나를 선택하세요.",
+                payload.message,
+                TRAVEL_TOOL_DEFINITIONS,
+            ),
+            payload.provider,
+        )
+        return ok(result.to_dict())
+    except (ValueError, RuntimeError) as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=502, detail=f"Tool 선택 실패: {error}") from error
 
 
 @router.post("/api/tools/run", response_model=ApiResponse)
