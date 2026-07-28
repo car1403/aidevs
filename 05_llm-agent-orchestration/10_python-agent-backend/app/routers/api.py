@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile
 
 from app.core.config import settings
 from app.providers.factory import (
@@ -19,8 +19,10 @@ from app.schemas.models import (
     ToolSelectRequest,
     TravelExtractRequest,
     TravelPlan,
+    TtsRequest,
 )
 from app.services.evaluation_service import evaluate_tool_selection
+from app.services.media_service import analyze_travel_image, synthesize_speech
 from app.services.travel_service import (
     add_memory,
     create_agent_run,
@@ -91,6 +93,39 @@ def generate_travel_plan(payload: ProviderGenerateRequest) -> ApiResponse:
         raise HTTPException(status_code=422, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=502, detail=f"LLM 호출 실패: {error}") from error
+
+
+@router.post("/api/media/image-analysis", response_model=ApiResponse)
+async def image_analysis(
+    image: UploadFile = File(...),
+    question: str = Form("이 여행 이미지에서 확인할 수 있는 정보와 주의점을 알려주세요."),
+) -> ApiResponse:
+    try:
+        content = await image.read()
+        result = analyze_travel_image(image.content_type or "", content, question)
+        return ok(result.model_dump())
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=502, detail=f"이미지 분석 실패: {error}") from error
+
+
+@router.post("/api/media/tts")
+def text_to_speech(payload: TtsRequest) -> Response:
+    try:
+        audio = synthesize_speech(payload.text, payload.voice, payload.instructions)
+        return Response(
+            content=audio,
+            media_type="audio/mpeg",
+            headers={
+                "Content-Disposition": 'inline; filename="travel-guide.mp3"',
+                "X-Synthetic-Voice": "true",
+            },
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=502, detail=f"TTS 생성 실패: {error}") from error
 
 
 @router.post("/api/evaluations/run", response_model=ApiResponse)

@@ -1,0 +1,6 @@
+FROM python:3.12-slim
+WORKDIR /course
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY 12_multi-agent-frontend ./12_multi-agent-frontend
+CMD ["streamlit", "run", "12_multi-agent-frontend/app.py", "--server.address=0.0.0.0", "--server.port=8501"]

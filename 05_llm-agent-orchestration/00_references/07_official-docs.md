@@ -4,10 +4,22 @@
 
 ## OpenAI
 
-- [Developer Quickstart](https://platform.openai.com/docs/quickstart)
-- [Responses API](https://platform.openai.com/docs/api-reference/responses)
-- [Function Calling](https://platform.openai.com/docs/guides/function-calling)
-- [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
+- [Developer Quickstart](https://developers.openai.com/api/docs/quickstart)
+- [Responses API 전환 가이드](https://developers.openai.com/api/docs/guides/migrate-to-responses)
+- [Function Calling](https://developers.openai.com/api/docs/guides/function-calling)
+- [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
+- [Images and Vision](https://developers.openai.com/api/docs/guides/images-vision)
+- [Text to Speech](https://developers.openai.com/api/docs/guides/text-to-speech)
+
+## Gemini
+
+- [Gemini API](https://ai.google.dev/gemini-api/docs)
+- [Function Calling](https://ai.google.dev/gemini-api/docs/function-calling)
+
+## Ollama
+
+- [API](https://docs.ollama.com/api/introduction)
+- [Tool Calling](https://docs.ollama.com/capabilities/tool-calling)
 
 ## LangChain
 
@@ -30,3 +42,4 @@
 - State와 Checkpointer 사용법
 - `interrupt`와 `Command(resume=...)`
 - Provider의 Structured Output 지원 여부
+- 이미지·TTS처럼 Provider별로 다른 기능의 지원 범위

@@ -9,6 +9,8 @@
 5. [Agent 보안 기초](./05_agent-security-basics.md)
 6. [공통 오류](./06_common-errors.md)
 7. [공식 문서](./07_official-docs.md)
+8. [Mock에서 실제 연동으로 확장](./08_mock-to-real-matrix.md)
+9. [OpenAI 이미지 분석과 TTS](./09_openai-multimodal-guide.md)
 
 ## 가장 중요한 기준
 

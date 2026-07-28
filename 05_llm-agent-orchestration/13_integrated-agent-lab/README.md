@@ -1,4 +1,4 @@
-# 12 Integrated Agent Lab
+# 13 Integrated Agent Lab
 
 ## 주제
 
@@ -17,6 +17,8 @@
 - 일정과 예산 검증
 - Mock 예약 요청 승인·거절
 - 실행 Trace
+- Provider별 Tool 선택 평가
+- OpenAI 이미지 분석과 TTS
 - FastAPI Backend
 - Streamlit Frontend
 
@@ -29,6 +31,7 @@
 5. 정책 검색 결과와 출처를 확인합니다.
 6. Mock 예약 요청을 승인·거절합니다.
 7. 평가 시나리오를 실행합니다.
+8. 선택 실습으로 이미지를 분석하고 안내문을 TTS로 재생합니다.
 
 ## 필수 확장
 
@@ -37,6 +40,7 @@
 - Memory 항목 하나 추가
 - 실패 경로 하나 추가
 - 평가 시나리오 두 개 추가
+- 멀티모달 결과를 저장하지 않고 후속 입력으로 사용하는 설계 설명
 
 ## 제외 범위
 
@@ -44,6 +48,7 @@
 - Docker Compose
 - AWS 배포
 - Multi-Agent
+- 이미지 분석 결과를 LangGraph Node에 직접 연결하는 심화 구현
 
 ## 완료 기준
 
@@ -58,3 +63,7 @@ Streamlit 입력
 ```
 
 이 흐름을 코드와 화면으로 설명할 수 있어야 합니다.
+
+05 과정의 멀티모달 화면은 Media API를 독립적으로 호출합니다. 이미지 분석
+결과를 Python Agent와 LangGraph State에 실제로 연결하는 심화 과정은
+`C:\mini_agent_st\mini_agent_12_multimodal_agent`에서 진행합니다.

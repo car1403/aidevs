@@ -35,7 +35,11 @@ Streamlit Sidebar의 `Backend 선택`에서 두 Backend를 번갈아 실행하�
 LLM Node만 Provider Factory를 사용하며 검증·RAG·Memory·승인 Node는
 Provider와 독립적인 Python 코드로 실행합니다.
 
-## 핵심 구조
+## 확장 설계 연습
+
+아래 재작성·반복 제한 흐름은 단위 학습과 과제에서 설계하는 확장안입니다.
+현재 `11_langgraph-agent-backend`의 기본 Graph는 정보 부족 분기, Context
+조회, 계획 생성, 승인 중단까지만 구현합니다.
 
 ```text
 START

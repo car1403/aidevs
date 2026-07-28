@@ -38,3 +38,10 @@ Provider를 유지합니다.
 상태가 사라집니다. 영속 Checkpointer는 후속 프로젝트에서 연결합니다.
 
 공통 API 경로와 요청·응답 구조는 `10_python-agent-backend`와 동일합니다.
+
+## 멀티모달 API
+
+`/api/media/image-analysis`와 `/api/media/tts`도 Python Backend와 동일하게
+제공합니다. 다만 현재 05 과정에서는 Media API가 Graph Node에 자동 연결되지는
+않습니다. 이미지 분석 결과를 `use_image_analysis` Node에 연결하는 심화 예제는
+`C:\mini_agent_st\mini_agent_12_multimodal_agent`에서 학습합니다.

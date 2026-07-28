@@ -29,12 +29,16 @@ uvicorn app.main:app --reload --port 8000
 | GET | `/api/providers/status` | LLM Provider 설정 상태 |
 | POST | `/api/providers/generate` | 일반 LLM 호출 |
 | POST | `/api/providers/travel-plan` | 구조화된 여행 일정 |
+| POST | `/api/media/image-analysis` | OpenAI 이미지 분석 |
+| POST | `/api/media/tts` | OpenAI MP3 합성 음성 |
 | POST | `/api/travel/extract` | 여행 요청 구조화 |
 | POST | `/api/tools/select` | 선택한 Provider의 Tool Calling |
 | POST | `/api/tools/run` | 허용된 Mock Tool 실행 |
 | POST | `/api/knowledge/search` | 정책 문서 검색 |
-| GET/POST/DELETE | `/api/users/{user_id}/memories` | Memory 관리 |
+| GET/POST | `/api/users/{user_id}/memories` | Memory 조회·생성 |
+| DELETE | `/api/users/{user_id}/memories/{memory_id}` | Memory 삭제 |
 | POST | `/api/agent/runs` | Python Agent 실행 |
+| GET | `/api/agent/runs/{run_id}` | Agent 실행 상태 조회 |
 | POST | `/api/agent/runs/{run_id}/approve` | 직접 구현한 승인 처리 |
 | POST | `/api/agent/runs/{run_id}/reject` | 직접 구현한 거절 처리 |
 | POST | `/api/evaluations/run` | 동일 Tool 시나리오의 Provider 평가 |
@@ -50,3 +54,8 @@ Tool 선택과 Agent 실행 요청에는 선택적으로 `provider`를 전달합
 
 Tool 실행 API는 Provider와 독립적이며 allowlist와 Pydantic 검증을 통과한
 함수만 실행합니다.
+
+이미지 분석과 TTS는 OpenAI 전용 선택 확장입니다. 현재 05 과정에서는 Media
+API와 Agent 실행 API를 분리합니다. 이미지 분석 결과를 Agent 실행에 직접
+연결하는 종합 예제는 `C:\mini_agent_st\mini_agent_12_multimodal_agent`에서
+학습합니다.

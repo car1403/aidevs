@@ -11,6 +11,7 @@ Local Docker 환경
 → GPT·Gemini·Ollama/Llama Provider
 LLM과 Agent 구분
 → Prompt와 Structured Output
+→ GPT 이미지 분석과 TTS 선택 확장
 → LangChain Core
 → Tool Use
 → RAG
@@ -39,7 +40,7 @@ LLM과 Agent 구분
 | --- | --- |
 | `00_local-runtime` | Docker 기반 Ollama, PostgreSQL/pgvector, Redis |
 | `00_references` | 전체 학습 지도, 설계 원칙, 오류 해결 |
-| `01_llm-to-agent` | LLM, Workflow, Agent 비교 |
+| `01_llm-to-agent` | LLM, Workflow, Agent 비교와 OpenAI 멀티모달 선택 확장 |
 | `02_prompt-and-structured-output` | Prompt 구성과 Pydantic 응답 |
 | `03_langchain-core` | LangChain 최소 추상화 |
 | `04_tool-use` | Function Calling과 Tool 실행 |
@@ -51,7 +52,7 @@ LLM과 Agent 구분
 | `10_python-agent-backend` | 일반 Python Workflow 기반 FastAPI |
 | `11_langgraph-agent-backend` | LangGraph 기반 FastAPI |
 | `12_agent-frontend` | 두 Backend를 선택하는 공용 Streamlit UI |
-| `13_integrated-agent-lab` | 두 구현을 비교하는 여행 Agent 통합 실습 |
+| `13_integrated-agent-lab` | 두 구현과 멀티모달 입출력을 비교하는 여행 Agent 통합 실습 |
 | `90_ai-assisted-review-and-debugging` | AI 보조 리뷰와 디버깅 |
 
 ## 예제 진행 방식
@@ -85,7 +86,7 @@ Mock 결과 확인
 ```text
 03 LangChain Runnable
 → 04 Tool Calling
-→ 07 Python/LangGraph Agent State
+→ 10·11 Python/LangGraph Agent 실행
 → 09 동일 시나리오 평가
 → 12 공용 Frontend
 ```
@@ -102,10 +103,12 @@ python -m venv .venv
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 Copy-Item .env.example .env
-pytest
 ```
 
 상세 환경 준비는 [SETUP.md](./SETUP.md)를 확인합니다.
+두 Backend는 모두 `app` 패키지 이름을 사용하므로 루트에서 한 번에 수집하지
+않고 [SETUP.md의 테스트 절차](./SETUP.md#8-테스트)처럼 Backend별 폴더에서
+각각 실행합니다.
 
 ## 완료 기준
 
@@ -118,6 +121,7 @@ pytest
 - GPT·Gemini·Ollama/Llama를 공통 Provider 계약으로 교체할 수 있습니다.
 - PostgreSQL/pgvector와 Redis를 목적에 맞게 구분해 연결할 수 있습니다.
 - 정상·정보 부족·Tool 실패·정책 위반 시나리오를 평가할 수 있습니다.
+- OpenAI 이미지 입력과 TTS를 일반 멀티 LLM 계약과 분리해 사용할 수 있습니다.
 
 ## 다음 과정
 

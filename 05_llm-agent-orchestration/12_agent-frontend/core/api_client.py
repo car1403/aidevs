@@ -9,6 +9,53 @@ class ApiClientError(RuntimeError):
     pass
 
 
+def upload_image(
+    path: str,
+    filename: str,
+    content: bytes,
+    content_type: str,
+    question: str,
+    base_url: str,
+) -> Any:
+    try:
+        response = httpx.post(
+            f"{base_url.rstrip('/')}{path}",
+            files={"image": (filename, content, content_type)},
+            data={"question": question},
+            timeout=60,
+        )
+        response.raise_for_status()
+        body = response.json()
+        return body.get("data", body)
+    except httpx.HTTPStatusError as error:
+        try:
+            message = error.response.json().get("detail", str(error))
+        except ValueError:
+            message = str(error)
+        raise ApiClientError(message) from error
+    except httpx.RequestError as error:
+        raise ApiClientError(f"Backend 연결에 실패했습니다: {error}") from error
+
+
+def request_audio(path: str, payload: dict, base_url: str) -> bytes:
+    try:
+        response = httpx.post(
+            f"{base_url.rstrip('/')}{path}",
+            json=payload,
+            timeout=60,
+        )
+        response.raise_for_status()
+        return response.content
+    except httpx.HTTPStatusError as error:
+        try:
+            message = error.response.json().get("detail", str(error))
+        except ValueError:
+            message = str(error)
+        raise ApiClientError(message) from error
+    except httpx.RequestError as error:
+        raise ApiClientError(f"Backend 연결에 실패했습니다: {error}") from error
+
+
 def request(
     method: str,
     path: str,

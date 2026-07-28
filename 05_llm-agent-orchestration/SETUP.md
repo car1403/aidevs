@@ -5,10 +5,9 @@
 - Python 3.11 이상 권장
 - VS Code
 - Git
-- 선택: Docker Desktop
-- 필수 실연동: Docker Desktop
-- 필수 실연동: OpenAI API Key
-- Provider 비교: Gemini API Key
+- 선택 실연동: Docker Desktop
+- GPT·이미지·TTS 실습: OpenAI API Key
+- Gemini 비교 실습: Gemini API Key
 
 모든 필수 예제는 `APP_MODE=mock`으로 실행할 수 있습니다.
 
@@ -40,6 +39,10 @@ Copy-Item .env.example .env
 APP_MODE=mock
 LLM_PROVIDER=mock
 OPENAI_MODEL=gpt-4.1-mini
+OPENAI_VISION_MODEL=gpt-4.1-mini
+OPENAI_TTS_MODEL=gpt-4o-mini-tts
+OPENAI_TTS_VOICE=coral
+MAX_IMAGE_SIZE_MB=5
 PYTHON_AGENT_API_URL=http://127.0.0.1:8000
 LANGGRAPH_AGENT_API_URL=http://127.0.0.1:8001
 ```
@@ -112,16 +115,15 @@ streamlit run .\12_agent-frontend\app.py
 Python Backend:
 
 ```powershell
-cd C:\aidevs\05_llm-agent-orchestration
-$env:PYTHONPATH="C:\aidevs\05_llm-agent-orchestration\10_python-agent-backend"
-pytest .\10_python-agent-backend\tests
+cd C:\aidevs\05_llm-agent-orchestration\10_python-agent-backend
+..\.venv\Scripts\python.exe -m pytest tests -q
 ```
 
 LangGraph Backend:
 
 ```powershell
-$env:PYTHONPATH="C:\aidevs\05_llm-agent-orchestration\11_langgraph-agent-backend"
-pytest .\11_langgraph-agent-backend\tests
+cd C:\aidevs\05_llm-agent-orchestration\11_langgraph-agent-backend
+..\.venv\Scripts\python.exe -m pytest tests -q
 ```
 
 두 Backend가 각각 `app` 패키지를 사용하므로 테스트도 별도 프로세스로 실행합니다.
@@ -155,8 +157,9 @@ LLM_PROVIDER=ollama
 ```
 
 Frontend에서는 Sidebar에서 Provider를 선택할 수 있습니다. 실제 비교 전에
-`환경 상태` 화면에서 설정 여부를 확인합니다. Tool 평가 1회는 Provider당
-3회의 실제 LLM 호출을 사용합니다.
+`환경 상태` 화면에서 설정 여부를 확인합니다. Tool 평가 1회는 현재 시나리오
+기준으로 Provider당 3회의 LLM 호출을 사용합니다. 이미지 분석과 TTS는
+OpenAI 전용 선택 실습이며 일반 Provider 선택과 분리됩니다.
 
 ## 10. 선택 환경
 

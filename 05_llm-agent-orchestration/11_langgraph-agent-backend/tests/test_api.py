@@ -19,7 +19,8 @@ if LANGGRAPH_AVAILABLE:
     from fastapi.testclient import TestClient
 
     from app.main import app
-
+    from app.schemas.models import TravelImageAnalysis
+    from app.services.media_service import validate_image
     client = TestClient(app)
 
 
@@ -27,6 +28,49 @@ def test_health() -> None:
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["mode"] == "mock"
+
+
+def test_image_analysis_upload(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "app.routers.api.analyze_travel_image",
+        lambda content_type, content, question: TravelImageAnalysis(
+            scene_type="transport",
+            summary="기차표입니다.",
+            visible_text=["서울", "부산"],
+            travel_tips=["출발 시간을 확인하세요."],
+            safety_notes=["예약번호를 가리세요."],
+        ),
+    )
+    response = client.post(
+        "/api/media/image-analysis",
+        files={"image": ("ticket.png", b"fake-png", "image/png")},
+        data={"question": "무엇인가요?"},
+    )
+    assert response.status_code == 200
+    assert response.json()["data"]["scene_type"] == "transport"
+
+
+def test_tts_returns_mp3(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "app.routers.api.synthesize_speech",
+        lambda text, voice, instructions: b"fake-mp3",
+    )
+    response = client.post(
+        "/api/media/tts",
+        json={"text": "안전한 여행 되세요.", "voice": "coral"},
+    )
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "audio/mpeg"
+    assert response.headers["x-synthetic-voice"] == "true"
+    assert response.content == b"fake-mp3"
+
+
+def test_image_validation_rejects_non_image() -> None:
+    try:
+        validate_image("text/plain", b"not-an-image")
+        assert False, "비이미지 파일을 허용하면 안 됩니다."
+    except ValueError as error:
+        assert "이미지" in str(error)
 
 
 def test_extract_travel_request() -> None:

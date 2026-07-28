@@ -40,6 +40,28 @@ class TravelPlan(BaseModel):
     cautions: list[str] = Field(default_factory=list, max_length=10)
 
 
+class TravelImageAnalysis(BaseModel):
+    scene_type: Literal[
+        "landmark", "food", "transport", "accommodation", "document", "other"
+    ]
+    summary: str = Field(min_length=1, max_length=500)
+    visible_text: list[str] = Field(default_factory=list, max_length=10)
+    travel_tips: list[str] = Field(default_factory=list, max_length=10)
+    safety_notes: list[str] = Field(default_factory=list, max_length=10)
+
+
+class TtsRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=2000)
+    voice: Literal[
+        "alloy", "ash", "ballad", "coral", "echo", "fable", "nova",
+        "onyx", "sage", "shimmer", "verse", "marin", "cedar"
+    ] | None = None
+    instructions: str = Field(
+        default="Speak clearly in a warm travel-guide tone.",
+        max_length=500,
+    )
+
+
 class TravelExtractRequest(TextRequest):
     reference_date: date = date(2026, 7, 27)
 

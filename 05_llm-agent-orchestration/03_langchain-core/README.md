@@ -18,7 +18,8 @@ python .\04_structured_chain_comparison.py
 `01`, `02`는 Mock으로 Runnable을 이해하고 `03`, `04`에서 같은 Prompt와
 Pydantic Schema를 GPT·Gemini·Ollama/Llama에 적용합니다.
 
-두 예제는 기본적으로 Mock Runnable을 사용합니다. 실제 모델 연결은 선택 실습입니다.
+`01`, `02`는 Mock Runnable을 사용합니다. `03`, `04`는 설정한 Provider에
+실제로 연결하므로 API Key, Ollama 상태와 호출 비용을 먼저 확인합니다.
 
 ## 필수 범위
 

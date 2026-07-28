@@ -3,6 +3,10 @@
 하나의 Streamlit 화면에서 Python Agent Backend와 LangGraph Agent Backend를
 선택하고 동일한 요청으로 결과와 Trace를 비교합니다.
 
+`app_pages/08_multimodal.py`에서는 선택한 백엔드에 연결하여 GPT 이미지
+분석과 TTS를 실습합니다. 이 기능은 OpenAI 전용 선택 확장이므로 일반
+Provider 비교 학습과 분리되어 있습니다.
+
 `C:\mini_frontend_sam\mini_frontend`와 같은 초보자용 멀티페이지 패턴을
 사용합니다. `app.py`는 메뉴와 이동을 담당하고 실제 화면은 `app_pages`에
 기능별로 분리합니다.
@@ -21,8 +25,9 @@
    ├─ 03_llm.py
    ├─ 04_tool.py
    ├─ 05_knowledge_memory.py
-   └─ 06_agent.py
-   └─ 07_evaluation.py
+   ├─ 06_agent.py
+   ├─ 07_evaluation.py
+   └─ 08_multimodal.py
 ```
 
 로그인·회원가입은 포함하지 않으며 교육용 `demo-user`를 사용합니다.
@@ -40,6 +45,8 @@
 
 Sidebar의 LLM Provider 선택은 LLM·Tool·Agent 화면에서 공통으로 사용합니다.
 평가 화면은 선택한 여러 Provider에 동일한 Tool 시나리오를 실행합니다.
+멀티모달 화면은 OpenAI 이미지 분석과 TTS를 호출하며 일반 Provider 비교와
+별도의 선택 실습으로 동작합니다.
 
 ## Backend 실행
 
