@@ -17,7 +17,17 @@ def show_del(p:dict) -> None:
 
 @st.dialog("수정")
 def show_up(p:dict) -> None:
-    st.info("Update")
+    st.info(f"{p['id']}를 수정 하겠습니다.")
+    with st.form(f"form_{p['id']}"):
+        product_name = st.text_input("이름:", value=p["name"])
+        product_price = st.number_input("가격:", value=int(p["price"]))
+        if st.form_submit_button("수정"):
+            payload = {"name":product_name, "price":product_price}
+            with st.spinner("데이터 요청"):
+                response = httpx.put(f"{API_BASE_URL}/product/update/{p['id']}",json=payload, timeout= 10.0)
+            if response.status_code == 200:
+                st.rerun()
+
 
 
 def product_select() -> None:
