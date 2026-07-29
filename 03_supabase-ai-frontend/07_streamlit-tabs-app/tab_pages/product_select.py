@@ -5,6 +5,17 @@ import pandas as pd
 
 API_BASE_URL = "http://127.0.0.1:8000"  # 프론트엔드가 호출할 백엔드 서버의 기본 주소를 한 곳에서 관리합니다.
 
+@st.dialog("삭제")
+def show_del(p:dict) -> None:
+    st.info("Delete")
+    st.write(f"{p['name']}삭제 하시겠습니까")
+
+
+@st.dialog("수정")
+def show_up(p:dict) -> None:
+    st.info("Update")
+
+
 def product_select() -> None:
     """데이터를 확인합니다."""
 
@@ -24,13 +35,19 @@ def product_select() -> None:
             st.info("Product 가 없습니다.")
         for p in result:
             with st.container(border=True):
-                product_col, button_col = st.columns([3,1])
-                with product_col:
+                col1,col2,col3,col4 = st.columns(4)
+                with col1:
                     st.write(p["id"])
+                with col2:    
                     st.write(p["name"])
+                with col3:
                     st.write(f"{p['price']}원")
-                with button_col:
-                    st.button("삭제", key=f"del_{p['id']}")
-                    st.button("수정", key=f"up_{p['id']}")
+                with col4:
+                    if st.button("삭제", key=f"del_{p['id']}"):
+                        show_del(p)
+                    if st.button("수정", key=f"up_{p['id']}"):
+                        show_up(p)
+
+
     else: 
         st.warning("Fail")
