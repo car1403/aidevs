@@ -10,13 +10,24 @@ def init_state():
         st.session_state.cheeze = ""
     if "toping" not in st.session_state:
         st.session_state.toping = ""
-def clear_state():
-    st.session_state.dow = ""
-    st.session_state.cheeze = ""
-    st.session_state.toping = ""
-
+    if "count" not in st.session_state:
+        st.session_state.count = 0
 init_state()
 
+def add():
+    st.session_state.count = st.session_state.count + 1
+
+def dec():
+    if st.session_state.count == 0:
+        return
+    st.session_state.count = st.session_state.count - 1
+
+def clear_state():
+    st.session_state.pizza = ""
+    st.session_state.count = 0
+    st.session_state.dow = "초기화"
+    st.session_state.cheeze = "초기화"
+    st.session_state.toping = "초기화"
 def make_p1():
     st.toast("P1 피자 만듭니다.")
     st.session_state.pizza = "Pizza1"
@@ -41,6 +52,12 @@ st.title("Pizza")
 
 if st.session_state.pizza != "":
     st.info(f"당신이 선택한 피자는: {st.session_state.pizza}")
+    st.info(f"개수:{st.session_state.count}")
+    left, right = st.columns(2)
+    with left:
+        st.button("추가", on_click=add, use_container_width= True)
+    with right:
+        st.button("감소" ,on_click=dec, use_container_width= True)
 
 p1, p2 , p3 = st.columns(3)
 with p1:
@@ -57,8 +74,11 @@ with st.form("pizza_form"):
     submit = st.form_submit_button("제출")
     reset = st.form_submit_button("초기화", on_click=clear_state)
 
+
+
 # --------------------------------------------------------------
 
 if submit:
     st.subheader(f"당신이 선택한 피자는 {st.session_state.pizza}")
+    st.subheader(f"당신이 {st.session_state.count}를 주문 했습니다.")
     st.info(f"{input_dow} {input_cheeze} {input_toping}")
