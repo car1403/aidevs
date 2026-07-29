@@ -2,11 +2,9 @@
 import httpx
 import streamlit as st
 
-from frontend_common import require_login
-
 API_BASE_URL = "http://127.0.0.1:8000"  # 프론트엔드가 호출할 백엔드 서버의 기본 주소를 한 곳에서 관리합니다.
 
-def render_chat_tab() -> None:
+def producr_create() -> None:
     """로그인 후 mock 대화를 입력하고 누적 표시합니다."""
 
     st.subheader("Chat")

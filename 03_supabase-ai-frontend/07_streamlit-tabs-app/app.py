@@ -25,8 +25,9 @@ st.set_page_config(page_title="Streamlit Tabs App", layout="wide")
 st.title("Streamlit 탭 기반 화면 구성")
 st.caption("최종 프로젝트 전에 st.tabs 구조와 탭별 파일 분리 방식을 연습합니다.")
 
-with st.sidebar:
-    render_login_sidebar()
+# with st.sidebar:
+#     # render_login_sidebar()
+#     st.text("Tab")
 
 overview_tab, signup_tab, log_tab, chat_tab, database_tab = st.tabs(
     ["화면설명", "회원가입", "로그조회", "Chat", "데이터베이스조회"]
