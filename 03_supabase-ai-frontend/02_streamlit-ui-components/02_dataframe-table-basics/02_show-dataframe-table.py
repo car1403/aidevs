@@ -3,12 +3,23 @@ import streamlit as st  # Python 코드로 웹 화면을 만들기 위해 Stream
 
 st.title("dataframe과 table 비교")  # Streamlit 화면의 가장 큰 제목을 표시합니다.
 
-data = {  # 계산 결과나 입력값을 이후 코드에서 다시 쓰기 위해 변수에 저장합니다.
-    "course": ["Python", "Streamlit", "FastAPI"],  # 이 줄은 예제의 핵심 동작을 단계별로 보여주기 위한 코드입니다.
-    "hours": [24, 16, 32],  # 이 줄은 예제의 핵심 동작을 단계별로 보여주기 위한 코드입니다.
-    "level": ["Basic", "Basic", "Intermediate"],  # 이 줄은 예제의 핵심 동작을 단계별로 보여주기 위한 코드입니다.
-}
-
+# data = {  # 계산 결과나 입력값을 이후 코드에서 다시 쓰기 위해 변수에 저장합니다.
+#     "course": ["Python", "Streamlit", "FastAPI"],  # 이 줄은 예제의 핵심 동작을 단계별로 보여주기 위한 코드입니다.
+#     "hours": [24, 16, 32],  # 이 줄은 예제의 핵심 동작을 단계별로 보여주기 위한 코드입니다.
+#     "level": ["Basic", "Basic", "Intermediate"],  # 이 줄은 예제의 핵심 동작을 단계별로 보여주기 위한 코드입니다.
+# }
+data =[
+  {
+    "id": 100,
+    "name": "바지",
+    "price": 20000
+  },
+  {
+    "id": 101,
+    "name": "바지",
+    "price": 30000
+  }
+]
 df = pd.DataFrame(data)  # 딕셔너리 데이터를 행과 열을 가진 DataFrame 표 구조로 변환합니다.
 
 st.subheader("st.dataframe")  # 이 줄은 예제의 핵심 동작을 단계별로 보여주기 위한 코드입니다.

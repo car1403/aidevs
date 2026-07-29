@@ -17,7 +17,7 @@ from tab_pages.database_view_tab import render_database_view_tab
 from tab_pages.log_view_tab import render_log_view_tab
 from tab_pages.overview_tab import render_overview_tab
 from tab_pages.signup_tab import render_signup_tab
-from tab_pages.product_create import producr_create
+from tab_pages.product_create import product_create
 
 init_state()
 
@@ -33,7 +33,7 @@ product_create_tab,overview_tab, signup_tab, log_tab, chat_tab, database_tab = s
     ["Product Create","화면설명", "회원가입", "로그조회", "Chat", "데이터베이스조회"]
 )
 with product_create_tab:
-    producr_create()
+    product_create()
 
 with overview_tab:
     render_overview_tab()
