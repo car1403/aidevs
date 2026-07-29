@@ -3,13 +3,17 @@ import httpx
 import streamlit as st
 import pandas as pd
 
-API_BASE_URL = "http://127.0.0.1:8000"  # 프론트엔드가 호출할 백엔드 서버의 기본 주소를 한 곳에서 관리합니다.
+API_BASE_URL = "https://zero2-mini-project-2.onrender.com"  # 프론트엔드가 호출할 백엔드 서버의 기본 주소를 한 곳에서 관리합니다.
 
 @st.dialog("삭제")
 def show_del(p:dict) -> None:
     st.info("Delete")
     st.write(f"{p['name']}삭제 하시겠습니까")
-
+    if st.button("삭제"):
+        with st.spinner("삭제 진행"):
+            response = httpx.delete(f"{API_BASE_URL}/product/delete/{p['id']}", timeout= 10.0)
+        if response.status_code == 200:
+            st.rerun()
 
 @st.dialog("수정")
 def show_up(p:dict) -> None:
