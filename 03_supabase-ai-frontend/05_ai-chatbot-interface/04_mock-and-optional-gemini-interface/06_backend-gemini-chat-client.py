@@ -59,7 +59,10 @@ if prompt:
     st.chat_message("user").write(prompt)  # 사용자가 입력한 질문을 화면에 표시합니다.
     try:
         with st.spinner("백엔드에서 Gemini 응답을 생성하는 중입니다..."):
-            history = [msg for msg in st.session_state.messages if msg["role"] in ("user", "assistant")]
+            history = [
+                msg for msg in st.session_state.messages 
+                    if msg["role"] in ("user", "assistant")
+                    ]
             result = call_gemini_chat_api(prompt, history=history)  # FastAPI 백엔드의 Gemini chat API를 호출합니다.
 
         st.session_state.messages.append({"role": "assistant", "content": result["answer"]})  # Streamlit이 재실행되어도 유지해야 하는 화면 상태를 session_state에 저장하거나 읽습니다.
