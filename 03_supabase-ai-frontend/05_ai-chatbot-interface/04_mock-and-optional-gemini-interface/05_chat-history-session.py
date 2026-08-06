@@ -57,6 +57,7 @@ if prompt:  # 사용자가 질문을 입력하고 Enter를 누르면 아래 코�
     # 새 사용자 메시지와 assistant 응답을 session_state에 순서대로 추가합니다.
     # 이렇게 저장해 두면 Streamlit이 다시 실행되어도 이전 대화가 화면에 계속 출력됩니다.
     st.session_state["messages"].append(user_message)
+    result = create_mock_reply(prompt)  # 실제 Gemini API 호출은 하지 않고, 화면 흐름만 확인합니다.
     st.session_state["messages"].append(assistant_message)
 
     # 메시지를 추가한 뒤 화면을 다시 실행해, 위쪽의 for문에서 전체 대화가 다시 그려지게 합니다.

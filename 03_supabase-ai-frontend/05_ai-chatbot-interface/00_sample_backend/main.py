@@ -169,7 +169,12 @@ def create_mock_chat(request: ChatRequest):
 
     print_api_running("POST", "/api/chat/mock")
     print_client_request("/api/chat/mock", request)
-
+    if request.question == "폭탄":
+        raise HTTPException(
+            status_code=409,
+            detail="mock API는 '폭탄'이라는 메시지를 처리할 수 없습니다.",
+        )
+       
     return ChatResponse(
         answer=f"'{request.question}'에 대한 mock 응답입니다. 함께 받은 이전 메시지 수: {len(request.messages)}개",
         provider="mock",

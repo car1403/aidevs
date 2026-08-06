@@ -19,12 +19,8 @@ prompt = st.chat_input("질문을 입력하세요")  # 채팅 입력창에서 �
 
 if prompt:  # 사용자가 질문을 입력했을 때만 메시지 처리 로직을 실행합니다.
     st.chat_message("user").write(prompt)  # 사용자 질문을 user 말풍선에 출력합니다.
-    try:  # 실패할 수 있는 API 호출 코드를 try 블록 안에서 실행합니다.
+    try:
         reply = call_chat_api(prompt)  # 백엔드 mock API 응답을 받아 변수에 저장합니다.
         st.chat_message("assistant").write(reply)  # assistant 답변을 화면에 출력합니다.
-    except httpx.ConnectError:  # 백엔드 서버가 꺼져 있거나 주소가 틀리면 이 예외가 발생할 수 있습니다.
-        st.error("백엔드 서버에 연결할 수 없습니다. 05_ai-chatbot-interface/00_sample_backend를 먼저 실행하세요.")
-    except httpx.TimeoutException:  # 정해진 시간 안에 응답이 오지 않으면 이 예외가 발생할 수 있습니다.
-        st.error("응답 시간이 초과되었습니다. 잠시 후 다시 시도하세요.")
-    except httpx.HTTPStatusError as error:  # 백엔드가 4xx 또는 5xx 상태 코드를 돌려주면 이 예외가 발생합니다.
-        st.error(f"API 오류가 발생했습니다: {error.response.status_code}")
+    except httpx.HTTPStatusError as e:  # HTTP 상태 코드가 4xx 또는 5xx일 때 발생하는 예외를 처리합니다.
+        st.error(f"Gemini가 바빠요")  # 상태 코드와 응답 본문을 화면에 표시합니다.
