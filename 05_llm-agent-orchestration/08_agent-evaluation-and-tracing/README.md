@@ -1,4 +1,4 @@
-# 09 Agent Evaluation and Tracing
+# 08 Agent Evaluation and Tracing
 
 ## 학습 목표
 

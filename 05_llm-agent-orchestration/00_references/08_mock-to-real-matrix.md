@@ -22,4 +22,34 @@ Mock은 없애지 않습니다. Agent의 판단 과정과 API 계약을 빠르�
 3. Provider 결과는 공통 Pydantic Schema로 검증합니다.
 4. fallback은 기본적으로 끄고, 실습에서 명시적으로 켭니다.
 5. 실제 예약·결제 Tool은 연결하지 않고 조회와 예약 초안까지만 다룹니다.
-6. 외부 서비스 실패는 숨기지 않고 Provider, 모델, 지연 시간과 함께 표시합니다.
+6. 정상 LLM 호출은 Provider, 모델, 지연 시간을 Trace에 기록합니다.
+7. 현재 오류 응답은 FastAPI `detail` 형식이며, 실패 Trace의 Provider·모델·지연
+   시간을 일관되게 기록하는 작업은 후속 확장 항목입니다.
+
+## 실행 모드 구분
+
+환경변수 하나가 모든 연동 방식을 결정하지 않습니다.
+
+| 환경변수 | 역할 | 예 |
+| --- | --- | --- |
+| `APP_MODE` | 실제 외부 호출을 허용할지 결정 | `mock`, `real` |
+| `LLM_PROVIDER` | 사용할 LLM Provider 선택 | `mock`, `openai`, `gemini`, `ollama` |
+| `STORAGE_MODE` | Agent 실행과 Memory 저장소 선택 | `memory`, `postgres` |
+| `LLM_FALLBACK_ENABLED` | Primary Provider 실패 시 fallback 허용 | `false`, `true` |
+| `LLM_FALLBACK_PROVIDER` | fallback으로 사용할 Provider | `mock` |
+
+예를 들어 `APP_MODE=real`만 설정해도 PostgreSQL이나 Ollama가 자동으로 실행되지는
+않습니다. 선택한 Provider의 API Key 또는 Local 서비스와, 선택한 Storage의 연결
+주소를 각각 준비해야 합니다.
+
+## 권장 전환 순서
+
+```text
+APP_MODE=mock + LLM_PROVIDER=mock + STORAGE_MODE=memory
+→ 실제 LLM + Memory 저장소
+→ 실제 LLM + PostgreSQL
+→ Primary Provider 실패 + 명시적 fallback
+```
+
+한 번에 한 축만 변경해야 실패 원인이 LLM, Database, Redis, 네트워크 중 어디에
+있는지 구분할 수 있습니다.

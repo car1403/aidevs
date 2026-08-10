@@ -19,8 +19,8 @@ def fixed_workflow(message: str) -> Decision:
     return Decision("general", "일치하는 고정 규칙 없음", 0.5)
 
 
-def mock_agent_decision(message: str) -> Decision:
-    """실제 수업에서는 이 부분을 LLM Structured Output으로 교체합니다."""
+def mock_semantic_router(message: str) -> Decision:
+    """LLM의 의미 판단을 흉내 내는 Router이며 완성된 Agent는 아닙니다."""
     normalized = message.replace(" ", "")
     if any(word in normalized for word in ("비가올", "우산", "기온")):
         return Decision("weather", "날씨와 관련된 의미를 감지", 0.85)
@@ -32,4 +32,5 @@ def mock_agent_decision(message: str) -> Decision:
 if __name__ == "__main__":
     request = "내일 비가 올까요?"
     print("고정 Workflow:", fixed_workflow(request))
-    print("Mock Agent:", mock_agent_decision(request))
+    print("의미 기반 Mock Router:", mock_semantic_router(request))
+    print("설명: Agent는 이 판단 뒤에 Tool 실행, 결과 관찰, 종료 결정까지 포함합니다.")

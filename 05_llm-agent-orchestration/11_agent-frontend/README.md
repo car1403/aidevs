@@ -1,4 +1,4 @@
-# 12 공용 Agent Frontend
+# 11 공용 Agent Frontend
 
 하나의 Streamlit 화면에서 Python Agent Backend와 LangGraph Agent Backend를
 선택하고 동일한 요청으로 결과와 Trace를 비교합니다.
@@ -12,7 +12,7 @@ Provider 비교 학습과 분리되어 있습니다.
 기능별로 분리합니다.
 
 ```text
-12_agent-frontend
+11_agent-frontend
 ├─ app.py
 ├─ core
 │  ├─ config.py
@@ -53,14 +53,14 @@ Sidebar의 LLM Provider 선택은 LLM·Tool·Agent 화면에서 공통으로 사
 터미널 1:
 
 ```powershell
-cd C:\aidevs\05_llm-agent-orchestration\10_python-agent-backend
+cd C:\aidevs\05_llm-agent-orchestration\09_python-agent-backend
 uvicorn app.main:app --reload --port 8000
 ```
 
 터미널 2:
 
 ```powershell
-cd C:\aidevs\05_llm-agent-orchestration\11_langgraph-agent-backend
+cd C:\aidevs\05_llm-agent-orchestration\10_langgraph-agent-backend
 uvicorn app.main:app --reload --port 8001
 ```
 
@@ -68,7 +68,7 @@ uvicorn app.main:app --reload --port 8001
 
 ```powershell
 cd C:\aidevs\05_llm-agent-orchestration
-streamlit run .\12_agent-frontend\app.py
+streamlit run .\11_agent-frontend\app.py
 ```
 
 ## 연결 주소

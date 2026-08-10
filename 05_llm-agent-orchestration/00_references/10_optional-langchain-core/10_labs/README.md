@@ -1,4 +1,4 @@
-# 03 Labs
+# Optional LangChain Labs
 
 ## Lab 1. Runnable 단계 추가
 

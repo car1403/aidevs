@@ -16,8 +16,23 @@ GPT·Gemini·Ollama의 일반 텍스트, 구조화 출력, Tool Calling 비교�
 3. `01_llm-to-agent/07_multimodal_travel_example.py`
    - 이미지 분석은 Agent의 입력 전처리 단계로 연결합니다.
    - TTS는 Agent 판단이 끝난 뒤의 출력 변환 단계로 연결합니다.
-4. `12_agent-frontend/app_pages/08_multimodal.py`
+4. `11_agent-frontend/app_pages/08_multimodal.py`
    - 이미지 업로드, 구조화 분석, 음성 재생을 한 화면에서 실습합니다.
+
+## 최소 예제와 Backend의 차이
+
+| 구분 | 최소 예제 | Backend API |
+| --- | --- | --- |
+| 목적 | OpenAI SDK 호출 구조 확인 | 사용자 업로드를 받는 서비스 흐름 확인 |
+| 이미지 입력 | 신뢰할 수 있는 로컬 파일 | Streamlit에서 업로드한 파일 |
+| 형식 검사 | 파일 확장자로 MIME 추정 | MIME과 실제 파일 Signature 비교 |
+| 크기 검사 | 없음 | `MAX_IMAGE_SIZE_MB` 적용 |
+| 빈 파일 검사 | 없음 | 빈 파일 거부 |
+| 오류 응답 | Python 예외 | FastAPI 상태 코드와 `detail` |
+
+`05_openai_image_analysis.py`는 API 사용법을 보기 위한 최소 예제이므로 신뢰할 수
+있는 로컬 이미지만 사용합니다. 실제 업로드 안전 기준은 Backend의
+`media_service.py`에서 확인합니다.
 
 ## API
 
@@ -66,5 +81,8 @@ MAX_IMAGE_SIZE_MB=5
 
 ## 공식 문서
 
-- https://developers.openai.com/api/docs/guides/images-vision
-- https://developers.openai.com/api/docs/guides/text-to-speech
+- [Images and Vision](https://developers.openai.com/api/docs/guides/images-vision)
+- [Text to Speech](https://developers.openai.com/api/docs/guides/text-to-speech)
+
+지원 모델, 입력 형식, 음성 목록은 변경될 수 있으므로 실제 API 실습 전 설치된
+OpenAI SDK 버전과 공식 문서를 다시 확인합니다.

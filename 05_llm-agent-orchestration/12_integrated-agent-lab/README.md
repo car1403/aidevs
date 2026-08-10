@@ -1,11 +1,11 @@
-# 13 Integrated Agent Lab
+# 12 Integrated Agent Lab
 
 ## 주제
 
 **AI 여행 일정 및 예약 요청 도우미**
 
-앞 단원의 코드를 `10_python-agent-backend`, `11_langgraph-agent-backend`,
-`12_agent-frontend`에서 연결한 뒤 두 구현의 차이를 비교하고 기능을 확장합니다.
+앞 단원의 코드를 `09_python-agent-backend`, `10_langgraph-agent-backend`,
+`11_agent-frontend`에서 연결한 뒤 두 구현의 차이를 비교하고 기능을 확장합니다.
 
 ## 현재 제공 기능
 
@@ -66,4 +66,4 @@ Streamlit 입력
 
 05 과정의 멀티모달 화면은 Media API를 독립적으로 호출합니다. 이미지 분석
 결과를 Python Agent와 LangGraph State에 실제로 연결하는 심화 과정은
-`C:\mini_agent_st\mini_agent_12_multimodal_agent`에서 진행합니다.
+`C:\mini_agent_st\mini_agent_11_multimodal_agent`에서 진행합니다.

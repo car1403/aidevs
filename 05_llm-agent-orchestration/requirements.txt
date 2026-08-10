@@ -1,10 +1,6 @@
 fastapi
 google-genai
 httpx
-langchain
-langchain-google-genai
-langchain-ollama
-langchain-openai
 langgraph
 openai
 ollama

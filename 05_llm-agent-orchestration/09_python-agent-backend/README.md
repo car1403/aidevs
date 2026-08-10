@@ -1,4 +1,4 @@
-# 10 Python Agent Backend
+# 09 Python Agent Backend
 
 조건문과 일반 Python 함수 호출로 Agent 흐름을 구현한 초보자용 FastAPI
 Backend입니다. LangGraph를 사용하지 않으므로 각 단계가 호출되는 순서를 코드에서
@@ -7,7 +7,7 @@ Backend입니다. LangGraph를 사용하지 않으므로 각 단계가 호출되
 ## 실행
 
 ```powershell
-cd C:\aidevs\05_llm-agent-orchestration\10_python-agent-backend
+cd C:\aidevs\05_llm-agent-orchestration\09_python-agent-backend
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -57,5 +57,5 @@ Tool 실행 API는 Provider와 독립적이며 allowlist와 Pydantic 검증을 �
 
 이미지 분석과 TTS는 OpenAI 전용 선택 확장입니다. 현재 05 과정에서는 Media
 API와 Agent 실행 API를 분리합니다. 이미지 분석 결과를 Agent 실행에 직접
-연결하는 종합 예제는 `C:\mini_agent_st\mini_agent_12_multimodal_agent`에서
+연결하는 종합 예제는 `C:\mini_agent_st\mini_agent_11_multimodal_agent`에서
 학습합니다.

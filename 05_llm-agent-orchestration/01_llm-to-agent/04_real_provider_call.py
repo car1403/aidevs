@@ -9,7 +9,8 @@ from dotenv import load_dotenv
 load_dotenv()
 BASE_URL = os.getenv("PYTHON_AGENT_API_URL", "http://127.0.0.1:8000")
 
-for provider in ("openai", "gemini", "ollama"):
+# 이전 과정에서 사용한 Gemini를 기준점으로 삼고 GPT, Local Llama 순서로 비교합니다.
+for provider in ("gemini", "openai", "ollama"):
     try:
         response = httpx.post(
             f"{BASE_URL}/api/providers/generate",

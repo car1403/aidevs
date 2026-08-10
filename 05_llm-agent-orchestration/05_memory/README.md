@@ -1,4 +1,4 @@
-# 06 Memory
+# 05 Memory
 
 ## 학습 목표
 

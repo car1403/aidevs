@@ -35,6 +35,24 @@
 - [Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)
 - [Interrupts](https://docs.langchain.com/oss/python/langgraph/interrupts)
 
+## Backend와 Schema
+
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [Pydantic](https://docs.pydantic.dev/latest/)
+- [psycopg 3](https://www.psycopg.org/psycopg3/docs/)
+
+## Local Runtime과 Data
+
+- [Docker Container 기초](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/)
+- [Docker Compose](https://docs.docker.com/compose/)
+- [PostgreSQL](https://www.postgresql.org/docs/current/)
+- [pgvector](https://github.com/pgvector/pgvector)
+- [Redis](https://redis.io/docs/latest/)
+
+## Frontend
+
+- [Streamlit](https://docs.streamlit.io/)
+
 ## 확인 기준
 
 - 설치된 패키지 버전과 문서 버전
@@ -43,3 +61,10 @@
 - `interrupt`와 `Command(resume=...)`
 - Provider의 Structured Output 지원 여부
 - 이미지·TTS처럼 Provider별로 다른 기능의 지원 범위
+- Docker Image Tag와 PostgreSQL·Redis 버전
+- Host Port와 Container 내부 Port
+- Pydantic 1과 2의 API 차이
+
+공식 문서의 최신 예제가 현재 설치된 패키지보다 새로운 API를 사용할 수 있습니다.
+문서만 보고 Import 경로를 즉시 바꾸지 말고, 먼저 가상환경에서 설치 버전을
+확인한 뒤 예제와 함께 검증합니다.

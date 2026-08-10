@@ -1,4 +1,4 @@
-# 03 Assignment
+# Optional LangChain Assignment
 
 여행 일정 Chain과 같은 구조로 교육 과정 추천 Chain을 만드세요.
 

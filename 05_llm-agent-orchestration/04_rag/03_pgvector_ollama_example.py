@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "10_python-agent-backend"))
+sys.path.insert(0, str(ROOT / "09_python-agent-backend"))
 
 from app.repositories.vector_store import PgVectorStore  # noqa: E402
 

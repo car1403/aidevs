@@ -1,4 +1,4 @@
-# 08 Human Approval and Safety
+# 07 Human Approval and Safety
 
 ## 학습 목표
 

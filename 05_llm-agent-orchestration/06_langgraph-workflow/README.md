@@ -1,4 +1,4 @@
-# 07 LangGraph Workflow
+# 06 LangGraph Workflow
 
 ## 학습 목표
 
@@ -18,7 +18,7 @@ python .\02_travel_example.py
 ## Backend 통합 비교
 
 단위 예제를 이해한 다음
-`11_langgraph-agent-backend/app/workflows/langgraph_travel_workflow.py`에서 같은 여행
+`10_langgraph-agent-backend/app/workflows/langgraph_travel_workflow.py`에서 같은 여행
 흐름의 실제 `StateGraph` 구현을 확인합니다.
 
 ```text
@@ -38,7 +38,7 @@ Provider와 독립적인 Python 코드로 실행합니다.
 ## 확장 설계 연습
 
 아래 재작성·반복 제한 흐름은 단위 학습과 과제에서 설계하는 확장안입니다.
-현재 `11_langgraph-agent-backend`의 기본 Graph는 정보 부족 분기, Context
+현재 `10_langgraph-agent-backend`의 기본 Graph는 정보 부족 분기, Context
 조회, 계획 생성, 승인 중단까지만 구현합니다.
 
 ```text
