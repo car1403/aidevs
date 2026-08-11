@@ -44,16 +44,13 @@ Local Docker 환경
 LLM과 Agent 구분
 → Prompt와 Structured Output
 → GPT 이미지 분석과 TTS 선택 확장
-→ LangChain Core
 → Tool Use
 → RAG
 → Memory
 → LangGraph Workflow
 → Human Approval과 Safety
 → 평가와 실행 추적
-→ FastAPI Backend
-→ Streamlit Frontend
-→ 여행 Agent 통합 Lab
+→ 누적 Backend·Frontend 통합 Lab
 ```
 
 ## 교육 원칙
@@ -80,11 +77,7 @@ LLM과 Agent 구분
 | `06_langgraph-workflow` | State, Node, Edge, 조건 분기 |
 | `07_human-approval-and-safety` | 승인, 권한, Prompt Injection 방어 |
 | `08_agent-evaluation-and-tracing` | 시나리오 평가와 실행 이력 |
-| `09_python-agent-backend` | 일반 Python Workflow 기반 FastAPI |
-| `10_langgraph-agent-backend` | LangGraph 기반 FastAPI |
-| `11_agent-frontend` | 두 Backend를 선택하는 공용 Streamlit UI |
-| `12_integrated-agent-lab` | 두 구현과 멀티모달 입출력을 비교하는 여행 Agent 통합 실습 |
-| `90_ai-assisted-review-and-debugging` | AI 보조 리뷰와 디버깅 |
+| `09_integrated-agent-lab` | `mini_agent_08_evaluation`로 전체 흐름을 실행·확장하는 통합 실습 |
 
 ## 예제 진행 방식
 
@@ -116,9 +109,9 @@ Mock 결과 확인
 
 ```text
 03 Tool Calling
-→ 09·10 Python/LangGraph Agent 실행
+→ 06 Python/LangGraph 흐름 비교
 → 08 동일 시나리오 평가
-→ 11 공용 Frontend
+→ 09 누적 Backend·Frontend 통합 실행
 ```
 
 Provider가 바뀌어도 Pydantic Schema, Tool 권한 검사, Graph 흐름, 평가
@@ -126,9 +119,10 @@ Provider가 바뀌어도 Pydantic Schema, Tool 권한 검사, Graph 흐름, 평�
 
 ## 빠른 시작
 
-Docker가 아직 없어도 `APP_MODE=mock`, `STORAGE_MODE=memory`로 `01`~`03`을
-먼저 학습할 수 있습니다. pgvector, Redis, Ollama가 필요한 확장 실습에 도달했을
-때 Local Docker 환경을 준비합니다.
+Docker가 아직 없어도 `APP_MODE=mock`, `STORAGE_MODE=memory`로 각 단원의 기본
+예제를 먼저 학습할 수 있습니다. pgvector, Redis, Ollama가 필요한 확장 실습에
+도달했을 때 [Docker 첫 사용 가이드](./00_local-runtime/00_docker-first-guide.md)부터
+진행합니다.
 
 ```powershell
 cd C:\aidevs\05_llm-agent-orchestration

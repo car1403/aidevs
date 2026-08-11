@@ -17,12 +17,11 @@ Docker가 처음이라면 모든 환경을 한 번에 설치하지 않습니다.
 
 | 시점 | 실행 모드 | 필요한 환경 |
 | --- | --- | --- |
-| `01`~`04` 기본 예제 | Mock | Python과 `.venv` |
-| `05` RAG 기본 예제 | Memory Mock | Python과 `.venv` |
-| `05` pgvector 확장 | Local Database | Docker Desktop, PostgreSQL/pgvector |
-| `06` Memory 확장 | Local Cache/Database | Docker Desktop, Redis, PostgreSQL |
+| `01`~`05` 기본 예제 | Mock | Python과 `.venv` |
+| `04` pgvector 확장 | Local Database | Docker Desktop, PostgreSQL/pgvector |
+| `05` Memory 확장 | Local Cache/Database | Docker Desktop, Redis, PostgreSQL |
 | Provider 비교 | Real 또는 Local LLM | API Key 또는 Docker Ollama |
-| `10`~`13` 통합 | Mock부터 시작 | 두 Backend와 Streamlit |
+| `09` 통합 Lab | Mock부터 시작 | `mini_agent_08_evaluation`의 두 Backend와 Streamlit |
 
 먼저 Mock으로 Agent의 계약과 흐름을 이해한 뒤 필요한 서비스만 추가합니다.
 Docker가 설치되지 않았다는 이유로 초반 단원 학습을 중단할 필요는 없습니다.
@@ -83,6 +82,11 @@ Docker Desktop만 Windows에 설치하고, Ollama·PostgreSQL·Redis는 각각 D
 Container로 격리해 실행합니다. 자세한 개념과 명령은
 [00_local-runtime](./00_local-runtime/README.md)에서 확인합니다.
 
+Docker를 처음 사용한다면 먼저
+[Docker 첫 사용 가이드](./00_local-runtime/00_docker-first-guide.md)에서 설치,
+WSL, 명령 읽기, 중지와 삭제의 차이를 확인합니다. 수업에서는 개별 Container를
+한 번씩 직접 실행한 뒤 반복 실행용 스크립트를 사용합니다.
+
 [00_local-runtime](./00_local-runtime/README.md)의 순서로 다음 컨테이너를 준비합니다.
 
 ```text
@@ -107,20 +111,30 @@ python .\01_llm-to-agent\02_travel_example.py
 
 각 단원의 README에 실행 순서가 있습니다.
 
-## 6. 두 Backend
+## 6. 통합 Lab의 두 Backend
+
+누적 완성본의 환경을 처음 한 번 준비합니다.
+
+```powershell
+cd C:\mini_agent_st\mini_agent_08_evaluation
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+```
 
 Python Agent Backend:
 
 ```powershell
-cd .\09_python-agent-backend
-uvicorn app.main:app --reload --port 8000
+cd C:\mini_agent_st\mini_agent_08_evaluation\backend_python
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
 ```
 
 새 PowerShell에서 LangGraph Agent Backend:
 
 ```powershell
-cd C:\aidevs\05_llm-agent-orchestration\10_langgraph-agent-backend
-uvicorn app.main:app --reload --port 8001
+cd C:\mini_agent_st\mini_agent_08_evaluation\backend_langgraph
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8001
 ```
 
 확인 주소:
@@ -137,9 +151,8 @@ Docs:   http://127.0.0.1:8001/docs
 새 PowerShell에서 실행합니다.
 
 ```powershell
-cd C:\aidevs\05_llm-agent-orchestration
-.\.venv\Scripts\Activate.ps1
-streamlit run .\11_agent-frontend\app.py
+cd C:\mini_agent_st\mini_agent_08_evaluation
+.\.venv\Scripts\python.exe -m streamlit run .\frontend\app.py
 ```
 
 ## 8. 테스트
@@ -147,14 +160,14 @@ streamlit run .\11_agent-frontend\app.py
 Python Backend:
 
 ```powershell
-cd C:\aidevs\05_llm-agent-orchestration\09_python-agent-backend
+cd C:\mini_agent_st\mini_agent_08_evaluation\backend_python
 ..\.venv\Scripts\python.exe -m pytest tests -q
 ```
 
 LangGraph Backend:
 
 ```powershell
-cd C:\aidevs\05_llm-agent-orchestration\10_langgraph-agent-backend
+cd C:\mini_agent_st\mini_agent_08_evaluation\backend_langgraph
 ..\.venv\Scripts\python.exe -m pytest tests -q
 ```
 
@@ -188,16 +201,15 @@ LLM_PROVIDER=gemini
 LLM_PROVIDER=ollama
 ```
 
-Frontend에서는 Sidebar에서 Provider를 선택할 수 있습니다. 실제 비교 전에
-`환경 상태` 화면에서 설정 여부를 확인합니다. Tool 평가 1회는 현재 시나리오
-기준으로 Provider당 3회의 LLM 호출을 사용합니다. 이미지 분석과 TTS는
-OpenAI 전용 선택 실습이며 일반 Provider 선택과 분리됩니다.
+Frontend에서는 Sidebar에서 Backend를 선택할 수 있습니다. 8-1~8-5 평가는
+Mock 기반으로 실행하고, 8-6 Provider 비교를 선택한 경우에만 설정과 비용을
+확인한 뒤 한 Provider씩 호출합니다.
 
 ## 10. 선택 환경
 
 pgvector, Redis, Ollama는 해당 단원의 확장 실습에서만 사용합니다. Dockerfile과 Docker Compose 운영은 `07_multi-agent-service-ops`에서 학습합니다.
 
-`07`에서는 다음 순서로 확장합니다.
+후속 `07_multi-agent-service-ops`에서는 다음 순서로 확장합니다.
 
 ```text
 Dockerfile 작성
@@ -209,8 +221,8 @@ Dockerfile 작성
 ```
 
 Docker Compose 파일 자체가 AWS의 모든 운영 문제를 해결하는 것은 아닙니다.
-`07`에서는 학습 범위를 명확히 하기 위해 EC2 한 대에서 수동 Compose 배포를 먼저
-경험하고, 완전한 CI/CD와 관리형 Container 운영은 선택 확장으로 구분합니다.
+후속 과정에서는 학습 범위를 명확히 하기 위해 EC2 한 대에서 수동 Compose 배포를
+먼저 경험하고, 완전한 CI/CD와 관리형 Container 운영은 선택 확장으로 구분합니다.
 
 ## 11. 자주 발생하는 문제
 
@@ -222,6 +234,9 @@ Docker Compose 파일 자체가 AWS의 모든 운영 문제를 해결하는 것�
 | 날짜 검증 오류 | ISO 날짜 `YYYY-MM-DD` 사용 |
 | Streamlit 상태 초기화 | `st.session_state` key 확인 |
 | LangGraph 재개 실패 | 동일한 `thread_id` 사용 여부 확인 |
+| Docker Engine 연결 오류 | Docker Desktop 실행 후 `docker info` 확인 |
+| Container 이름 충돌 | `docker ps -a` 확인 후 기존 Container를 `docker start` |
+| Docker Port 충돌 | 실행 중인 `aidevs-*`와 `mini-agent-*` 중 한 환경만 사용 |
 | `xxhash` DLL 차단 | 교육장 PC의 애플리케이션 제어 정책 확인 또는 허용된 개발 컨테이너/WSL 사용 |
 
 일부 Windows 교육장 PC는 가상환경 내부의 네이티브 DLL을 차단할 수 있습니다.

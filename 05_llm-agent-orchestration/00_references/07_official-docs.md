@@ -43,7 +43,11 @@
 
 ## Local Runtime과 Data
 
+- [Docker Desktop Windows 설치](https://docs.docker.com/desktop/setup/install/windows-install/)
+- [Docker Desktop WSL 2](https://docs.docker.com/desktop/features/wsl/)
 - [Docker Container 기초](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/)
+- [Docker `run`](https://docs.docker.com/reference/cli/docker/container/run/)
+- [Docker Volume](https://docs.docker.com/engine/storage/volumes/)
 - [Docker Compose](https://docs.docker.com/compose/)
 - [PostgreSQL](https://www.postgresql.org/docs/current/)
 - [pgvector](https://github.com/pgvector/pgvector)

@@ -1,38 +1,32 @@
-"""외부 패키지 없는 작은 검색·근거 답변 예제."""
-
-from dataclasses import dataclass
-import re
-
-
-@dataclass
-class Document:
-    id: str
-    text: str
-    source: str
-
+"""RAG의 전체 흐름을 외부 패키지 없이 확인합니다."""
 
 DOCUMENTS = [
-    Document("d1", "예약일 3일 전까지 취소하면 전액 환불됩니다.", "refund-policy.md"),
-    Document("d2", "체크인은 오후 3시부터 가능하며 신분 확인이 필요합니다.", "check-in.md"),
-    Document("d3", "기내 수하물은 10kg까지 허용됩니다.", "baggage.md"),
+    {"source": "hotel-refund.md", "text": "체크인 3일 전까지 취소하면 전액 환불합니다."},
+    {"source": "baggage.md", "text": "교육용 국내선의 위탁 수하물은 15kg까지 허용합니다."},
 ]
 
 
-def tokenize(text: str) -> set[str]:
-    return set(re.findall(r"[가-힣A-Za-z0-9]+", text.lower()))
+def llm_only_answer(question: str) -> str:
+    return "제가 알고 있는 일반적인 내용으로는 정확한 정책을 확인하기 어렵습니다."
 
 
-def search(query: str, limit: int = 2) -> list[tuple[Document, float]]:
-    query_tokens = tokenize(query)
-    scored = []
-    for document in DOCUMENTS:
-        document_tokens = tokenize(document.text)
-        score = len(query_tokens & document_tokens) / max(len(query_tokens), 1)
-        if score > 0:
-            scored.append((document, score))
-    return sorted(scored, key=lambda item: item[1], reverse=True)[:limit]
+def retrieve(question: str) -> list[dict]:
+    if "취소" in question or "환불" in question:
+        return [DOCUMENTS[0]]
+    if "수하물" in question or "짐" in question:
+        return [DOCUMENTS[1]]
+    return []
+
+
+def rag_answer(question: str) -> dict:
+    documents = retrieve(question)
+    if not documents:
+        return {"answer": "제공된 문서에서 근거를 찾지 못했습니다.", "sources": []}
+    return {"answer": documents[0]["text"], "sources": [documents[0]["source"]]}
 
 
 if __name__ == "__main__":
-    for document, score in search("취소하면 환불되나요?"):
-        print(f"{document.source} | score={score:.2f} | {document.text}")
+    question = "호텔을 취소하면 환불되나요?"
+    print("1. LLM만 사용:", llm_only_answer(question))
+    print("2. 문서 검색:", retrieve(question))
+    print("3. RAG 답변:", rag_answer(question))

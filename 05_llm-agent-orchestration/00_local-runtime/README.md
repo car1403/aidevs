@@ -43,19 +43,22 @@ Container 밖의 Docker Volume에 보존합니다.
 
 ## 진행 순서
 
-1. [Docker 상태 확인](./01_docker-health-check.md)
-2. [Redis 실행](./04_redis.md)과 `PING` 확인
-3. [PostgreSQL/pgvector 실행](./03_postgresql-pgvector.md)과 Schema 확인
-4. [Ollama/Llama 실행](./02_ollama-llama.md)과 모델 다운로드
-5. `05_environment_diagnostics.py` 실행
+1. [Docker 첫 사용 가이드](./00_docker-first-guide.md)
+2. [Docker 상태 확인](./01_docker-health-check.md)
+3. [Redis 실행](./04_redis.md)과 `PING` 확인
+4. [PostgreSQL/pgvector 실행](./03_postgresql-pgvector.md)과 Schema 확인
+5. [Ollama/Llama 실행](./02_ollama-llama.md)과 모델 다운로드
+6. `05_environment_diagnostics.py` 실행
 
 Redis는 가장 작은 명령으로 실행과 응답을 확인할 수 있어 Docker 입문 실습에
 적합합니다. Ollama는 모델 다운로드와 PC 자원 사용량이 크므로 마지막에
 진행합니다.
 
-## 빠른 실행
+## 반복 실행용 스크립트
 
-PowerShell에서 다음 스크립트를 실행합니다.
+각 Container를 한 번씩 직접 실행해 본 뒤에는 다음 스크립트로 세 서비스를 다시
+시작할 수 있습니다. **첫 Docker 실습에서는 스크립트보다 개별 문서를 먼저
+따라갑니다.**
 
 ```powershell
 .\00_local-runtime\scripts\start-local-services.ps1
@@ -81,9 +84,12 @@ python .\00_local-runtime\05_environment_diagnostics.py
 
 종료는 컨테이너와 데이터를 삭제하지 않습니다. 컨테이너·Volume 삭제는 실습 데이터가 사라지는 작업이므로 학생이 대상을 확인한 뒤 별도로 수행합니다.
 
-## 05와 07의 경계
+## 현재 과정과 후속 운영 과정의 경계
 
-`05`에서는 각각의 인프라 도구를 `docker run`으로 실행합니다. Dockerfile, Docker Compose, 배포와 운영 자동화는 `07`에서 다룹니다.
+현재 `05_llm-agent-orchestration`에서는 각각의 인프라 도구를 `docker run`으로
+실행합니다. Dockerfile, Docker Compose, 배포와 운영 자동화는 후속
+`07_multi-agent-service-ops`에서 다룹니다. 현재 단원의
+`07_human-approval-and-safety`와는 다른 과정입니다.
 
 ```text
 05 Local Runtime
@@ -94,6 +100,7 @@ Dockerfile → Docker Compose → GitHub Actions → AWS EC2 Compose 배포
 ```
 
 Docker Compose는 여러 Container의 설정과 네트워크를 한 파일로 묶어 같은 구성을
-반복 실행하게 해 줍니다. `07`에서는 먼저 로컬과 CI에서 Compose 구성을 검증한 뒤
-Amazon Linux 2023 EC2 한 대에 Simple Compose를 수동 배포합니다. 수업 완료에는
-비용 방지를 위한 EC2, EBS, Security Group 정리도 포함됩니다.
+반복 실행하게 해 줍니다. 후속 `07_multi-agent-service-ops`에서는 먼저 로컬과
+CI에서 Compose 구성을 검증한 뒤 Amazon Linux 2023 EC2 한 대에 Simple Compose를
+수동 배포합니다. 수업 완료에는 비용 방지를 위한 EC2, EBS, Security Group
+정리도 포함됩니다.

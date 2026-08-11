@@ -92,7 +92,7 @@ Backend와 Frontend로 연결합니다.
 ```
 
 이미지 분석과 TTS 서비스 연결은 Structured Output을 학습한 뒤
-`mini_agent_03_multimodal`에서 진행합니다.
+`mini_agent_01_llm`의 `1-5 이미지 분석`, `1-6 음성 생성` 화면에서 진행합니다.
 
 ## 확인 질문
 

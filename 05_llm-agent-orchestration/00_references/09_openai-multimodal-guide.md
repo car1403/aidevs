@@ -16,8 +16,8 @@ GPT·Gemini·Ollama의 일반 텍스트, 구조화 출력, Tool Calling 비교�
 3. `01_llm-to-agent/07_multimodal_travel_example.py`
    - 이미지 분석은 Agent의 입력 전처리 단계로 연결합니다.
    - TTS는 Agent 판단이 끝난 뒤의 출력 변환 단계로 연결합니다.
-4. `11_agent-frontend/app_pages/08_multimodal.py`
-   - 이미지 업로드, 구조화 분석, 음성 재생을 한 화면에서 실습합니다.
+4. `C:\mini_agent_st\mini_agent_01_llm\frontend\app_pages\07_image_analysis.py`와 `08_tts.py`
+   - 이미지 업로드·구조화 분석과 음성 재생을 선택 화면에서 실습합니다.
 
 ## 최소 예제와 Backend의 차이
 
