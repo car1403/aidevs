@@ -33,6 +33,14 @@ def list_tasks() -> list[dict]:
     return request("GET", "/api/tasks")
 
 
+def get_history(task_id: str) -> dict:
+    return request("GET", f"/api/tasks/{task_id}/history")
+
+
+def health() -> dict:
+    return request("GET", "/health")
+
+
 def action(task_id: str, name: str) -> dict:
     return request("POST", f"/api/tasks/{task_id}/{name}")
 

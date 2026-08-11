@@ -3,11 +3,11 @@ name: 07 Simple Compose CI
 on:
   push:
     paths:
-      - "07_multi-agent-service-ops/13_observability-docker-and-security/01_simple-compose/**"
+      - "07_multi-agent-service-ops/00_service_ops/01_simple-compose/**"
       - ".github/workflows/07-simple-compose-ci.yml"
   pull_request:
     paths:
-      - "07_multi-agent-service-ops/13_observability-docker-and-security/01_simple-compose/**"
+      - "07_multi-agent-service-ops/00_service_ops/01_simple-compose/**"
       - ".github/workflows/07-simple-compose-ci.yml"
   workflow_dispatch:
 
@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: 07_multi-agent-service-ops/13_observability-docker-and-security/01_simple-compose
+        working-directory: 07_multi-agent-service-ops/00_service_ops/01_simple-compose
 
     steps:
       - name: Checkout

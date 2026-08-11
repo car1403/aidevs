@@ -1,34 +1,30 @@
 import importlib.util
+import sys
 from pathlib import Path
 
 from fastapi.testclient import TestClient
 
 
-APP_FILE = (
+BACKEND_DIR = (
     Path(__file__).parents[1]
-    / "13_observability-docker-and-security"
+    / "00_service_ops"
     / "01_simple-compose"
     / "backend"
-    / "app.py"
 )
-spec = importlib.util.spec_from_file_location("simple_compose_backend", APP_FILE)
+sys.path.insert(0, str(BACKEND_DIR))
+spec = importlib.util.spec_from_file_location("simple_compose_backend", BACKEND_DIR / "app.py")
 assert spec and spec.loader
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 client = TestClient(module.app)
 
 
-def test_health() -> None:
-    response = client.get("/health")
+def test_backend_liveness_does_not_require_external_services() -> None:
+    response = client.get("/health/live")
     assert response.status_code == 200
-    assert response.json()["service"] == "backend"
+    assert response.json() == {"status": "ok", "service": "backend"}
 
 
-def test_message_round_trip() -> None:
-    response = client.post(
-        "/api/message",
-        json={"name": "홍길동", "message": "이사 준비를 시작합니다."},
-    )
-    assert response.status_code == 200
-    assert "홍길동" in response.json()["reply"]
-
+def test_note_validation_rejects_empty_values_before_storage() -> None:
+    response = client.post("/api/notes", json={"name": "", "message": ""})
+    assert response.status_code == 422

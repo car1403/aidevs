@@ -24,16 +24,24 @@ class TaskStatus(StrEnum):
 class AgentRequest(BaseModel):
     user_id: str = Field(min_length=1)
     message: str = Field(min_length=1)
-    provider: Literal["mock", "openai", "gemini", "ollama"] = "mock"
+    provider: Literal["mock", "openai", "gemini", "ollama"] = "openai"
     context: dict[str, Any] = Field(default_factory=dict)
 
 
 class AgentResult(BaseModel):
-    agent_name: str
+    agent_name: str = Field(min_length=1)
     success: bool = True
     data: dict[str, Any] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
     error: str | None = None
+
+    @model_validator(mode="after")
+    def check_success_and_error(self) -> "AgentResult":
+        if self.success and self.error:
+            raise ValueError("성공 결과에는 error를 함께 기록할 수 없습니다.")
+        if not self.success and not self.error:
+            raise ValueError("실패 결과에는 error가 필요합니다.")
+        return self
 
 
 class RouteDecision(BaseModel):
@@ -81,13 +89,22 @@ class Handoff(BaseModel):
 class TaskCreate(BaseModel):
     user_id: str = "demo-user"
     message: str = Field(min_length=1)
-    provider: Literal["mock", "openai", "gemini", "ollama"] = "mock"
+    provider: Literal["mock", "openai", "gemini", "ollama"] = "openai"
     idempotency_key: str | None = None
     context: dict[str, Any] = Field(default_factory=dict)
 
 
 class TaskInput(BaseModel):
+    user_id: str = "demo-user"
     values: dict[str, Any] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def allow_safe_context_fields(self) -> "TaskInput":
+        allowed = {"box_count", "large_items", "distance_km", "budget"}
+        unknown = set(self.values) - allowed
+        if unknown:
+            raise ValueError(f"허용되지 않은 Context 필드: {sorted(unknown)}")
+        return self
 
 
 class TaskRecord(BaseModel):
@@ -95,7 +112,7 @@ class TaskRecord(BaseModel):
     trace_id: str = Field(default_factory=lambda: f"trace-{uuid4().hex[:10]}")
     user_id: str
     message: str
-    provider: str = "mock"
+    provider: str = "openai"
     status: TaskStatus = TaskStatus.QUEUED
     current_agent: str | None = None
     progress: int = Field(default=0, ge=0, le=100)

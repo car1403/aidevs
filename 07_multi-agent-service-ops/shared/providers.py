@@ -2,11 +2,16 @@ from __future__ import annotations
 
 import json
 import os
+from time import perf_counter
 
 import httpx
+from dotenv import load_dotenv
 
 from shared.contracts import AgentResult, RouteDecision
 from shared.moving_agents import packing_agent, route_request
+
+
+load_dotenv()
 
 
 SYSTEM_PROMPT = """
@@ -84,6 +89,18 @@ def route_with_provider(provider: str, message: str) -> RouteDecision:
     return routers[provider](message)
 
 
+def provider_model(provider: str) -> str:
+    models = {
+        "mock": "deterministic-mock",
+        "openai": os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
+        "gemini": os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+        "ollama": os.getenv("OLLAMA_MODEL", "llama3.2"),
+    }
+    if provider not in models:
+        raise ValueError(f"지원하지 않는 Provider: {provider}")
+    return models[provider]
+
+
 def worker_with_provider(provider: str, message: str) -> AgentResult:
     prompt = (
         "당신은 이사 준비 Packing Agent입니다. 실제 예약이나 결제를 하지 말고 "
@@ -131,6 +148,95 @@ def worker_with_provider(provider: str, message: str) -> AgentResult:
         response.raise_for_status()
         return AgentResult.model_validate_json(response.json()["message"]["content"])
     raise ValueError(f"지원하지 않는 Provider: {provider}")
+
+
+def _allow_mock_fallback() -> bool:
+    return os.getenv("ALLOW_MOCK_FALLBACK", "false").lower() in {"1", "true", "yes"}
+
+
+def worker_with_metadata(
+    provider: str,
+    message: str,
+    allow_mock_fallback: bool | None = None,
+) -> dict:
+    """실제 호출 정보와 fallback 여부를 숨기지 않고 반환합니다."""
+    fallback_allowed = _allow_mock_fallback() if allow_mock_fallback is None else allow_mock_fallback
+    started = perf_counter()
+    used = provider
+    fallback_used = False
+    provider_error = None
+    try:
+        result = worker_with_provider(provider, message)
+    except Exception as exc:
+        if provider == "mock" or not fallback_allowed:
+            raise
+        provider_error = f"{type(exc).__name__}: {exc}"
+        used = "mock"
+        fallback_used = True
+        result = worker_with_provider("mock", message)
+    return {
+        "result": result.model_dump(),
+        "provider_requested": provider,
+        "provider_used": used,
+        "model": provider_model(used),
+        "fallback_used": fallback_used,
+        "provider_error": provider_error,
+        "latency_ms": round((perf_counter() - started) * 1000, 2),
+    }
+
+
+def route_with_metadata(
+    provider: str,
+    message: str,
+    allow_mock_fallback: bool | None = None,
+) -> dict:
+    fallback_allowed = _allow_mock_fallback() if allow_mock_fallback is None else allow_mock_fallback
+    started = perf_counter()
+    used = provider
+    fallback_used = False
+    provider_error = None
+    try:
+        result = route_with_provider(provider, message)
+    except Exception as exc:
+        if provider == "mock" or not fallback_allowed:
+            raise
+        provider_error = f"{type(exc).__name__}: {exc}"
+        used = "mock"
+        fallback_used = True
+        result = route_with_provider("mock", message)
+    return {
+        "result": result.model_dump(),
+        "provider_requested": provider,
+        "provider_used": used,
+        "model": provider_model(used),
+        "fallback_used": fallback_used,
+        "provider_error": provider_error,
+        "latency_ms": round((perf_counter() - started) * 1000, 2),
+    }
+
+
+def compare_providers(kind: str, providers: list[str], message: str) -> list[dict]:
+    """비교 중 실패한 Provider도 오류로 표시하고 다른 Provider 비교는 계속합니다."""
+    runner = worker_with_metadata if kind == "worker" else route_with_metadata
+    results = []
+    for provider in providers:
+        try:
+            results.append(runner(provider, message, allow_mock_fallback=False))
+        except Exception as exc:
+            try:
+                model = provider_model(provider)
+            except ValueError:
+                model = "unknown"
+            results.append(
+                {
+                    "provider_requested": provider,
+                    "provider_used": None,
+                    "model": model,
+                    "fallback_used": False,
+                    "error": f"{type(exc).__name__}: {exc}",
+                }
+            )
+    return results
 
 
 def pretty_route(provider: str, message: str) -> str:

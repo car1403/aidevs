@@ -1,7 +1,21 @@
 import pytest
 from pydantic import ValidationError
 
-from shared.contracts import ExecutionPlan, PlanStep
+from shared.contracts import AgentResult, ExecutionPlan, PlanStep
+
+
+def test_failed_agent_result_requires_error() -> None:
+    with pytest.raises(ValidationError):
+        AgentResult(agent_name="packing_agent", success=False)
+
+
+def test_successful_agent_result_rejects_error() -> None:
+    with pytest.raises(ValidationError):
+        AgentResult(
+            agent_name="packing_agent",
+            success=True,
+            error="성공과 오류가 동시에 들어왔습니다.",
+        )
 
 
 def test_execution_plan_rejects_unknown_dependency() -> None:

@@ -15,7 +15,7 @@ initialize_state()
 page = st.sidebar.radio("화면", ["새 요청", "Task 상태", "Agent 흐름", "Monitor"])
 provider = st.sidebar.selectbox(
     "LLM Provider",
-    ["mock", "openai", "gemini", "ollama"],
+    ["openai", "gemini", "ollama", "mock"],
 )
 
 renderers = {

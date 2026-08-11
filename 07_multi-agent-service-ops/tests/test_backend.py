@@ -42,9 +42,31 @@ class FakeRepository:
         self.idempotency[(user_id, key)] = task_id
 
 
+class FakeAuditRepository:
+    def __init__(self) -> None:
+        self.tasks = {}
+        self.events = []
+
+    def ping(self) -> bool:
+        return True
+
+    def save_task(self, task: TaskRecord) -> None:
+        self.tasks[task.task_id] = task
+
+    def append_event(self, task: TaskRecord, event_type: str, actor: str, payload=None) -> dict:
+        self.events.append({"task_id": task.task_id, "event_type": event_type})
+        return self.events[-1]
+
+    def get_history(self, task_id: str) -> dict | None:
+        task = self.tasks.get(task_id)
+        return {"task": {"task_id": task_id}, "events": self.events, "handoffs": []} if task else None
+
+
 def test_create_and_get_task(monkeypatch) -> None:
     fake = FakeRepository()
+    audit = FakeAuditRepository()
     monkeypatch.setattr(backend_main, "repository", lambda: fake)
+    monkeypatch.setattr(backend_main, "audit_repository", lambda: audit)
     client = TestClient(backend_main.app)
 
     created = client.post(
@@ -70,6 +92,7 @@ def test_create_and_get_task(monkeypatch) -> None:
         },
     )
     assert duplicate.json()["task_id"] == task_id
+    assert client.get(f"/api/tasks/{task_id}/history").status_code == 200
 
 
 def test_waiting_task_accepts_additional_input(monkeypatch) -> None:
@@ -81,6 +104,7 @@ def test_waiting_task_accepts_additional_input(monkeypatch) -> None:
     )
     fake.save(task)
     monkeypatch.setattr(backend_main, "repository", lambda: fake)
+    monkeypatch.setattr(backend_main, "audit_repository", lambda: FakeAuditRepository())
     client = TestClient(backend_main.app)
 
     response = client.post(

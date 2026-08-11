@@ -1,11 +1,16 @@
 import streamlit as st
 
-from core.api_client import list_tasks
+from core.api_client import health, list_tasks
 from core.ui import show_error
 
 
 def render_monitor() -> None:
     try:
+        service = health()
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Backend", service["status"])
+        col2.metric("Redis", "연결" if service.get("redis") else "실패")
+        col3.metric("PostgreSQL", "연결" if service.get("postgresql") else "실패")
         tasks = list_tasks()
         st.metric("최근 Task 수", len(tasks))
         st.dataframe(
