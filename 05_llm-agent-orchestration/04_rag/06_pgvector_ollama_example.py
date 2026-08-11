@@ -1,4 +1,10 @@
-"""Ollama Embedding을 pgvector에 저장하고 실제 의미 검색을 수행합니다."""
+r"""Ollama Embedding을 pgvector에 저장하고 실제 의미 검색을 수행합니다.
+
+이 파일은 Mini Backend를 호출하지 않습니다. 실행 전 공용 인프라를 준비합니다.
+    cd C:\mini_agent_st\infra
+    docker compose up -d postgres ollama
+    docker compose exec ollama ollama pull embeddinggemma
+"""
 
 import os
 from pathlib import Path

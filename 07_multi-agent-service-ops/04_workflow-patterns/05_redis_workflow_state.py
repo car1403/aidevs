@@ -1,4 +1,7 @@
-"""병렬 Workflow 결과를 실제 Redis에 저장하고 다시 읽습니다."""
+r"""병렬 Workflow 결과를 실제 Redis에 저장하고 다시 읽습니다.
+
+Mini Backend를 실행하지 않습니다. 과정 루트 .env의 REDIS_URL로 직접 연결합니다.
+"""
 
 from uuid import uuid4
 

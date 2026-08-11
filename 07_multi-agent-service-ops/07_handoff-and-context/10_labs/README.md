@@ -1,5 +1,16 @@
 # 07 Labs
 
+## 실행 위치
+
+Handoff Python 예제는 Mini Backend 없이 실행합니다. `05_persist_handoff.py`는 과정
+루트 `.env`를 사용해 Redis와 PostgreSQL에 직접 연결합니다. 완성 화면을 사용할 때만
+다음 Backend를 실행합니다.
+
+```powershell
+cd C:\mini_multi_agent_st\mini_multi_agent_07_handoff\backend
+uvicorn app.main:app --reload --port 8000
+```
+
 - Handoff에 API Key를 넣고 필터로 제거합니다.
 - 다른 `user_id`의 Context를 차단합니다.
 - 최대 Handoff 횟수를 3회로 제한합니다.

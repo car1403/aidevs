@@ -1,3 +1,9 @@
+"""과정 Backend가 Redis Queue에 넣은 Task를 계속 처리하는 Worker입니다.
+
+실행 전 `11_multi-agent-backend`를 Port 8100으로 실행하고 같은 REDIS_URL과
+DATABASE_URL을 사용합니다. Mini 프로젝트 Backend의 Queue는 처리하지 않습니다.
+"""
+
 import os
 import time
 from collections.abc import Callable

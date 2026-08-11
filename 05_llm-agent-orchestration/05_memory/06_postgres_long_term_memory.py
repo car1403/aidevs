@@ -1,4 +1,9 @@
-"""PostgreSQL에 사용자별 장기 Memory를 저장·조회·삭제합니다."""
+r"""PostgreSQL에 사용자별 장기 Memory를 저장·조회·삭제합니다.
+
+이 파일은 Mini Backend를 호출하지 않습니다. 실행 전 PostgreSQL을 준비합니다.
+    cd C:\mini_agent_st\infra
+    docker compose up -d postgres
+"""
 
 import os
 from pathlib import Path

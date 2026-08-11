@@ -94,13 +94,32 @@ Simple Frontend + Backend + Redis + PostgreSQL + Gemini
 두 경로는 대체 관계가 아닙니다. 관리형 Cloud 경로는 Multi-Agent 서비스 완성에,
 AWS 경로는 Container와 배포 구조를 한 번 경험하는 데 목적이 있습니다.
 
+## Lab 실행 전 Backend 빠른 확인
+
+각 단원의 `10_labs/README.md`에서 `실행 위치`를 먼저 확인합니다. 과정의 작은 Python
+예제와 Mini 완성 화면은 실행 방식이 다릅니다.
+
+| 단원 | 과정 Python Lab | 완성 화면·통합 실행 |
+| --- | --- | --- |
+| 01~03 | Backend 없이 실제 Provider 직접 호출 | 해당 `mini_multi_agent_01~03`의 `backend` · Port 8000 |
+| 04~05 | Backend 없이 Redis 직접 연결 | 해당 Mini의 `backend` · Port 8000 |
+| 06~09 | Backend 없이 Redis·PostgreSQL 직접 연결 | 해당 Mini의 `backend` · Port 8000 |
+| 10 | Memory 예제는 불필요, 실제 Queue는 과정 Backend 필요 | `11_multi-agent-backend` 8100 + `05_real_worker_once.py` |
+| 11 | 계약 예제는 Backend 불필요 | `11_multi-agent-backend` · Port 8100 |
+| 12 | 상태 함수는 Backend 불필요 | 과정 Backend 8100 + Worker + Streamlit |
+| 13 | 전체 통합 | 과정 Backend 8100 + Worker + Streamlit |
+
+01~09의 Mini Backend와 10~13 과정 Backend는 Redis Queue Key와 API 계약이 다르므로
+서로 바꾸어 실행하지 않습니다. 외부 연결 Python 파일 맨 위의 `실행 전 준비` 주석도
+필요한 Backend 또는 저장소를 안내합니다.
+
 ## Mini 프로젝트
 
 `C:\mini_multi_agent_st`는 2단계부터 01~13 단원과 함께 누적 구성합니다.
 
 ```text
 강의 단위 예제
-→ mini_multi_agent_st의 learning_unit·starter·steps
+→ mini_multi_agent_st의 learning_unit·starter
 → 작은 테스트
 → solution 또는 완성 Backend·Frontend
 ```

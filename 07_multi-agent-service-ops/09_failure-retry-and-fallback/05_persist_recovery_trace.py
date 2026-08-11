@@ -1,4 +1,8 @@
-"""복구 진행 상태는 Redis, 각 Trace 이벤트는 PostgreSQL에 append합니다."""
+r"""복구 진행 상태는 Redis, 각 Trace 이벤트는 PostgreSQL에 append합니다.
+
+Mini Backend를 실행하지 않습니다. 과정 루트 .env의 REDIS_URL과 DATABASE_URL로
+두 저장소에 직접 연결합니다.
+"""
 
 from uuid import uuid4
 

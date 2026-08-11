@@ -1,5 +1,15 @@
 # 03 Labs
 
+## 실행 위치
+
+Rule Router와 실제 Provider Router는 과정 Python 파일에서 직접 실행하므로 Backend가
+필요하지 않습니다. 누적 화면에서 비교할 때만 다음 Backend를 실행합니다.
+
+```powershell
+cd C:\mini_multi_agent_st\mini_multi_agent_03_supervisor\backend
+uvicorn app.main:app --reload --port 8000
+```
+
 - `confidence < 0.7`이면 `missing_information`을 반환합니다.
 - 복합 요청에서 Agent 두 개 이상을 선택합니다.
 - Supervisor가 직접 비용을 계산하지 않는지 확인합니다.

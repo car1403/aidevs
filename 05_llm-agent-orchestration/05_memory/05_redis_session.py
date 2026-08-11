@@ -1,4 +1,9 @@
-"""Redis TTL로 자동 만료되는 단기 Agent 상태를 저장합니다."""
+r"""Redis TTL로 자동 만료되는 단기 Agent 상태를 저장합니다.
+
+이 파일은 Mini Backend를 호출하지 않습니다. 실행 전 Redis를 준비합니다.
+    cd C:\mini_agent_st\infra
+    docker compose up -d redis
+"""
 
 import json
 import os

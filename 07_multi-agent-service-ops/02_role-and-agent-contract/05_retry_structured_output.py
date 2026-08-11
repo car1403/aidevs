@@ -1,3 +1,8 @@
+"""실제 Provider의 구조화 출력 실패를 제한된 횟수로 다시 요청합니다.
+
+Mini Backend를 실행하지 않습니다. 과정 루트 .env에 Provider Key를 설정합니다.
+"""
+
 import json
 import os
 

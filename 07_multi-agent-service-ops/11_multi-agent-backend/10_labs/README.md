@@ -1,5 +1,22 @@
 # 11 Labs
 
+## 실행 위치
+
+`01_api_contract.py`와 `02_repository_switch.py`는 Backend 없이 실행합니다. 실제 HTTP
+상태 코드·Redis Queue·PostgreSQL 이력을 확인할 때는 과정 Backend를 실행합니다.
+
+```powershell
+cd C:\aidevs\07_multi-agent-service-ops
+$env:PYTHONPATH='C:\aidevs\07_multi-agent-service-ops'
+uvicorn app.main:app --app-dir .\11_multi-agent-backend --reload --port 8100
+```
+
+Task를 완료 상태까지 진행하려면 새 터미널에서 다음 Worker도 실행합니다.
+
+```powershell
+python .\10_async-task-and-redis-worker\worker.py
+```
+
 - 같은 idempotency key가 같은 Task를 반환하는지 확인합니다.
 - 없는 Task의 `404 detail`을 Frontend가 표시하는지 확인합니다.
 - 완료된 Task 취소를 `409`로 차단합니다.

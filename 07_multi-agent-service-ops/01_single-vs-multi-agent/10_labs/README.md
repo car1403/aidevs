@@ -1,5 +1,17 @@
 # 01 Labs
 
+## 실행 위치
+
+이 Lab의 Python 파일은 Mini Backend를 호출하지 않습니다. 1~4번은 외부 연결 없이,
+5~6번은 과정 루트 `.env`의 GPT 또는 Gemini 설정으로 Provider를 직접 호출합니다.
+
+완성 화면에서 같은 내용을 확인할 때만 다음 Backend를 먼저 실행합니다.
+
+```powershell
+cd C:\mini_multi_agent_st\mini_multi_agent_01_roles\backend
+uvicorn app.main:app --reload --port 8000
+```
+
 1. `single_agent`에 주소 변경 목록을 추가합니다.
 2. 같은 기능을 `address_agent`로 분리합니다.
 3. 두 버전의 함수 수·입력·테스트 범위를 비교합니다.

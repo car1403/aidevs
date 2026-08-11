@@ -1,5 +1,15 @@
 # 02 Labs
 
+## 실행 위치
+
+계약 예제는 Backend 없이 실행합니다. 실제 Provider 예제도 과정 루트 `.env`를 읽어
+GPT 또는 Gemini를 직접 호출합니다. 완성 화면을 사용할 때만 다음 Backend를 실행합니다.
+
+```powershell
+cd C:\mini_multi_agent_st\mini_multi_agent_02_contract\backend
+uvicorn app.main:app --reload --port 8000
+```
+
 - `AgentCapability`에 허용 Tool 목록을 정의합니다.
 - `BudgetResult`에 음수가 아닌 비용 범위를 정의합니다.
 - 잘못된 최소·최대 비용 관계를 차단합니다.

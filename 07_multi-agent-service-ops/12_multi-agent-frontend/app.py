@@ -1,3 +1,9 @@
+"""과정 Backend와 Worker의 상태를 보여 주는 Streamlit 진입점입니다.
+
+실행 전에 11_multi-agent-backend(8100)와 10_async-task-and-redis-worker/worker.py를
+각각 별도 터미널에서 실행합니다.
+"""
+
 import streamlit as st
 
 from app_pages.agent_flow import render_agent_flow

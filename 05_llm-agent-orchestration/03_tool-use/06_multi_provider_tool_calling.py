@@ -1,4 +1,11 @@
-"""Mini Agent Backend에서 Provider별 Tool 선택과 안전 실행을 확인합니다."""
+r"""Mini Agent Backend에서 Provider별 Tool 선택과 안전 실행을 확인합니다.
+
+실행 전 준비:
+    cd C:\mini_agent_st\mini_agent_03_tool\backend
+    uvicorn app.main:app --reload --port 8000
+
+다른 주소를 사용하면 BACKEND_API_URL 환경 변수로 지정합니다.
+"""
 
 import os
 

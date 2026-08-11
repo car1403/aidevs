@@ -1,3 +1,8 @@
+"""실제 Provider를 직접 호출해 Supervisor Routing 결과를 만듭니다.
+
+Mini Backend를 실행하지 않습니다. 과정 루트 .env에 Provider Key를 설정합니다.
+"""
+
 import os
 import json
 

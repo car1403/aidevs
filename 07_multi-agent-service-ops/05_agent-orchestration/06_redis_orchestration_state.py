@@ -1,4 +1,7 @@
-"""Agent 한 단계가 끝날 때마다 실제 Redis 상태를 갱신합니다."""
+r"""Agent 한 단계가 끝날 때마다 실제 Redis 상태를 갱신합니다.
+
+Mini Backend를 실행하지 않습니다. 과정 루트 .env의 REDIS_URL로 직접 연결합니다.
+"""
 
 from uuid import uuid4
 

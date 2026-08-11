@@ -1,5 +1,18 @@
 # 02 Labs
 
+## 실행 위치
+
+Lab 1~3은 과정 폴더의 Python 파일만 사용하므로 Backend가 필요하지 않습니다.
+Lab 4의 실제 Provider 비교는 다음 Backend를 먼저 실행합니다.
+
+```powershell
+cd C:\mini_agent_st\mini_agent_02_structured_output\backend
+uvicorn app.main:app --reload --port 8000
+```
+
+Backend 실행 후 `02_prompt-and-structured-output\03_real_provider_comparison.py`를
+실행하거나 같은 Mini의 Frontend에서 비교 결과를 확인합니다.
+
 ## Lab 1. Prompt 네 부분 만들기
 
 여행 예약 취소 요청을 위한 Role, Instruction, Context, Constraint를 각각 작성하고

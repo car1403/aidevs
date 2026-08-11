@@ -1,3 +1,9 @@
+"""과정의 11_multi-agent-backend API를 호출합니다.
+
+Backend를 Port 8100으로 먼저 실행합니다. 다른 주소는 MULTI_AGENT_API_URL로 지정하며,
+Mini 프로젝트 Backend는 API·Queue 계약이 다르므로 연결하지 않습니다.
+"""
+
 import os
 
 import httpx

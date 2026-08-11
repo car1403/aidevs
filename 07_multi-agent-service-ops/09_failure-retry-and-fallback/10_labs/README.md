@@ -1,5 +1,16 @@
 # 09 Labs
 
+## 실행 위치
+
+복구 정책 Python 예제는 Mini Backend 없이 실행합니다. `05_persist_recovery_trace.py`는
+과정 루트 `.env`를 사용해 Redis와 PostgreSQL에 직접 연결합니다. 완성 화면을 사용할
+때만 다음 Backend를 실행합니다.
+
+```powershell
+cd C:\mini_multi_agent_st\mini_multi_agent_09_recovery_observability\backend
+uvicorn app.main:app --reload --port 8000
+```
+
 - Schema 오류는 한 번만 재요청합니다.
 - 잘못된 Route에서 한 번 replan합니다.
 - 정책 위반은 retry 없이 차단합니다.

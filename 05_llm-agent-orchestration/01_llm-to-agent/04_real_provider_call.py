@@ -1,4 +1,11 @@
-"""Backend를 통해 GPT, Gemini, Ollama/Llama를 같은 방식으로 호출합니다."""
+r"""Backend를 통해 GPT, Gemini, Ollama/Llama를 같은 방식으로 호출합니다.
+
+실행 전 준비:
+    cd C:\mini_agent_st\mini_agent_01_llm\backend
+    uvicorn app.main:app --reload --port 8000
+
+다른 주소를 사용하면 PYTHON_AGENT_API_URL 환경 변수로 지정합니다.
+"""
 
 import os
 

@@ -1,5 +1,24 @@
 # 04 RAG 실습
 
+## 실행 위치
+
+실습 1~3은 Backend와 Docker 없이 실행합니다. 실습 4의
+`06_pgvector_ollama_example.py`는 Mini Backend를 호출하지 않고 PostgreSQL·pgvector와
+Ollama에 직접 연결합니다.
+
+```powershell
+cd C:\mini_agent_st\infra
+docker compose up -d postgres ollama
+docker compose exec ollama ollama pull embeddinggemma
+```
+
+완성 RAG 화면을 확인할 때만 별도 터미널에서 다음 Backend를 실행합니다.
+
+```powershell
+cd C:\mini_agent_st\mini_agent_04_rag\backend
+uvicorn app.main:app --reload --port 8000
+```
+
 ## 실습 1. Chunk 크기 비교
 
 `02_chunking_and_metadata.py`의 `sentences_per_chunk`를 1, 2, 4로 바꾸고 Chunk 개수와 내용을 비교합니다.

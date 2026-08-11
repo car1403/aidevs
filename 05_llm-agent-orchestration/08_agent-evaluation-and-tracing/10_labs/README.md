@@ -1,5 +1,19 @@
 # 08 Labs
 
+## 실행 위치
+
+Lab 1~4는 Backend 없이 과정 폴더의 Python 파일을 직접 실행합니다. Lab 5의 선택
+Provider 비교는 다음 Python Agent Backend를 먼저 실행합니다.
+
+```powershell
+cd C:\mini_agent_st\mini_agent_08_evaluation\backend_python
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
+```
+
+Backend 실행 후 `08_agent-evaluation-and-tracing\06_provider_comparison_optional.py`를
+실행합니다. 전체 평가 화면에서 두 구현을 비교할 때만 `backend_langgraph`도 Port
+8001로 추가 실행합니다.
+
 ## Lab 1. 첫 실패 시나리오
 
 `02_one_scenario.py`의 기대 Tool을 일부러 잘못 지정하고 `passed=False`가 되는지 확인하세요. 실제 결과·기대 결과·검사 항목 중 무엇을 먼저 확인해야 하는지 기록합니다.

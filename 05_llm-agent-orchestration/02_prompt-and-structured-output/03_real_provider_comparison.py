@@ -1,4 +1,11 @@
-"""Mini Agent 02의 동일한 TravelPlan Schema 결과를 Provider별로 비교합니다."""
+r"""Mini Agent 02의 동일한 TravelPlan Schema 결과를 Provider별로 비교합니다.
+
+실행 전 준비:
+    cd C:\mini_agent_st\mini_agent_02_structured_output\backend
+    uvicorn app.main:app --reload --port 8000
+
+다른 주소를 사용하면 BACKEND_API_URL 환경 변수로 지정합니다.
+"""
 
 import os
 

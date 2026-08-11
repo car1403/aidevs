@@ -1,4 +1,11 @@
-"""선택 실습: 같은 요청을 설정된 Provider에 실행해 결과를 비교합니다."""
+r"""선택 실습: 같은 요청을 설정된 Provider에 실행해 결과를 비교합니다.
+
+실행 전 준비:
+    cd C:\mini_agent_st\mini_agent_08_evaluation\backend_python
+    ..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
+
+다른 주소를 사용하면 PYTHON_AGENT_API_URL 환경 변수로 지정합니다.
+"""
 
 import json
 import os

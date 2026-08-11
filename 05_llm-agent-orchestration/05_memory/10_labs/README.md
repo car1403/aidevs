@@ -1,5 +1,23 @@
 # 05 Memory 실습
 
+## 실행 위치
+
+실습 1~5는 Backend 없이 진행합니다. 실습 6~7의 Python 파일은 Mini Backend가 아니라
+Redis와 PostgreSQL에 직접 연결하므로 공용 인프라를 먼저 실행합니다.
+
+```powershell
+cd C:\mini_agent_st\infra
+docker compose up -d redis postgres
+```
+
+실습 8의 완성 화면과 Backend 재시작 후 영속성을 확인할 때는 다음 Backend를
+별도 터미널에서 실행합니다.
+
+```powershell
+cd C:\mini_agent_st\mini_agent_05_memory\backend
+uvicorn app.main:app --reload --port 8000
+```
+
 ## 실습 1. 데이터 종류 분류
 
 다음 정보를 대화 기록·단기 상태·장기 Memory·RAG 문서로 분류합니다.

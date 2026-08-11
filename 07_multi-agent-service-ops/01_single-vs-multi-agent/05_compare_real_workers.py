@@ -1,3 +1,8 @@
+"""과정 루트 .env에 설정한 실제 Provider Worker 결과를 직접 비교합니다.
+
+Mini Backend를 실행하지 않습니다. 과정 루트에서 `pip install -e .` 후 실행합니다.
+"""
+
 import json
 import os
 

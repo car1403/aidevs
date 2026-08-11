@@ -2,6 +2,18 @@
 
 예제를 순서대로 실행한 뒤 한 가지씩 바꿔 봅니다. 실제 외부 서비스는 호출하지 않습니다.
 
+## 실행 위치
+
+Lab 1~6은 과정 폴더의 Python 파일을 직접 실행하므로 Backend가 필요하지 않습니다.
+승인 중단·재개를 완성 화면에서 확인할 때는 LangGraph Backend를 실행합니다.
+
+```powershell
+cd C:\mini_agent_st\mini_agent_07_human_approval\backend_langgraph
+uvicorn app.main:app --reload --port 8001
+```
+
+일반 Python 구현과 비교하려면 `backend_python`을 Port 8000으로 추가 실행합니다.
+
 ## Lab 1. 위험도 표 완성
 
 `01_action_risk.py`에 다음 작업을 추가하고 위험도를 정하세요.

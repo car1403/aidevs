@@ -1,5 +1,17 @@
 # 06 LangGraph Workflow 실습
 
+## 실행 위치
+
+실습 1~11은 과정 폴더의 Python 파일을 직접 실행하므로 Backend가 필요하지 않습니다.
+완성 LangGraph 화면을 확인할 때만 다음 Backend를 실행합니다.
+
+```powershell
+cd C:\mini_agent_st\mini_agent_06_langgraph\backend_langgraph
+uvicorn app.main:app --reload --port 8001
+```
+
+일반 Python 방식과 비교하려면 `backend_python`을 Port 8000으로 추가 실행합니다.
+
 ## 실습 1. State 필드 추가
 
 `01_state.py`에 `nights`, `budget`를 추가합니다. 필드가 없을 수도 있도록 `total=False`의 의미를 확인합니다.

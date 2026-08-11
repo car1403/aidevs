@@ -117,6 +117,26 @@ Mock 결과 확인
 Provider가 바뀌어도 Pydantic Schema, Tool 권한 검사, Graph 흐름, 평가
 시나리오는 동일하게 유지합니다.
 
+## Lab 실행 전 Backend 빠른 확인
+
+각 `10_labs/README.md`의 `실행 위치`를 먼저 확인합니다. 작은 Python 예제는 대부분
+Backend 없이 실행하며, 실제 Provider 또는 완성 화면을 사용하는 Lab만 아래 Backend를
+먼저 실행합니다.
+
+| 단원 | 기본 Lab | 실제 연동·완성 화면에서 실행할 위치 |
+| --- | --- | --- |
+| 01 | Backend 불필요 | `C:\mini_agent_st\mini_agent_01_llm\backend` · Port 8000 |
+| 02 | Lab 1~3 불필요 | Lab 4: `mini_agent_02_structured_output\backend` · Port 8000 |
+| 03 | 실습 1~5 불필요 | 실습 6: `mini_agent_03_tool\backend` · Port 8000 |
+| 04 | 실습 1~3 불필요 | 실습 4는 Backend가 아니라 `C:\mini_agent_st\infra`의 PostgreSQL·Ollama 사용 |
+| 05 | 실습 1~5 불필요 | 실습 6~7은 Redis·PostgreSQL, 완성 화면은 `mini_agent_05_memory\backend` |
+| 06 | 실습 1~11 불필요 | 완성 화면: `mini_agent_06_langgraph\backend_langgraph` · Port 8001 |
+| 07 | Lab 1~6 불필요 | 완성 화면: `mini_agent_07_human_approval\backend_langgraph` · Port 8001 |
+| 08 | Lab 1~4 불필요 | Lab 5: `mini_agent_08_evaluation\backend_python` · Port 8000 |
+| 09 | 두 Backend 필요 | `backend_python` 8000 + `backend_langgraph` 8001 |
+
+Python 파일 맨 위의 `실행 전 준비` 주석도 같은 경로를 안내합니다.
+
 ## 빠른 시작
 
 Docker가 아직 없어도 `APP_MODE=mock`, `STORAGE_MODE=memory`로 각 단원의 기본

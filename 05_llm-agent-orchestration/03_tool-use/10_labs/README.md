@@ -1,5 +1,17 @@
 # 03 Tool Use 실습
 
+## 실행 위치
+
+실습 1~5는 Backend 없이 과정 폴더의 Python 파일로 진행합니다. 실습 6의 실제
+Provider 비교만 다음 Backend를 먼저 실행합니다.
+
+```powershell
+cd C:\mini_agent_st\mini_agent_03_tool\backend
+uvicorn app.main:app --reload --port 8000
+```
+
+Backend 실행 후 `03_tool-use\06_multi_provider_tool_calling.py`를 실행합니다.
+
 ## 실습 1. Schema 오류 관찰
 
 `02_tool_schema_validation.py`에 다음 입력을 추가하고 오류의 `field`, `message`, `type`을 기록합니다.
