@@ -1,6 +1,0 @@
-langchain
-langchain-google-genai
-langchain-ollama
-langchain-openai
-python-dotenv
-pydantic
