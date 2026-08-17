@@ -6,7 +6,6 @@
 docker run -d `
   --name aidevs-redis `
   -p 6379:6379 `
-  -v aidevs-redis-data:/data `
   redis:7 `
   redis-server --appendonly yes
 ```
