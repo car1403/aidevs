@@ -12,6 +12,7 @@ class ReservationRequest(BaseModel):
     customer_name: str = Field(min_length=1)
     reservation_date: date
     people: int = Field(ge=1, le=20)
+    children: int = Field(default=0, ge=0, le=10)
 
 
 def validate_sample(name: str, payload: dict) -> None:
@@ -34,6 +35,7 @@ if __name__ == "__main__":
             "customer_name": "김여행",
             "reservation_date": "2026-08-10",
             "people": 2,
+            "children": 1,  # 계약에 없는 필드이므로 무시됩니다.
         },
     )
     validate_sample(
@@ -50,6 +52,6 @@ if __name__ == "__main__":
             "customer_name": "김여행",
             "reservation_date": "2026-08-10",
             "people": 2,
-            "password": "화면에 노출하면 안 되는 값",
+            "password": "abc123",
         },
     )

@@ -58,3 +58,18 @@ Memory를 저장하고 Backend를 재시작한 뒤에도 남는지 확인합니�
 ## 실습 8. 개인화 답변 변화
 
 Memory 저장 전·저장 후·수정 후·삭제 후에 같은 질문을 보내 최종 답변이 어떻게 달라지는지 기록합니다.
+
+## 실습 9. Redis 사용자 격리와 충돌
+
+`07_redis_ttl_and_isolation.py`와 `08_redis_atomic_update.py`로 같은 session_id의 사용자
+격리, TTL 연장, 오래된 version의 HTTP 409 차단을 확인합니다.
+
+## 실습 10. PostgreSQL 대화와 Hybrid 복원
+
+`10_postgres_conversation_history.py`와 `11_hybrid_session_restore.py`로 최근 대화,
+장기 Memory, Redis 단기 상태가 사용자별로 복원되는지 확인합니다.
+
+## 실습 11. 실제 개인화와 사용자 제어
+
+`12_real_llm_personalization.py`에서 사용 Memory·Trace를 검증하고
+`13_memory_export_and_delete.py`로 내보내기와 전체 삭제를 확인합니다.

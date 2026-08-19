@@ -44,3 +44,18 @@ Docker 환경을 실행한 후 `06_pgvector_ollama_example.py`의 질문을 세 
 - 박물관이 쉬는 날은 언제인가요?
 
 각 질문에서 1위 문서와 점수를 기록합니다.
+
+## 실습 5. 키워드와 pgvector 비교
+
+`07_keyword_vs_pgvector.py`에서 두 검색 방식의 1위 문서와 점수를 기록하고 의미가
+비슷하지만 단어가 다른 질문에서 결과가 달라지는 이유를 설명합니다.
+
+## 실습 6. 실제 LLM 근거 답변
+
+`08_real_rag_answer.py`를 준비된 Provider로 실행하고 답변이 출력된 Context와 출처로
+뒷받침되는지 확인합니다.
+
+## 실습 7. Redis Cache
+
+`09_redis_rag_cache.py`로 MISS→HIT와 TTL을 확인합니다. `top_k`나 Provider를 바꾸면
+새 Cache Key가 사용되는지 확인하고 재색인 후 다시 MISS가 되는지 관찰합니다.

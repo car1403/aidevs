@@ -20,7 +20,7 @@ FEW_SHOT = """고객 문의를 billing, technical, account, other 중 하나로 
 - 결제가 두 번 됐어요. → billing
 - 비밀번호를 잊었어요. → account
 - 화면에서 서버 오류가 발생해요. → technical
-
+- 그외 나머지는 모두 -> other
 분류값과 한 문장 근거만 답하세요."""
 
 

@@ -10,6 +10,9 @@ Agent가 **실행되는 것**과 **올바르게 행동하는 것**은 다릅니�
 - Trace에서 처음 실패한 Node와 원인을 찾습니다.
 - 코드 수정 뒤 이전 기능이 깨지지 않았는지 회귀 테스트합니다.
 - 선택 실습으로 GPT·Gemini·Ollama의 결과와 지연 시간을 비교합니다.
+- 실제 LLM의 구조화 응답을 결정적 규칙으로 평가합니다.
+- 평가 결과를 PostgreSQL에 저장하고 이전 실행과 비교합니다.
+- 최근 실패 Trace는 Redis에 TTL을 두고 임시 저장합니다.
 
 ## 학습 순서
 
@@ -21,6 +24,9 @@ Agent가 **실행되는 것**과 **올바르게 행동하는 것**은 다릅니�
 | 8-4 | `04_trace_failure.py` | Trace에서 실패 위치 찾기 |
 | 8-5 | `05_regression.py` | 수정 전후 회귀 확인 |
 | 8-6 | `06_provider_comparison_optional.py` | Provider 비교 선택 확장 |
+| 8-7 | `07_real_llm_evaluation.py` | 실제 LLM 구조화 응답 평가 |
+| 8-8 | `08_postgres_evaluation_history.py` | PostgreSQL 평가 이력과 회귀 확인 |
+| 8-9 | `09_redis_trace_cache.py` | Redis 실패 Trace 캐시 선택 확장 |
 
 ## 실행
 
@@ -36,7 +42,12 @@ python .\05_regression.py
 
 ```powershell
 python .\06_provider_comparison_optional.py
+python .\07_real_llm_evaluation.py --provider openai
+python .\08_postgres_evaluation_history.py
+python .\09_redis_trace_cache.py
 ```
+
+8-7은 선택한 실제 Provider의 환경 변수와 호출 비용이 필요할 수 있습니다. 8-8은 `DATABASE_URL`, 8-9는 `REDIS_URL`을 사용합니다. 세 예제 모두 Mini Agent 08 Backend가 먼저 실행되어야 합니다.
 
 ## 처음 평가할 항목
 
@@ -66,4 +77,7 @@ Trace의 목적은 점수를 예쁘게 만드는 것이 아니라 **어디서 �
 - 규칙 기반 평가는 필수입니다.
 - LLM Judge, 외부 평가 플랫폼, 복잡한 가중치는 다루지 않습니다.
 - Provider 비교는 선택 실습이며 실제 호출 비용과 시간이 발생할 수 있습니다.
+- LLM 응답은 문장 전체를 일치시키지 않고 구조·목적지·일수·활동처럼 안정적으로 확인할 수 있는 항목을 검사합니다.
+- PostgreSQL에는 API Key와 전체 Prompt를 저장하지 않고 평가 결과와 요약만 저장합니다.
+- Redis는 영구 평가 이력 대신 최근 실패 Trace의 짧은 TTL 캐시에만 사용합니다.
 - API Key, 전체 Prompt, 개인정보는 평가 보고서에 저장하지 않습니다.

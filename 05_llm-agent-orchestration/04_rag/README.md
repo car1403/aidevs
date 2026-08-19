@@ -16,6 +16,8 @@ RAG는 LLM에게 바로 질문하지 않고, 먼저 관련 문서를 찾은 다�
 - 검색 결과로 Context를 만들고 출처를 표시합니다.
 - 근거가 없을 때 답변을 제한합니다.
 - Ollama Embedding과 PostgreSQL/pgvector의 역할을 구분합니다.
+- Redis Cache의 TTL, hit/miss, 재색인 무효화를 확인합니다.
+- Retrieval부터 LLM 답변까지 전체 Trace를 관찰합니다.
 
 ## 예제 순서
 
@@ -27,6 +29,10 @@ RAG는 LLM에게 바로 질문하지 않고, 먼저 관련 문서를 찾은 다�
 | 04 | `04_vector_similarity.py` | 필요 없음 | 코사인 유사도와 의미 검색 |
 | 05 | `05_grounded_answer.py` | 필요 없음 | Context·출처·답변 제한 |
 | 06 | `06_pgvector_ollama_example.py` | Docker 필요 | 실제 Embedding 저장과 검색 |
+| 07 | `07_keyword_vs_pgvector.py` | Backend·Docker 필요 | 키워드와 의미 검색 비교 |
+| 08 | `08_real_rag_answer.py` | Backend·Docker 필요 | 실제 LLM 근거 답변과 출처 |
+| 09 | `09_redis_rag_cache.py` | Backend·Docker 필요 | Redis MISS·HIT·TTL |
+| 10 | `10_full_rag_pipeline.py` | Backend·Docker 필요 | 전체 RAG Trace |
 
 처음 다섯 예제는 API Key와 Docker 없이 실행합니다. RAG의 흐름을 먼저 이해한 후 마지막 예제에서 같은 과정을 실제 인프라로 교체합니다.
 
@@ -38,6 +44,7 @@ RAG는 LLM에게 바로 질문하지 않고, 먼저 관련 문서를 찾은 다�
 | 간단한 키워드/숫자 벡터 | Ollama `embeddinggemma` |
 | Python 정렬 | pgvector 코사인 거리 검색 |
 | Mock 답변 | 검색 Context를 전달받은 LLM |
+| 매번 다시 계산 | Redis TTL 답변 Cache |
 
 채팅 모델인 `llama3.2`와 Embedding 모델인 `embeddinggemma`는 역할이 다릅니다. 문서를 저장할 때와 질문을 검색할 때는 반드시 같은 Embedding 모델을 사용해야 합니다.
 
@@ -64,6 +71,24 @@ python .\00_local-runtime\database\apply_schema.py
 python .\04_rag\06_pgvector_ollama_example.py
 ```
 
+07~10은 `mini_agent_04_rag` Backend를 실행한 뒤 호출합니다.
+
+```powershell
+cd C:\mini_agent_st\mini_agent_04_rag\backend
+uvicorn app.main:app --reload --port 8000
+
+cd C:\aidevs\05_llm-agent-orchestration\04_rag
+$env:RAG_EXAMPLE_PROVIDER="ollama"  # mock, gemini, openai, ollama
+python .\07_keyword_vs_pgvector.py
+python .\08_real_rag_answer.py
+python .\09_redis_rag_cache.py
+python .\10_full_rag_pipeline.py
+```
+
+pgvector는 Chunk와 Embedding을 영구 저장하고 Redis는 계산된 RAG 답변을 짧게
+보관합니다. Redis 장애는 검색과 답변 생성을 막지 않으며 재색인하면 전용 Cache를
+무효화합니다.
+
 > 기존 PostgreSQL Volume을 사용해도 `apply_schema.py`는 필요한 테이블을 다시
 > 확인하고, 없는 테이블만 생성합니다. 데이터 보존이 필요하면 Volume을 삭제하지
 > 않습니다.
@@ -73,8 +98,9 @@ python .\04_rag\06_pgvector_ollama_example.py
 1. 01~03에서 RAG 흐름과 검색을 이해합니다.
 2. 04에서 벡터는 의미를 나타내는 숫자 배열이라는 정도만 확인합니다.
 3. 05에서 검색 결과가 없을 때 모른다고 답하도록 만듭니다.
-4. 06에서 Docker의 Ollama와 pgvector로 구현을 교체합니다.
-5. `mini_agent_04_rag` 화면에서 Chunk·검색·답변·출처를 확인합니다.
+4. 06~07에서 Ollama와 pgvector 색인·검색을 확인합니다.
+5. 08에서 검색 Context를 실제 LLM에 전달합니다.
+6. 09~10에서 Redis Cache와 전체 Trace를 확인합니다.
 
 ## 공식 참고 자료
 

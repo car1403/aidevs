@@ -74,3 +74,18 @@ uvicorn app.main:app --reload --port 8001
 - 반복 Graph의 `max_iterations` 검사를 제거합니다.
 
 마지막 오류는 실행하지 말고 코드만 보고 무한 반복 가능성을 설명합니다.
+
+## 실습 12. Streaming과 State Update
+
+`10_graph_streaming.py`에서 Node 실행 순서와 각 Update에 포함된 필드를 기록합니다.
+최종 State 전체와 부분 Update의 차이를 설명합니다.
+
+## 실습 13. Tool·RAG·Memory 경로
+
+`12_tool_node_and_routing.py`와 `13_rag_memory_context_graph.py`에 Tool이 필요한 질문과
+일반 정책 질문을 보내 Conditional Edge, Context, Tool Result를 비교합니다.
+
+## 실습 14. Provider 오류와 전체 Trace
+
+`14_retry_fallback_and_error.py`로 명시적 Fallback 정책을 확인하고
+`15_full_agent_graph.py`의 Node별 지연 시간과 최종 답변 근거를 검증합니다.
