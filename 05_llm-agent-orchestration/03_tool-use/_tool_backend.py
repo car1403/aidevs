@@ -23,28 +23,24 @@ def post(path: str, payload: dict[str, Any]) -> dict[str, Any]:
 def select_tool(
     message: str,
     tool_choice: str = "auto",
-    description_variant: str = "clear",
 ) -> dict[str, Any]:
     # 이 API는 Tool Call을 제안할 뿐 Tool 함수를 실행하지 않습니다.
     return post("/api/tools/select", {
         "provider": PROVIDER,
         "message": message,
         "tool_choice": tool_choice,
-        "description_variant": description_variant,
     })
 
 
 def complete_loop(
     message: str,
     tool_choice: str = "auto",
-    description_variant: str = "clear",
 ) -> dict[str, Any]:
     # complete API는 선택·검증·실행·최종 답변의 전체 Loop를 수행합니다.
     return post("/api/tools/complete", {
         "provider": PROVIDER,
         "message": message,
         "tool_choice": tool_choice,
-        "description_variant": description_variant,
     })
 
 

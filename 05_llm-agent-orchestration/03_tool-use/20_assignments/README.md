@@ -17,7 +17,7 @@
 ## 선택 과제
 
 Gemini·GPT·Ollama/Llama 중 사용 가능한 두 Provider의 실제 Tool Call을 비교하고,
-Tool 설명과 Tool Choice에 따라 arguments가 달라진 이유를 설명합니다.
+사용자 메시지와 Provider에 따라 Tool 이름과 arguments가 달라진 이유를 설명합니다.
 
 ## 완료 기준
 
