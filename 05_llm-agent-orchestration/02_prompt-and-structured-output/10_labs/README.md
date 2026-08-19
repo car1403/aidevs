@@ -24,8 +24,8 @@ $env:PROMPT_EXAMPLE_PROVIDER="gemini"  # mock, gemini, openai, ollama
 
 ## Lab 2. Zero-shot과 Few-shot
 
-`02_zero_shot_few_shot.py`의 고객 문의 세 개를 Zero-shot과 Few-shot으로 각각
-실행합니다. 분류값, 형식 준수 여부, 근거의 일관성을 표로 기록하세요.
+`02_zero_shot_few_shot.py`의 고객 문의를 세 개로 늘리고 Zero-shot과 Few-shot으로
+각각 실행합니다. 분류값, 형식 준수 여부, 근거의 일관성을 표로 기록하세요.
 
 ## Lab 3. 사용자 입력과 지시 분리
 

@@ -10,6 +10,7 @@ class PromptExample(TypedDict):
     constraint: str
 
 
+# 업무가 달라도 네 구성 요소는 동일하다는 점을 비교하기 위한 예제 모음입니다.
 EXAMPLES: dict[str, PromptExample] = {
     "여행 요청 분석": {
         "role": "당신은 초보자를 돕는 여행 요청 분석가입니다.",
@@ -38,6 +39,7 @@ def build_prompt(
     context: str,
     constraint: str,
 ) -> str:
+    # 각 부분에 제목을 붙이면 누락된 지시나 서로 충돌하는 조건을 찾기 쉽습니다.
     return (
         f"[Role]\n{role}\n\n"
         f"[Instruction]\n{instruction}\n\n"

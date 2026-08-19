@@ -10,6 +10,7 @@
 from string import Template
 
 
+# 변하지 않는 Prompt 골격은 Template으로 한 번만 정의합니다.
 PROMPT_TEMPLATE = Template(
     """[Role]
 $role
@@ -27,6 +28,7 @@ $constraint
 $output_format"""
 )
 
+# 업무별로 달라지는 값만 분리하면 복사·붙여넣기로 생기는 불일치를 줄일 수 있습니다.
 TASKS = {
     "고객 문의": {
         "role": "온라인 쇼핑몰 고객 지원 분류 담당자",
@@ -46,6 +48,7 @@ TASKS = {
 
 
 def render_prompt(values: dict[str, str]) -> str:
+    # substitute()는 필수 변수가 빠지면 오류를 내므로 누락을 조기에 발견할 수 있습니다.
     return PROMPT_TEMPLATE.substitute(values)
 
 

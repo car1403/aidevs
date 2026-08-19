@@ -24,6 +24,7 @@ SAMPLES = {
 
 
 def compare_providers(schema_type: str, message: str) -> None:
+    # 모든 Provider에 같은 Schema와 입력을 보내 형식과 내용 차이를 비교합니다.
     response = httpx.post(
         f"{BASE_URL}/api/structured/compare",
         json={
@@ -35,6 +36,7 @@ def compare_providers(schema_type: str, message: str) -> None:
     )
     response.raise_for_status()
 
+    # 한 Provider가 실패해도 나머지 성공 결과는 그대로 관찰할 수 있습니다.
     for item in response.json()["results"]:
         print(f"\n[{item['provider']}] {item['status']}")
         if item["status"] == "success":

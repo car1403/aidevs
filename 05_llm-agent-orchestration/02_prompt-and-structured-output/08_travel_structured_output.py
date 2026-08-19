@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 
 class TravelPlan(BaseModel):
+    # LLM이 임의 필드를 추가해도 계약을 통과하지 못하게 합니다.
     model_config = ConfigDict(extra="forbid")
 
     destination: str = Field(min_length=1)
@@ -15,6 +16,7 @@ class TravelPlan(BaseModel):
     cautions: list[str] = Field(default_factory=list, max_length=10)
 
 
+# 성공, 누락, 범위 오류, 추가 필드라는 대표 경계 조건을 한 번씩 확인합니다.
 SAMPLES: dict[str, dict[str, Any]] = {
     "정상 여행 계획": {
         "destination": "부산",
@@ -50,6 +52,7 @@ SAMPLES: dict[str, dict[str, Any]] = {
 def validate_travel_output(name: str, payload: dict[str, Any]) -> None:
     print(f"\n[{name}]")
     try:
+        # JSON 파싱 이후에도 필드 타입과 범위를 별도로 검증해야 합니다.
         plan = TravelPlan.model_validate(payload)
         print(plan.model_dump_json(indent=2))
     except ValidationError as error:

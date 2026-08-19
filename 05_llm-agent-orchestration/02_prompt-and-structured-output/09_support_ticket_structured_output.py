@@ -8,13 +8,16 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 class SupportTicket(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    # Literal은 서비스가 처리할 수 있는 분류값만 통과시킵니다.
     category: Literal["billing", "technical", "account", "other"]
     priority: Literal["low", "medium", "high"]
     summary: str = Field(min_length=1, max_length=300)
+    # strict=True는 "yes"나 1이 Boolean으로 자동 변환되는 것을 막습니다.
     requires_human: bool = Field(strict=True)
     missing_information: list[str] = Field(default_factory=list, max_length=10)
 
 
+# 생성형 여행 계획과 달리 분류·판단 결과를 계약으로 표현하는 예제입니다.
 SAMPLES: dict[str, dict[str, Any]] = {
     "결제 문의": {
         "category": "billing",

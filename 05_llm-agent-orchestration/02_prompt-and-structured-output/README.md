@@ -49,6 +49,14 @@ python .\09_support_ticket_structured_output.py
 응답 차이는 Gemini, OpenAI 또는 Ollama를 선택해 관찰합니다.
 
 ```powershell
+cd C:\mini_agent_st\mini_agent_02_structured_output\backend
+uvicorn app.main:app --reload --port 8000
+```
+
+새 PowerShell에서 과정 폴더로 이동하고 Provider를 선택합니다.
+
+```powershell
+cd C:\aidevs\05_llm-agent-orchestration\02_prompt-and-structured-output
 $env:PROMPT_EXAMPLE_PROVIDER="gemini"  # mock, gemini, openai, ollama
 python .\02_zero_shot_few_shot.py
 python .\03_delimiters_and_prompt_injection.py
@@ -59,12 +67,15 @@ python .\06_prompt_to_structured_output.py
 
 실제 Provider는 호출 횟수와 비용을 먼저 확인합니다. Structured Output의
 Provider별 비교는 `10_labs\01_structured_provider_comparison.py`에서 진행합니다.
+`mock`은 System Prompt를 해석하지 않는 결정적 응답이므로 Before/After 품질
+비교에는 사용하지 않습니다.
 
 ## Mini Agent 연결
 
 ```text
 여러 도메인의 Prompt 구성 예제
 → Prompt 구성 메뉴의 예제 선택
+→ Before / After 실제 응답 비교
 → TravelPlan·SupportTicket 검증 예제
 → Schema별 JSON 검증 메뉴
 → Schema별 Structured Output API

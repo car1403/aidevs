@@ -11,7 +11,9 @@ from _llm_backend import generate_text, print_connection_help, print_result
 
 
 MESSAGE = "배송 조회 화면에서 계속 오류가 발생하고 주문 상태를 볼 수 없습니다."
+# Zero-shot에는 작업 정의만 제공하고 정답 예시는 제공하지 않습니다.
 ZERO_SHOT = "고객 문의를 billing, technical, account, other 중 하나로 분류하세요."
+# Few-shot은 원하는 입력·출력 패턴을 가상의 예시로 보여 줍니다.
 FEW_SHOT = """고객 문의를 billing, technical, account, other 중 하나로 분류하세요.
 
 예시:
@@ -24,6 +26,7 @@ FEW_SHOT = """고객 문의를 billing, technical, account, other 중 하나로 
 
 if __name__ == "__main__":
     try:
+        # 입력과 Provider를 고정하고 Prompt에 예시가 있는지만 바꿉니다.
         print_result("Zero-shot", generate_text(ZERO_SHOT, MESSAGE))
         print_result("Few-shot", generate_text(FEW_SHOT, MESSAGE))
     except httpx.HTTPError as error:
