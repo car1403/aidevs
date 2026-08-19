@@ -1,5 +1,10 @@
 """같은 고객 문의를 Zero-shot과 Few-shot Prompt로 실제 호출해 비교합니다."""
 
+# 방식	예시 제공	의미
+# Zero-shot	0개	지시문만 보고 작업 수행
+# One-shot	1개	예시 하나를 참고하여 수행
+# Few-shot	여러 개	여러 예시의 규칙과 패턴을 참고하여 수행
+
 import httpx
 
 from _llm_backend import generate_text, print_connection_help, print_result
