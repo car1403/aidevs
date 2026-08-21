@@ -6,6 +6,7 @@ openai
 ollama
 pgvector
 psycopg[binary]
+pypdf
 pydantic
 python-multipart
 python-dotenv

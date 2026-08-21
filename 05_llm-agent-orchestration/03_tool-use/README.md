@@ -230,16 +230,17 @@ User Message → LLM Tool Call → Backend 실행 → Tool Result
 
 ## 실전 Lab
 
-기본 예제 이후에는 API 키 없이 실행할 수 있는 여섯 가지 업무 시나리오로 안전한 Tool 설계를 연습합니다. 자세한 실습 내용과 확장 과제는 [`10_labs/README.md`](10_labs/README.md)를 참고합니다.
+기본 예제 이후에는 API 키 없이 실행할 수 있는 일곱 가지 업무 시나리오로 안전한 Tool과 Agent 설계를 연습합니다. 자세한 실습 내용과 확장 과제는 [`10_labs/README.md`](10_labs/README.md)를 참고합니다.
 
 | Lab | 파일 | 핵심 개념 |
 |---:|---|---|
 | 01 | `01_parking_gate_tool.py` | 조회 Tool과 상태 변경 Tool 분리, 서버 승인 |
 | 02 | `02_air_conditioner_workflow.py` | Agent가 필요 없는 규칙 기반 Workflow |
 | 03 | `03_parcel_locker_authorization.py` | 인증, 만료, 중복 실행 방지 |
-| 04 | `04_cafe_argument_extraction.py` | arguments 추출, 누락값 재질문 |
-| 05 | `05_library_multi_tool_rules.py` | 여러 Tool Result와 백엔드 업무 규칙 |
+| 04 | `04_cafe_argument_extraction.py` | 상태를 유지하는 재질문 Agent Cycle |
+| 05 | `05_library_multi_tool_rules.py` | 동적 Tool 선택 Agent와 백엔드 업무 규칙 분리 |
 | 06 | `06_inventory_reservation_concurrency.py` | 실행 직전 재검증, 동시성, 낙관적 잠금 |
+| 07 | `07_travel_planning_agent.py` | 재질문, Multi-Tool 선택, 결과 종합, 종료 조건 |
 
 ## 실행
 
@@ -263,6 +264,7 @@ python .\10_labs\03_parcel_locker_authorization.py
 python .\10_labs\04_cafe_argument_extraction.py
 python .\10_labs\05_library_multi_tool_rules.py
 python .\10_labs\06_inventory_reservation_concurrency.py
+python .\10_labs\07_travel_planning_agent.py
 ```
 
 실제 호출 예제는 Mini Agent Backend를 먼저 실행합니다.

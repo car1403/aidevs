@@ -1,6 +1,23 @@
 # 03 Tool Use 실습
 
-기본 예제 `00`~`08`을 학습한 뒤 아래 실전 Lab을 실행합니다. 두 Lab 모두 API 키나 실제 장비 없이 로컬 Python만으로 실행할 수 있습니다.
+기본 예제 `00`~`08`을 학습한 뒤 아래 일곱 가지 실전 Lab을 실행합니다. 모든 Lab은 API 키나 실제 장비 없이 로컬 Python만으로 실행할 수 있습니다.
+
+## Lab 구성 원칙
+
+| Lab | 현재 성격 | Agent 여부 | 학습 방향 |
+|---:|---|---|---|
+| 01 주차장 출입 | Tool + 승인 Workflow | 아니오 | 안전한 상태 변경 Workflow로 유지 |
+| 02 에어컨 제어 | 규칙 기반 Workflow | 아니오 | Agent가 필요 없는 반례로 유지 |
+| 03 택배함 인증 | 인증·멱등성 Workflow | 아니오 | 백엔드 보안 정책으로 유지 |
+| 04 카페 주문 | arguments 추출 + 재질문 | 부분적 Agent | 상태를 유지하는 단일 Agent Cycle |
+| 05 도서 대출 | 동적 조회 Tool 선택 | 학습용 Agent | 제한된 반복 Agent Loop와 서버 정책 분리 |
+| 06 재고 예약 | 동시성·낙관적 잠금 | 아니오 | 안전한 Tool 실행 정책으로 유지 |
+| 07 여행 준비 | 재질문 + Multi-Tool + 결과 종합 | 예 | 읽기 전용 Agent의 판단과 종료 조건 학습 |
+
+여러 Tool을 사용한다고 모두 Agent인 것은 아닙니다. 정해진 순서대로 실행하면
+Workflow이고, 현재 상태에 따라 다음 Tool·재질문·종료를 선택하면 Agent입니다.
+반대로 승인, 인증, 동시성처럼 결과가 결정적이어야 하는 정책은 Agent가 아니라
+Backend Service가 담당해야 합니다.
 
 ## Lab 1. 주차장 출입 제어
 
@@ -70,7 +87,9 @@ python 10_labs/03_parcel_locker_authorization.py
 python 10_labs/04_cafe_argument_extraction.py
 ```
 
-자연어 주문에서 `menu`, `size`, `quantity`를 추출합니다. 필수값이 모두 있으면 검증된 arguments를 만들고, 값이 빠졌다면 임의로 추측하지 않고 `missing_arguments`와 `follow_up_question`을 반환합니다.
+자연어 주문에서 `menu`, `size`, `quantity`를 추출합니다. 한 번의 사용자 메시지마다
+단일 Agent Cycle을 실행하고, 이전에 수집한 arguments를 상태에 보존합니다. 필수값이
+빠졌다면 임의로 추측하지 않고 재질문하며 다음 입력에서 기존 값과 새 값을 병합합니다.
 
 확인할 사례:
 
@@ -81,21 +100,25 @@ python 10_labs/04_cafe_argument_extraction.py
 
 예제의 추출기는 학습용 Mock입니다. 실제 연동에서는 LLM의 Tool Call arguments를 같은 Pydantic Schema로 다시 검증합니다.
 
-## Lab 5. 도서 대출과 여러 Tool Result
+## Lab 5. 도서 대출과 동적 Tool 선택 Agent
 
 ```bash
 python 10_labs/05_library_multi_tool_rules.py
 ```
 
-회원 조회, 도서 조회, 현재 대출 목록 조회라는 세 Tool Result를 모은 뒤 서버 업무 규칙으로 대출 가능 여부를 결정합니다.
+Agent가 현재 상태에서 부족한 정보를 확인해 회원 조회, 도서 조회, 현재 대출 목록
+조회 중 다음 Tool을 선택합니다. 필요한 근거가 모두 모이면 종료를 선택하고, 서버
+업무 규칙이 대출 가능 여부와 실제 상태 변경을 결정합니다.
 
 ```text
-회원 조회 ─┐
-도서 조회 ─┼→ 대출 규칙 평가 → 대출 상태 변경 → 최종 답변
-대출 조회 ─┘
+Agent 상태 확인 → 다음 조회 Tool 선택 → Tool Result를 상태에 저장
+       ↑                                      ↓
+       └──────── 근거가 부족하면 반복 ────────┘
+근거가 충분하면 종료 선택 → 서버 대출 규칙 → 상태 변경 → 최종 결과
 ```
 
-회원 활성 상태, 연체 여부, 도서 대출 가능 상태, 최대 대출 권수를 검사합니다. LLM은 여러 결과를 설명할 수 있지만 대출 허용 여부는 백엔드 규칙이 결정해야 합니다.
+최대 반복 횟수와 종료 이유를 Trace로 확인할 수 있습니다. 실제 LLM Provider로 교체해도
+대출 허용 여부는 반드시 백엔드 규칙이 결정해야 합니다.
 
 ## Lab 6. 재고 예약과 동시성
 
@@ -113,9 +136,33 @@ python 10_labs/06_inventory_reservation_concurrency.py
 
 이 예제는 낙관적 잠금의 개념을 메모리로 단순화한 것입니다. 실제 DB에서는 트랜잭션과 `WHERE version = ?` 조건을 포함한 원자적 갱신을 사용합니다. LLM이 조금 전에 조회한 재고 수량만 믿고 예약을 확정해서는 안 됩니다.
 
+## Lab 7. 여행 준비 Multi-Tool Agent
+
+```bash
+python 10_labs/07_travel_planning_agent.py
+```
+
+도시나 날짜가 빠지면 재질문하고, 오늘 여행에는 현재 날씨 Tool을, 미래 여행에는
+예보 Tool을 선택합니다. 날씨 결과를 얻은 뒤 관광지 Tool을 추가로 호출하고 충분한
+근거가 모이면 여행 준비 정보를 조립하여 종료합니다.
+
+```text
+사용자 요청 → 도시·날짜 확인 ── 부족함 → 재질문 후 상태 유지
+                         └─ 충분함 → 현재 날씨 또는 미래 예보
+                                      → 관광지 검색 → 결과 종합 → 종료
+```
+
+확인할 항목:
+
+1. 첫 번째 Cycle에서 누락된 도시만 재질문하는지 확인합니다.
+2. 두 번째 Cycle에서 이전 날짜와 새 도시가 병합되는지 확인합니다.
+3. Agent가 현재 날씨와 미래 예보 중 하나만 선택하는지 확인합니다.
+4. `max_steps`, `termination_reason`, 전체 Trace를 확인합니다.
+5. 미등록 Tool과 잘못된 arguments가 Backend Executor에서 차단되는지 확인합니다.
+
 ## Provider 비교 방법
 
-별도의 Provider 비교 Python 파일은 두지 않습니다. Mini Agent의 Streamlit `Tool 선택`과 `Agent Loop` 화면에서 같은 질문을 Gemini, GPT, Ollama/Llama에 각각 보내 다음 항목을 표로 기록합니다.
+별도의 Provider 비교 Python 파일은 두지 않습니다. Mini Agent의 Streamlit `Tool 선택`과 `Agent Cycle` 화면에서 같은 질문을 Gemini, GPT, Ollama/Llama에 각각 보내 다음 항목을 표로 기록합니다.
 
 - 선택한 Tool 이름과 arguments
 - 누락 정보에 대한 재질문 여부

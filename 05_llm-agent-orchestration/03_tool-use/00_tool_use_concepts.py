@@ -20,6 +20,7 @@ class WeatherInput(BaseModel):
 def get_current_weather(arguments: dict) -> dict:
     # LLM이 만든 arguments를 그대로 믿지 않고 실행 직전에 검증합니다.
     args = WeatherInput.model_validate(arguments)
+
     return {"city": args.city, "condition": "맑음", "source": "mock"}
 
 

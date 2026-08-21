@@ -18,6 +18,8 @@ RAG는 LLM에게 바로 질문하지 않고, 먼저 관련 문서를 찾은 다�
 - Ollama Embedding과 PostgreSQL/pgvector의 역할을 구분합니다.
 - Redis Cache의 TTL, hit/miss, 재색인 무효화를 확인합니다.
 - Retrieval부터 LLM 답변까지 전체 Trace를 관찰합니다.
+- 직접 입력한 문장과 PDF를 pgvector에 색인하고 의미 검색합니다.
+- Agent가 검색 전용 Tool을 선택·실행하고 근거 답변을 만드는 과정을 확인합니다.
 
 ## 예제 순서
 
@@ -33,6 +35,11 @@ RAG는 LLM에게 바로 질문하지 않고, 먼저 관련 문서를 찾은 다�
 | 08 | `08_real_rag_answer.py` | Backend·Docker 필요 | 실제 LLM 근거 답변과 출처 |
 | 09 | `09_redis_rag_cache.py` | Backend·Docker 필요 | Redis MISS·HIT·TTL |
 | 10 | `10_full_rag_pipeline.py` | Backend·Docker 필요 | 전체 RAG Trace |
+| 11 | `11_text_insert_and_search.py` | Docker 필요 | 문장 입력·저장·유사도 검색 |
+| 12 | `12_pdf_index_and_search.py` | Docker·PDF 필요 | PDF 추출·Chunk·페이지 출처 |
+| 13 | `13_agent_pgvector_tool.py` | Docker 필요 | Agent의 pgvector Tool 호출 |
+| 14 | `14_metadata_and_threshold.py` | Docker 필요 | JSONB Filter·유사도 임계값 |
+| 15 | `15_hybrid_search.py` | Docker 필요 | 키워드·벡터 검색과 RRF 결합 |
 
 처음 다섯 예제는 API Key와 Docker 없이 실행합니다. RAG의 흐름을 먼저 이해한 후 마지막 예제에서 같은 과정을 실제 인프라로 교체합니다.
 
@@ -85,6 +92,33 @@ python .\09_redis_rag_cache.py
 python .\10_full_rag_pipeline.py
 ```
 
+11~15는 Mini Backend 없이 Ollama와 PostgreSQL에 직접 연결합니다. 먼저 06과 같은
+방법으로 공용 인프라와 DB Schema를 준비합니다.
+
+```powershell
+cd C:\aidevs\05_llm-agent-orchestration\04_rag
+python .\11_text_insert_and_search.py
+python .\12_pdf_index_and_search.py C:\data\travel-policy.pdf --query "당일 취소 규정은?" --top-k 3
+python .\13_agent_pgvector_tool.py
+python .\14_metadata_and_threshold.py
+python .\15_hybrid_search.py
+
+# 실제 Ollama Agent Tool Calling을 확인할 때
+$env:RAG_AGENT_PROVIDER="ollama"
+python .\13_agent_pgvector_tool.py
+```
+
+12는 텍스트가 포함된 PDF를 대상으로 합니다. 검색 결과에는 파일명과 페이지 번호가
+표시됩니다. 이미지로 스캔된 PDF는 텍스트 추출 전에 별도 OCR 처리가 필요합니다.
+
+11~15가 공유하는 `_pgvector_store.py`는 다음 계약을 한곳에서 관리합니다.
+
+- 문서와 질문에 동일한 `embeddinggemma` 모델 사용
+- `collection/source/chunk_index` 기반 결정적 ID와 Upsert
+- `top_k`, 선택적 `score_threshold`, JSONB Metadata Filter 적용
+- Parameterized SQL을 이용한 코사인 유사도 검색
+- Agent에는 DB나 SQL 대신 `search_knowledge_base` 검색 Tool만 제공
+
 pgvector는 Chunk와 Embedding을 영구 저장하고 Redis는 계산된 RAG 답변을 짧게
 보관합니다. Redis 장애는 검색과 답변 생성을 막지 않으며 재색인하면 전용 Cache를
 무효화합니다.
@@ -101,6 +135,24 @@ pgvector는 Chunk와 Embedding을 영구 저장하고 Redis는 계산된 RAG 답
 4. 06~07에서 Ollama와 pgvector 색인·검색을 확인합니다.
 5. 08에서 검색 Context를 실제 LLM에 전달합니다.
 6. 09~10에서 Redis Cache와 전체 Trace를 확인합니다.
+7. 11에서 직접 입력한 문장의 저장과 유사도 검색을 확인합니다.
+8. 12에서 PDF의 페이지별 Chunk와 출처를 확인합니다.
+9. 13에서 Agent의 Tool 선택·실행·최종 답변 Loop를 확인합니다.
+10. 14에서 문서 범위 Filter와 임계값에 따른 결과 변화를 확인합니다.
+11. 15에서 키워드·벡터 검색 결과를 RRF로 결합합니다.
+
+## 14~15 검색 품질 확장
+
+14는 벡터가 비슷하더라도 만료된 정책이나 다른 업무 영역의 문서를 제외하는 방법을
+다룹니다. `metadata @> filter` 조건으로 `category`, `status`, `language`를 제한하고,
+`score_threshold`보다 낮은 결과는 Context에 포함하지 않습니다. 임계값은 모델과
+데이터에 따라 점수 분포가 달라지므로 고정된 정답이 아니라 평가 결과로 조정합니다.
+
+15는 정확한 객실 코드 같은 고유명사에 강한 키워드 검색과 표현이 달라도 의미를 찾는
+pgvector 검색을 함께 사용합니다. 두 검색 점수는 단위가 다르므로 직접 더하지 않고,
+각 결과의 순위를 Reciprocal Rank Fusion(RRF)으로 결합합니다. 이 예제의 키워드 검색은
+원리를 보기 위한 Python 구현이며, 대규모 서비스에서는 PostgreSQL Full Text Search나
+별도 검색 엔진으로 후보를 가져오는 구조로 교체할 수 있습니다.
 
 ## 공식 참고 자료
 

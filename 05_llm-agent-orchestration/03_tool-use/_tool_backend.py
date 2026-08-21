@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 # .env와 환경 변수로 Backend 주소와 실험 Provider를 바꿀 수 있습니다.
 load_dotenv()
 BASE_URL = os.getenv("BACKEND_API_URL", "http://127.0.0.1:8000").rstrip("/")
-PROVIDER = os.getenv("TOOL_EXAMPLE_PROVIDER", "mock")
+PROVIDER = os.getenv("TOOL_EXAMPLE_PROVIDER", "openai")
 
 
 def post(path: str, payload: dict[str, Any]) -> dict[str, Any]:
