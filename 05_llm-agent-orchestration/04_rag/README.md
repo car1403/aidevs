@@ -41,7 +41,7 @@ RAG는 LLM에게 바로 질문하지 않고, 먼저 관련 문서를 찾은 다�
 | 14 | `14_metadata_and_threshold.py` | Docker 필요 | JSONB Filter·유사도 임계값 |
 | 15 | `15_hybrid_search.py` | Docker 필요 | 키워드·벡터 검색과 RRF 결합 |
 
-처음 다섯 예제는 API Key와 Docker 없이 실행합니다. RAG의 흐름을 먼저 이해한 후 마지막 예제에서 같은 과정을 실제 인프라로 교체합니다.
+처음 다섯 예제는 API Key와 Docker 없이 실행합니다. RAG의 흐름을 먼저 이해한 후 06부터 같은 과정을 실제 인프라로 확장합니다.
 
 ## 기본과 실제 인프라 비교
 
@@ -122,6 +122,37 @@ python .\13_agent_pgvector_tool.py
 pgvector는 Chunk와 Embedding을 영구 저장하고 Redis는 계산된 RAG 답변을 짧게
 보관합니다. Redis 장애는 검색과 답변 생성을 막지 않으며 재색인하면 전용 Cache를
 무효화합니다.
+
+## Agent·Tool 개념을 이어가는 독립 Lab
+
+기본 예제 이후에는 `03_tool-use`에서 배운 Agent·Tool 원칙을 실제 RAG 인프라에
+연결합니다. 첫 번째 고객지원 Lab은 Agent가 검색 Tool Call을 제안하고 Backend가
+Allowlist와 Pydantic으로 arguments를 검증한 뒤 pgvector를 검색합니다. 검색 결과는
+Tool Result로 Agent에게 전달되며, 근거 답변은 Redis TTL Cache에 저장됩니다.
+
+```text
+사용자 질문 → Agent 검색 결정 → 검증된 search_knowledge_base Tool
+→ pgvector Tool Result → 근거 답변과 출처 → Redis Cache
+```
+
+```powershell
+cd C:\aidevs\05_llm-agent-orchestration\04_rag
+python .\10_labs\01_customer_support_rag_agent.py
+```
+
+Agent에는 SQL이나 Redis 명령을 직접 제공하지 않습니다. Tool Call은 실행 제안이며,
+허용 Tool·arguments·검색 범위·Cache 정책은 Backend가 관리합니다. 상세 실습은
+[`10_labs/README.md`](10_labs/README.md)를 참고합니다.
+
+| Lab | 실제 인프라 시나리오 | Agent·Workflow 구분 |
+|---:|---|---|
+| 01 | 고객지원 검색 Tool과 Redis Cache | 검색 여부를 Agent가 결정 |
+| 02 | 문서 갱신·오래된 Chunk·Cache 무효화 | 결정적 Backend Workflow |
+| 03 | 상품 Metadata·가격·Hybrid Search | 검증된 검색 Workflow |
+| 04 | 사내 규정 ACL 검색 | Backend 권한 + 검색 Tool |
+| 05 | PDF 페이지 Chunk 색인과 검색 | 수집 Workflow + 검색 Tool |
+| 06 | Hit@K·MRR 검색 평가 | 결정적 평가 Workflow |
+| 07 | 여러 지식 저장소 검색 | 재질문·Multi-Tool Agent |
 
 > 기존 PostgreSQL Volume을 사용해도 `apply_schema.py`는 필요한 테이블을 다시
 > 확인하고, 없는 테이블만 생성합니다. 데이터 보존이 필요하면 Volume을 삭제하지
