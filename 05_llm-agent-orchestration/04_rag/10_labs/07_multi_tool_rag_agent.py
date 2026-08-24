@@ -144,7 +144,12 @@ def run_cycle(message: str, state: AgentState, cache: JsonCache) -> dict[str, An
     cached = cache.get(key)
     if cached is not None:
         state.termination_reason = "cache_hit"
-        return {**cached, "cache_hit": True, "state": state}
+        return {
+            **cached,
+            "termination_reason": state.termination_reason,
+            "cache_hit": True,
+            "state": state,
+        }
 
     results: dict[str, list[dict[str, Any]]] = {}
     for topic in topics:

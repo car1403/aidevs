@@ -154,95 +154,47 @@ python .\10_labs\07_multi_tool_rag_agent.py
 4. `MAX_STEPS`, 전체 Trace, `termination_reason`을 확인합니다.
 5. Agent가 Collection 이름이나 SQL을 직접 선택하지 않는지 확인합니다.
 
-## 실행 위치
+## 실행 준비
 
-실습 1~3은 Backend와 Docker 없이 실행합니다. 실습 4의
-`06_pgvector_ollama_example.py`는 Mini Backend를 호출하지 않고 PostgreSQL·pgvector와
-Ollama에 직접 연결합니다.
+이 폴더의 독립 Lab 1~7은 모두 Mini Backend 없이 실행하지만, 공통 모듈
+`_pgvector_store.py`를 통해 PostgreSQL·pgvector와 Ollama에 직접 연결합니다. Cache를
+다루는 Lab은 Redis도 사용합니다. 따라서 Docker가 필요 없다는 뜻이 아니라 별도의
+FastAPI Backend가 필요 없다는 뜻입니다.
 
-```powershell
-cd C:\mini_agent_st\infra
-docker compose up -d postgres redis ollama
-docker compose exec ollama ollama pull embeddinggemma
-```
-
-완성 RAG 화면을 확인할 때만 별도 터미널에서 다음 Backend를 실행합니다.
+먼저 과정 의존성을 설치하고 공용 인프라와 DB Schema를 준비합니다.
 
 ```powershell
-cd C:\mini_agent_st\mini_agent_04_rag\backend
-uvicorn app.main:app --reload --port 8000
+cd C:\aidevs\05_llm-agent-orchestration
+python -m pip install -r .\requirements.txt
+.\00_local-runtime\scripts\start-local-services.ps1
+docker exec aidevs-ollama ollama pull embeddinggemma
+docker exec aidevs-ollama ollama pull llama3.2
+python .\00_local-runtime\database\apply_schema.py
 ```
 
-## 실습 1. Chunk 크기 비교
+연결 주소가 기본값과 다르면 실행 전에 환경 변수를 설정합니다.
 
-`02_chunking_and_metadata.py`의 `sentences_per_chunk`를 1, 2, 4로 바꾸고 Chunk 개수와 내용을 비교합니다.
+```powershell
+$env:DATABASE_URL="postgresql://agent_user:agent_password@127.0.0.1:5433/agent_db"
+$env:REDIS_URL="redis://127.0.0.1:6379/0"
+$env:OLLAMA_BASE_URL="http://127.0.0.1:11434"
+```
 
-## 실습 2. 검색 결과 설명하기
+공용 인프라의 상세 설치·점검 방법은
+[`00_local-runtime/README.md`](../../00_local-runtime/README.md), 기본 예제 01~15의
+단계별 실습은 상위 [`04_rag/README.md`](../README.md)를 참고합니다. 이 문서는 위에서
+설명한 독립 Lab 1~7만 다룹니다.
 
-`03_keyword_retrieval.py`에서 `top_k`를 1과 3으로 실행하고, 검색 결과가 늘어날 때 Context에 불필요한 내용이 섞일 수 있는 이유를 적습니다.
+## 실행 결과 확인
 
-## 실습 3. 근거 없음 처리
+- Lab 1: 첫 검색은 `cache_hit=false`, 같은 질문의 두 번째 검색은 `true`입니다.
+- Lab 2: version 2 색인 후 Chunk가 하나만 남고 다음 검색은 다시 MISS입니다.
+- Lab 3: 검색 결과는 `shoes`, 100,000원 이하 조건을 만족합니다.
+- Lab 4: `employee`와 `manager`에게 HR 전용 문서가 노출되지 않습니다.
+- Lab 5: 결과에 PDF 파일명과 페이지 번호가 표시됩니다.
+- Lab 6: Keyword·Vector·Hybrid별 Hit@3와 MRR 및 질문별 순위가 출력됩니다.
+- Lab 7: 첫 요청은 재질문으로 끝나고, 두 번째 요청은 호텔·항공 Tool만 호출합니다.
 
-등록되지 않은 여권 분실 질문을 입력하고 다음을 확인합니다.
-
-- `grounded`가 `False`인가?
-- `sources`가 비어 있는가?
-- 문서에 없는 내용을 추측하지 않는가?
-
-## 실습 4. 실제 pgvector 검색
-
-Docker 환경을 실행한 후 `06_pgvector_ollama_example.py`의 질문을 세 가지로 바꿉니다.
-
-- 호텔 예약을 취소하고 싶어요.
-- 비행기에 가방을 몇 kg까지 실을 수 있나요?
-- 박물관이 쉬는 날은 언제인가요?
-
-각 질문에서 1위 문서와 점수를 기록합니다.
-
-## 실습 5. 키워드와 pgvector 비교
-
-`07_keyword_vs_pgvector.py`에서 두 검색 방식의 1위 문서와 점수를 기록하고 의미가
-비슷하지만 단어가 다른 질문에서 결과가 달라지는 이유를 설명합니다.
-
-## 실습 6. 실제 LLM 근거 답변
-
-`08_real_rag_answer.py`를 준비된 Provider로 실행하고 답변이 출력된 Context와 출처로
-뒷받침되는지 확인합니다.
-
-## 실습 7. Redis Cache
-
-`09_redis_rag_cache.py`로 MISS→HIT와 TTL을 확인합니다. `top_k`나 Provider를 바꾸면
-새 Cache Key가 사용되는지 확인하고 재색인 후 다시 MISS가 되는지 관찰합니다.
-
-## 실습 8. 직접 입력 문장 검색
-
-`11_text_insert_and_search.py`에 의미는 비슷하지만 단어가 다른 문장과 질문을 각각
-추가합니다. `top_k`와 `score_threshold`를 바꾸며 관련 없는 결과가 제거되는지 확인합니다.
-
-## 실습 9. PDF 페이지 출처 검색
-
-텍스트형 PDF를 준비하고 `12_pdf_index_and_search.py`로 색인합니다. 서로 다른 페이지의
-내용을 묻는 질문 세 개를 실행하여 1위 Chunk의 파일명, 페이지 번호, 점수를 기록합니다.
-같은 PDF를 다시 색인했을 때 Chunk 수가 중복 증가하지 않는지도 확인합니다.
-
-> 이미지로 스캔된 PDF는 이 기본 실습의 대상이 아닙니다. 텍스트가 추출되지 않을 때
-> OCR이 필요한 이유를 설명하는 것은 심화 실습으로 다룹니다.
-
-## 실습 10. Agent와 pgvector Tool
-
-`13_agent_pgvector_tool.py`를 먼저 기본 `mock` 모드로 실행하여 Tool Call과 Tool Result를
-확인합니다. 이후 `RAG_AGENT_PROVIDER=ollama`로 실행하여 실제 Agent가 검색 Tool을
-선택하는지, 최종 답변이 Tool Result와 출처로 뒷받침되는지 비교합니다.
-
-## 실습 11. Metadata Filter와 임계값
-
-`14_metadata_and_threshold.py`에서 `category`, `status`, `language` 조건을 하나씩 제거해
-만료되었거나 다른 범주의 문서가 검색되는지 관찰합니다. `score_threshold`를 여러 값으로
-바꾸고 관련 문서까지 사라지는 지점을 기록하여 임계값의 정밀도·재현율 trade-off를
-설명합니다.
-
-## 실습 12. Hybrid Search와 RRF
-
-`15_hybrid_search.py`의 질문에서 정확한 객실 코드가 있는 경우와 없는 경우를 비교합니다.
-키워드, pgvector, Hybrid 각각의 상위 문서를 기록하고 `rank_constant`를 바꿨을 때 RRF
-순위가 어떻게 변하는지 확인합니다.
+> Lab 7의 Tool 선택은 재현 가능한 학습을 위한 키워드 기반 결정적 Router입니다. 실제
+> LLM Tool Calling 예제는 상위 `13_agent_pgvector_tool.py`와 Lab 1의 선택적 Ollama
+> 모드를 사용합니다.

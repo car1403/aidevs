@@ -1,17 +1,42 @@
 # 05 Memory 실습
 
+## 독립 Lab 구성
+
+다음 세 Lab은 Docker와 Backend 없이 실행하며, Memory를 저장하기 전에 적용할 정책을
+작은 결정적 코드로 확인합니다.
+
+| Lab | 파일 | 핵심 학습 |
+|---:|---|---|
+| 01 | `01_consent_and_value_safety.py` | 명시적 동의, key Allowlist, 민감한 value 차단 |
+| 02 | `02_retention_and_user_control.py` | TTL과 장기 보존, 내보내기, 사용자 전체 삭제 |
+| 03 | `03_authenticated_scope_and_safe_keys.py` | 인증 사용자 범위, Redis-safe 결정적 Key |
+
+```powershell
+cd C:\aidevs\05_llm-agent-orchestration\05_memory
+python .\10_labs\01_consent_and_value_safety.py
+python .\10_labs\02_retention_and_user_control.py
+python .\10_labs\03_authenticated_scope_and_safe_keys.py
+```
+
+각 Lab에서 확인할 항목은 다음과 같습니다.
+
+1. 허용된 key라도 동의가 없거나 value에 민감정보가 있으면 저장하지 않습니다.
+2. Redis 단기 상태는 만료되지만 PostgreSQL 장기 선호는 삭제 요청까지 유지됩니다.
+3. 내보내기와 삭제는 인증된 사용자 범위에만 적용됩니다.
+4. 외부 ID를 Redis Key에 그대로 넣지 않아 `*`, `?`, `:`에 의한 충돌을 막습니다.
+
 ## 실행 위치
 
-실습 1~5는 Backend 없이 진행합니다. 실습 6~7의 Python 파일은 Mini Backend가 아니라
-Redis와 PostgreSQL에 직접 연결하므로 공용 인프라를 먼저 실행합니다.
+아래 기본 실습 1~5는 Backend 없이 진행합니다. 기본 예제 `05_redis_session.py`와
+`06_postgres_long_term_memory.py`를 실행할 때는 공용 Redis와 PostgreSQL을 준비합니다.
 
 ```powershell
 cd C:\mini_agent_st\infra
 docker compose up -d redis postgres
 ```
 
-실습 8의 완성 화면과 Backend 재시작 후 영속성을 확인할 때는 다음 Backend를
-별도 터미널에서 실행합니다.
+기본 예제 07~13과 완성 화면, Backend 재시작 후 영속성을 확인할 때는 Mini Agent 05
+Backend를 별도 터미널에서 실행합니다.
 
 ```powershell
 cd C:\mini_agent_st\mini_agent_05_memory\backend
