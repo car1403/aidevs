@@ -1,4 +1,4 @@
-# 04 RAG
+# 04 RAG (Retrieval-Augmented Generation)
 
 ## 한 문장으로 이해하기
 
