@@ -26,6 +26,9 @@ COLLECTION = "rag_lesson"
 
 DOCUMENTS = [
     ("호텔 환불", "체크인 3일 전까지 취소하면 전액 환불합니다.", "hotel-refund.md"),
+    ("호텔 환불", "당일 취소는 환불이 안됩니다.", "hotel-refund.md"),
+    ("호텔 환불", "체크인 2일 전까지 취소하면 50% 환불합니다.", "hotel-refund.md"),
+    ("호텔 환불", "체크인 1일 전까지 취소하면 10% 환불합니다.", "hotel-refund.md"),
     ("수하물", "교육용 국내선의 위탁 수하물은 15kg까지 허용합니다.", "baggage.md"),
     ("관광지 운영", "바다 박물관은 매주 화요일에 휴관합니다.", "attraction-hours.md"),
 ]
@@ -79,13 +82,13 @@ def search(question: str, top_k: int = 3) -> list[dict]:
     with connect() as connection, connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT title, content, source, 1 - (embedding <=> %s) AS score
+            SELECT title, content, source, 1 - (embedding <=> %s::vector) AS score
             FROM documents
             WHERE collection_name = %s
               AND embedding_provider = 'ollama'
               AND embedding_model = %s
               AND embedding_dimension = %s
-            ORDER BY embedding <=> %s
+            ORDER BY embedding <=> %s::vector
             LIMIT %s
             """,
             (vector, COLLECTION, OLLAMA_EMBEDDING_MODEL, len(vector), vector, top_k),

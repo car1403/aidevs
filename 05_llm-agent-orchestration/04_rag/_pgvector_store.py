@@ -120,15 +120,15 @@ def similarity_search(
         cursor.execute(
             """
             SELECT id, title, content, source, chunk_index, metadata,
-                   1 - (embedding <=> %s) AS score
+                   1 - (embedding <=> %s::vector) AS score
             FROM documents
             WHERE collection_name = %s
               AND embedding_provider = 'ollama'
               AND embedding_model = %s
               AND embedding_dimension = %s
-              AND (%s::double precision IS NULL OR 1 - (embedding <=> %s) >= %s)
+              AND (%s::double precision IS NULL OR 1 - (embedding <=> %s::vector) >= %s)
               AND (%s::jsonb = '{}'::jsonb OR metadata @> %s::jsonb)
-            ORDER BY embedding <=> %s
+            ORDER BY embedding <=> %s::vector
             LIMIT %s
             """,
             (
