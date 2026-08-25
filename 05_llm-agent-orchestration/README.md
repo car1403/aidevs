@@ -45,6 +45,7 @@ LLM과 Agent 구분
 → Prompt와 Structured Output
 → GPT 이미지 분석과 TTS 선택 확장
 → Tool Use
+→ MCP로 Tool 표준화
 → RAG
 → Memory
 → LangGraph Workflow
@@ -72,6 +73,7 @@ LLM과 Agent 구분
 | `01_llm-to-agent` | LLM, Workflow, Agent 비교와 OpenAI 멀티모달 선택 확장 |
 | `02_prompt-and-structured-output` | Prompt 구성과 Pydantic 응답 |
 | `03_tool-use` | Function Calling과 Tool 실행 |
+| `03_mcp` | stdio MCP Server, Tool 발견·호출, Resource |
 | `04_rag` | 문서 검색과 근거 기반 답변 |
 | `05_memory` | 사용자별 단기·장기 기억 |
 | `06_langgraph-workflow` | State, Node, Edge, 조건 분기 |
@@ -128,6 +130,7 @@ Backend 없이 실행하며, 실제 Provider 또는 완성 화면을 사용하�
 | 01 | Backend 불필요 | `C:\mini_agent_st\mini_agent_01_llm\backend` · Port 8000 |
 | 02 | Lab 1~3 불필요 | Lab 4: `mini_agent_02_structured_output\backend` · Port 8000 |
 | 03 | 실습 1~5 불필요 | 실습 6: `mini_agent_03_tool\backend` · Port 8000 |
+| 03 MCP | Backend 불필요 | stdio Client가 MCP Server를 자동 실행 |
 | 04 | 실습 1~3 불필요 | 실습 4는 Backend가 아니라 `C:\mini_agent_st\infra`의 PostgreSQL·Ollama 사용 |
 | 05 | 실습 1~5 불필요 | 실습 6~7은 Redis·PostgreSQL, 완성 화면은 `mini_agent_05_memory\backend` |
 | 06 | 실습 1~11 불필요 | 완성 화면: `mini_agent_06_langgraph\backend_langgraph` · Port 8001 |
