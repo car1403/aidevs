@@ -150,6 +150,7 @@ async def answer(question: str) -> dict[str, Any]:
 
 
 async def main() -> None:
+    # result = await answer("부산 날씨 알려주세요.")
     result = await answer("부산 날씨와 15만원 이하 호텔을 찾아 주세요.")
     print(json.dumps(result, ensure_ascii=False, indent=2))
 

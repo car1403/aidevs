@@ -53,4 +53,5 @@ def baggage_policy() -> str:
 
 
 if __name__ == "__main__":
+    print("MCP Server is running on stdio...")
     mcp.run(transport="stdio")
