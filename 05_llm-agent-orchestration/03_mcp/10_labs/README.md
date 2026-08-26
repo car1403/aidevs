@@ -16,6 +16,19 @@
 `03_weather_mcp_server.py`와 `03_hotel_mcp_server.py`를 각각 stdio Server로
 실행하고 `03_multi_server_tool_loop.py`에서 동시에 연결합니다.
 
+연결할 Server 목록은 `mcp_servers.json`에서 관리합니다. 새 Server를 추가할 때는
+Client 코드를 수정하지 않고 다음처럼 설정만 추가합니다. `command`를 생략하면 현재
+Python 실행 파일을 사용하며, 상대 경로인 Python 파일은 이 Lab 디렉터리를 기준으로
+찾습니다.
+
+```json
+{
+  "weather": { "args": ["03_weather_mcp_server.py"] },
+  "hotel": { "args": ["03_hotel_mcp_server.py"] },
+  "restaurant": { "args": ["03_restaurant_mcp_server.py"] }
+}
+```
+
 ```text
 질문
 → 부산의 현재 날씨와 내일 예보를 확인하고, 15만 원 이하 호텔을 찾은 뒤

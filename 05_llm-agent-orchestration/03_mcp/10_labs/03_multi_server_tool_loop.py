@@ -39,8 +39,7 @@ from openai import AsyncOpenAI
 
 COURSE_ROOT = Path(__file__).resolve().parents[2]
 LAB_DIR = Path(__file__).resolve().parent
-WEATHER_SERVER_PATH = LAB_DIR / "03_weather_mcp_server.py"
-HOTEL_SERVER_PATH = LAB_DIR / "03_hotel_mcp_server.py"
+SERVER_CONFIG_PATH = LAB_DIR / "mcp_servers.json"
 
 load_dotenv(COURSE_ROOT / ".env")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
@@ -80,12 +79,20 @@ def text_result(result) -> str:
 
 async def open_session(
     stack: AsyncExitStack,
-    server_path: Path,
+    config: dict[str, Any],
 ) -> ClientSession:
     """stdio Server 하나를 실행하고 초기화된 Session을 반환합니다."""
+    command = config.get("command", sys.executable)
+    args = [
+        str(LAB_DIR / arg)
+        if arg.endswith(".py") and not Path(arg).is_absolute()
+        else arg
+        for arg in config.get("args", [])
+    ]
     parameters = StdioServerParameters(
-        command=sys.executable,
-        args=[str(server_path)],
+        command=command,
+        args=args,
+        env=config.get("env"),
     )
     read_stream, write_stream = await stack.enter_async_context(
         stdio_client(parameters)
@@ -97,6 +104,26 @@ async def open_session(
     return session
 
 
+def load_server_configs() -> dict[str, dict[str, Any]]:
+    """설정 파일에서 연결할 MCP Server 목록을 읽습니다."""
+    configs = json.loads(SERVER_CONFIG_PATH.read_text(encoding="utf-8"))
+    if not isinstance(configs, dict) or not configs:
+        raise ValueError("mcp_servers.json에는 하나 이상의 Server 설정이 필요합니다.")
+    if not all(isinstance(config, dict) for config in configs.values()):
+        raise ValueError("각 Server 설정은 JSON Object여야 합니다.")
+    return configs
+
+
+async def open_sessions(
+    stack: AsyncExitStack,
+) -> dict[str, ClientSession]:
+    """설정에 등록된 모든 MCP Server에 연결합니다."""
+    sessions: dict[str, ClientSession] = {}
+    for server_name, config in load_server_configs().items():
+        sessions[server_name] = await open_session(stack, config)
+    return sessions
+
+
 async def answer(question: str) -> dict[str, Any]:
     if not os.getenv("OPENAI_API_KEY"):
         raise RuntimeError("OPENAI_API_KEY가 필요합니다.")
@@ -105,10 +132,7 @@ async def answer(question: str) -> dict[str, Any]:
     llm_calls = 0
 
     async with AsyncExitStack() as stack:
-        sessions = {
-            "weather": await open_session(stack, WEATHER_SERVER_PATH),
-            "hotel": await open_session(stack, HOTEL_SERVER_PATH),
-        }
+        sessions = await open_sessions(stack)
         client = await stack.enter_async_context(AsyncOpenAI())
 
         openai_tools: list[dict[str, Any]] = []
