@@ -4,5 +4,8 @@
   },
   "hotel": {
     "args": ["03_hotel_mcp_server.py"]
+  },
+  "tour": {
+    "args": ["03_tour_mcp_server.py"]
   }
 }
