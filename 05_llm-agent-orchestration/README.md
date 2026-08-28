@@ -76,8 +76,8 @@ LLM과 Agent 구분
 | `03_mcp` | stdio MCP Server, Tool 발견·호출, Resource |
 | `04_rag` | 문서 검색과 근거 기반 답변 |
 | `05_memory` | 사용자별 단기·장기 기억 |
-| `06_langgraph-workflow` | State, Node, Edge, 조건 분기 |
-| `07_human-approval-and-safety` | 승인, 권한, Prompt Injection 방어 |
+| `06_agent-workflow` | Workflow·Rule Loop·OpenAI Agent, LangGraph 비교와 Multi-Agent 연결 |
+| `07_human-approval-and-safety` | Agent 경계 설계, Single/Multi-Agent 선택, 권한·승인과 안전한 실행 |
 | `08_agent-evaluation-and-tracing` | 시나리오 평가와 실행 이력 |
 | `09_integrated-agent-lab` | `mini_agent_08_evaluation`로 전체 흐름을 실행·확장하는 통합 실습 |
 
@@ -134,7 +134,7 @@ Backend 없이 실행하며, 실제 Provider 또는 완성 화면을 사용하�
 | 04 | 실습 1~3 불필요 | 실습 4는 Backend가 아니라 `C:\mini_agent_st\infra`의 PostgreSQL·Ollama 사용 |
 | 05 | 실습 1~5 불필요 | 실습 6~7은 Redis·PostgreSQL, 완성 화면은 `mini_agent_05_memory\backend` |
 | 06 | 실습 1~11 불필요 | 완성 화면: `mini_agent_06_langgraph\backend_langgraph` · Port 8001 |
-| 07 | Lab 1~6 불필요 | 완성 화면: `mini_agent_07_human_approval\backend_langgraph` · Port 8001 |
+| 07 | 필수 예제·Lab 1~8 불필요 | 선택 비교 화면: `mini_agent_07_human_approval\backend_langgraph` · Port 8001 |
 | 08 | Lab 1~4 불필요 | Lab 5: `mini_agent_08_evaluation\backend_python` · Port 8000 |
 | 09 | 두 Backend 필요 | `backend_python` 8000 + `backend_langgraph` 8001 |
 

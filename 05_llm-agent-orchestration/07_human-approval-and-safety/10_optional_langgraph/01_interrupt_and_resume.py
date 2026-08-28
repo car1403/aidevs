@@ -1,4 +1,4 @@
-"""LangGraph interrupt와 구조화된 Command(resume=...) 최소 예제."""
+"""선택 학습: LangGraph interrupt와 구조화된 Command(resume=...) 예제."""
 
 from operator import add
 from typing import Annotated, TypedDict

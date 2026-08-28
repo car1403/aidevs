@@ -1,4 +1,4 @@
-"""일반 Python으로 중단, 상태 저장, 재개를 구분합니다."""
+"""일반 Python으로 Agent 실행의 중단, 상태 저장, 재개를 구분합니다."""
 
 
 ALLOWED_DECISIONS = {"approve", "reject"}

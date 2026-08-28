@@ -1,6 +1,6 @@
 # 03 Tool Use 실습
 
-기본 예제 `00`~`08`을 학습한 뒤 아래 일곱 가지 실전 Lab을 실행합니다. 모든 Lab은 API 키나 실제 장비 없이 로컬 Python만으로 실행할 수 있습니다.
+기본 예제 `00`~`08`을 학습한 뒤 아래 여덟 가지 실전 Lab을 실행합니다. 모든 Lab은 API 키나 실제 장비 없이 로컬 Python만으로 실행할 수 있습니다.
 
 ## Workflow, Tool Use, AI Agent 구분
 
@@ -133,6 +133,7 @@ Agent를 사용하더라도 무제한 자율 실행을 허용하지 않습니다
 | 05 도서 대출 | 동적 조회 Tool 선택 | 학습용 Agent | 제한된 반복 Agent Loop와 서버 정책 분리 |
 | 06 재고 예약 | 동시성·낙관적 잠금 | 아니오 | 안전한 Tool 실행 정책으로 유지 |
 | 07 여행 준비 | 재질문 + Multi-Tool + 결과 종합 | 예 | 읽기 전용 Agent의 판단과 종료 조건 학습 |
+| 08 사용자 입력 후 재개 | Tool 2개 + 사용자 대기 + Tool 재실행 | 예 | 여러 Cycle의 State 유지와 안전한 재개 |
 
 여러 Tool을 사용한다고 모두 Agent인 것은 아닙니다. 정해진 순서대로 실행하면
 Workflow이고, 현재 상태에 따라 다음 Tool·재질문·종료를 선택하면 Agent입니다.
@@ -330,6 +331,36 @@ python 10_labs/07_travel_planning_agent.py
 - 날씨 결과를 받은 뒤 관광지 검색으로 진행하는 등 이전 결과가 다음 행동에 영향을 줍니다.
 - 조회 전용 Tool만 허용하고 `max_steps`와 종료 조건을 두어 Agent의 행동 범위를 제한할 수 있습니다.
 - 예약이나 결제 같은 상태 변경이 없어 Agent의 동적 판단을 학습하기에 안전한 사례입니다.
+
+## Lab 8. Multi-Tool 실행 후 사용자 입력으로 재개
+
+```bash
+python 10_labs/08_multi_tool_user_resume.py
+```
+
+첫 번째 Agent Cycle에서 날씨와 관광지 조회 Tool을 연속 실행합니다. Agent는 추천 장소를 얻은 뒤 임의로 일정을 확정하지 않고 사용자에게 장소를 질문하며 `waiting_user` 상태로 종료합니다. 두 번째 Cycle은 같은 State를 이어받아 사용자의 선택을 검증한 후 일정 추가 Tool을 실행합니다.
+
+```text
+사용자 요청
+   ↓
+날씨 Tool → 관광지 Tool
+   ↓
+사용자에게 장소 선택 질문 → waiting_user
+   ↓
+다음 사용자 메시지 + 기존 State
+   ↓
+후보 검증 → 일정 추가 Tool → completed
+```
+
+확인할 항목:
+
+1. 첫 번째 Cycle에서 조회 Tool 두 개가 실행되는지 확인합니다.
+2. 사용자 질문 후 함수가 `waiting_user`로 종료되는지 확인합니다.
+3. 두 번째 Cycle에서 날씨와 관광지를 다시 조회하지 않는지 확인합니다.
+4. 사용자가 조회 결과에 없는 장소를 말하면 다시 질문하는지 확인합니다.
+5. 검증된 장소에만 상태 변경 Tool을 실행하는지 확인합니다.
+
+이 예제의 중단은 LangGraph 기능이 아니라 `AgentState`와 여러 번의 함수 호출로 직접 구현합니다. `06_agent-workflow`에서는 같은 개념을 LangGraph의 Checkpoint와 interrupt/resume으로 확장할 수 있습니다.
 
 ## Provider 비교 방법
 

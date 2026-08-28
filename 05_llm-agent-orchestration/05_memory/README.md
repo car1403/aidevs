@@ -54,6 +54,8 @@ python .\05_memory\00_check_environment.py
 | `BACKEND_API_URL` | `http://127.0.0.1:8000` | 07~13 |
 | `MEMORY_EXAMPLE_PROVIDER` | `mock` | 12 |
 | `REQUEST_TIMEOUT_SECONDS` | `30` | 07~13 API 요청 |
+| `MEMORY_MCP_URL` | `http://127.0.0.1:8002/mcp` | HTTP MCP Client |
+| `MCP_DEMO_USER_ID` | `student-01` | 교육용 MCP 사용자 범위 |
 
 ## 학습 목표
 
@@ -113,6 +115,21 @@ TTL, 충돌, 사용자 격리와 복원 과정을 확인합니다.
 
 실제 LLM에는 전체 Memory가 아니라 질문과 관련된 안전한 Memory만 전달합니다.
 마지막에는 사용자가 자신의 데이터를 확인하고 삭제할 수 있는지도 검증합니다.
+
+### 선택 과정 · Streamable HTTP MCP
+
+`30_mcp`는 Memory 기능을 Agent가 호출할 수 있는 Tool로 제공합니다.
+
+```text
+Codex 또는 MCP Client
+→ http://127.0.0.1:8002/mcp
+→ 사용자 범위 Memory Tool
+→ Mock Memory Store
+```
+
+처음에는 [30_mcp/README.md](./30_mcp/README.md)의 Mock Server와 Client를 실행합니다.
+Tool 인자에서 `user_id`를 제거하고 서버가 확인한 사용자 범위를 쓰는 이유도 함께
+확인합니다.
 
 ## 2~3단계 실행 환경
 
@@ -192,3 +209,19 @@ python .\05_memory\00_check_environment.py
 ## 운영 환경의 사용자 식별
 
 예제의 `user_id`는 사용자 격리 원리를 보여주기 위한 수업용 값입니다. 실제 서비스에서는 요청 Body나 화면에서 받은 `user_id`를 그대로 신뢰하면 안 됩니다. Backend가 로그인 토큰이나 인증 Session에서 확인한 사용자 ID를 조회·수정·삭제 조건에 사용해야 합니다.
+
+## Mini Agent learning_unit 동기화
+
+독립 예제의 원본은 이 디렉터리입니다. `C:\mini_agent_st\mini_agent_05_memory\learning_unit`
+복사본을 직접 수정하지 않고 다음 스크립트로 동기화합니다.
+
+```powershell
+# 차이만 확인
+.\05_memory\sync_learning_unit.ps1 -Check
+
+# 원본에서 Mini Agent 복사본으로 반영
+.\05_memory\sync_learning_unit.ps1
+```
+
+MCP 예제는 Mini Agent Backend와 별도로 실행하므로 `learning_unit` 동기화 대상에서
+제외합니다.

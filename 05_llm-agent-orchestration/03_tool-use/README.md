@@ -33,6 +33,10 @@ Tool 하나를 호출했다고 해서 반드시 Agent인 것은 아닙니다. Ba
 순서대로 함수를 호출하면 일반 Workflow입니다. 반면 LLM이 현재 상태를 보고 다음
 Tool, 재질문 또는 종료를 선택하고 그 과정이 반복되면 Agent에 가까워집니다.
 
+Tool을 여러 개 사용하는 Single Agent와 Multi-Agent의 구분, Agent 분리 기준과
+오케스트레이션 패턴은 [`07 Agent 설계 가이드`](../07_human-approval-and-safety/00_agent_design_and_boundaries.md)에서
+자세히 설명합니다.
+
 ```text
 고정 Workflow
 사용자 입력 → 항상 날씨 조회 → 항상 안내문 생성 → 종료
@@ -230,7 +234,7 @@ User Message → LLM Tool Call → Backend 실행 → Tool Result
 
 ## 실전 Lab
 
-기본 예제 이후에는 API 키 없이 실행할 수 있는 일곱 가지 업무 시나리오로 안전한 Tool과 Agent 설계를 연습합니다. 자세한 실습 내용과 확장 과제는 [`10_labs/README.md`](10_labs/README.md)를 참고합니다.
+기본 예제 이후에는 API 키 없이 실행할 수 있는 여덟 가지 업무 시나리오로 안전한 Tool과 Agent 설계를 연습합니다. 자세한 실습 내용과 확장 과제는 [`10_labs/README.md`](10_labs/README.md)를 참고합니다.
 
 | Lab | 파일 | 핵심 개념 |
 |---:|---|---|
@@ -241,6 +245,7 @@ User Message → LLM Tool Call → Backend 실행 → Tool Result
 | 05 | `05_library_multi_tool_rules.py` | 동적 Tool 선택 Agent와 백엔드 업무 규칙 분리 |
 | 06 | `06_inventory_reservation_concurrency.py` | 실행 직전 재검증, 동시성, 낙관적 잠금 |
 | 07 | `07_travel_planning_agent.py` | 재질문, Multi-Tool 선택, 결과 종합, 종료 조건 |
+| 08 | `08_multi_tool_user_resume.py` | Tool 2개 실행, 사용자 대기, State 유지, Tool 재실행 |
 
 ## 실행
 
@@ -265,6 +270,7 @@ python .\10_labs\04_cafe_argument_extraction.py
 python .\10_labs\05_library_multi_tool_rules.py
 python .\10_labs\06_inventory_reservation_concurrency.py
 python .\10_labs\07_travel_planning_agent.py
+python .\10_labs\08_multi_tool_user_resume.py
 ```
 
 실제 호출 예제는 Mini Agent Backend를 먼저 실행합니다.
