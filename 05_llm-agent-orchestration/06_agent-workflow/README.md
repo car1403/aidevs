@@ -819,6 +819,39 @@ Checkpoint, `interrupt()`와 승인 후 재개는 07장의 선택 예제에서 �
 
 # Part 5. 다음 Multi-Agent Orchestration 과정으로
 
+## 여러 Single Agent를 제공하는 서비스
+
+하나의 애플리케이션에 Agent 클래스나 Agent Profile이 여러 개 있다는 사실만으로 Multi-Agent Orchestration이 되지는 않습니다.
+
+```text
+사용자
+├─ Travel Agent 직접 선택 → 독립 실행 → 종료
+├─ Support Agent 직접 선택 → 독립 실행 → 종료
+└─ Order Agent 직접 선택 → 독립 실행 → 종료
+```
+
+이 구조에서는 각 Agent가 독립적인 Goal, instructions와 Tool 권한을 가지지만 서로 메시지를 주고받지 않습니다. 사용자가 실행할 Agent를 직접 선택하고, 선택된 Agent 하나만 자신의 Loop를 완료합니다.
+
+```text
+Agent가 여러 개 존재              O
+Agent 간 자동 위임                X
+Coordinator                       X
+Handoff                           X
+공유 State와 결과 집계            X
+
+분류: 여러 독립 Single Agent를 제공하는 서비스
+```
+
+이 단계는 Multi-Agent로 가기 전 좋은 설계 연습입니다. Agent마다 Goal, Context, Tool Allowlist, 완료 조건과 평가 기준을 먼저 분리할 수 있기 때문입니다. 다음 과정에서는 사용자의 직접 선택을 Coordinator의 Routing으로 바꾸고, Agent 사이의 Context 전달·Handoff·전체 종료와 Trace를 추가합니다.
+
+```text
+현재 미니 프로젝트
+사용자가 Agent 선택 → Single Agent 독립 실행
+
+다음 과정
+Coordinator가 Agent 선택 → 위임·Handoff·집계 → 전체 종료
+```
+
 ## Single Agent에서 Multi-Agent로 가는 기준
 
 Tool이 많거나 Node가 많다는 이유만으로 Agent를 나누지 않습니다.

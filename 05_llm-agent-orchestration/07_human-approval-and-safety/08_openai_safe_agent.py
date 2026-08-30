@@ -1,0 +1,185 @@
+"""OpenAI AI Agent의 변경 Tool Call을 승인 전 중단하고 승인 후 한 번 실행합니다."""
+
+import json
+import os
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+from dotenv import load_dotenv
+from openai import OpenAI
+
+
+ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(ROOT / ".env")
+MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+
+INSTRUCTIONS = """당신은 여행 일정 저장 AI Agent입니다.
+먼저 get_weather와 search_places로 근거를 확인한 뒤 save_itinerary를 호출하세요.
+Tool Result에 없는 사실은 만들지 마세요. Tool 실행 권한은 Backend 정책이 결정합니다.
+"""
+
+TOOLS = [
+    {
+        "type": "function",
+        "name": name,
+        "description": description,
+        "parameters": {
+            "type": "object",
+            "properties": properties,
+            "required": list(properties),
+            "additionalProperties": False,
+        },
+        "strict": True,
+    }
+    for name, description, properties in (
+        ("get_weather", "도시의 날씨를 조회합니다.", {"city": {"type": "string"}}),
+        ("search_places", "도시의 추천 장소를 조회합니다.", {"city": {"type": "string"}}),
+        (
+            "save_itinerary",
+            "여행 일정을 저장합니다. 외부 상태를 변경하므로 승인이 필요합니다.",
+            {"city": {"type": "string"}, "place": {"type": "string"}},
+        ),
+    )
+]
+
+TOOL_RISK = {"get_weather": "read", "search_places": "read", "save_itinerary": "change"}
+PROCESSED_CALLS: set[str] = set()
+AUDIT_LOG: list[dict[str, Any]] = []
+
+
+@dataclass
+class SafeAgentState:
+    run_id: str
+    owner_id: str
+    question: str
+    status: str = "running"
+    previous_response_id: str | None = None
+    pending_call: dict[str, Any] | None = None
+    trace: list[dict[str, Any]] = field(default_factory=list)
+
+
+def require_client() -> OpenAI:
+    if not os.getenv("OPENAI_API_KEY"):
+        raise RuntimeError("과정 루트의 .env에 OPENAI_API_KEY를 설정하세요.")
+    return OpenAI()
+
+
+def execute_read_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+    if name == "get_weather":
+        return {"city": arguments["city"], "condition": "비", "temperature_c": 21}
+    if name == "search_places":
+        return {"city": arguments["city"], "items": ["제주현대미술관", "아쿠아플라넷"]}
+    raise ValueError(f"자동 실행할 수 없는 Tool입니다: {name}")
+
+
+def run_until_approval(state: SafeAgentState, max_steps: int = 6) -> dict[str, Any]:
+    client = require_client()
+    response = client.responses.create(
+        model=MODEL,
+        instructions=INSTRUCTIONS,
+        input=state.question,
+        tools=TOOLS,
+        tool_choice="auto",
+        parallel_tool_calls=False,
+    )
+    for step in range(1, max_steps + 1):
+        calls = [item for item in response.output if item.type == "function_call"]
+        if not calls:
+            state.status = "completed"
+            return {"status": state.status, "answer": response.output_text, "trace": state.trace}
+        call = calls[0]
+        if call.name not in TOOL_RISK:
+            state.status = "blocked"
+            return {"status": state.status, "reason": "TOOL_NOT_ALLOWED"}
+        arguments = json.loads(call.arguments)
+        risk = TOOL_RISK[call.name]
+        state.trace.append({"step": step, "tool": call.name, "arguments": arguments, "risk": risk})
+        if risk == "change":
+            state.status = "waiting_approval"
+            state.previous_response_id = response.id
+            state.pending_call = {"call_id": call.call_id, "tool": call.name, "arguments": arguments}
+            return {
+                "status": state.status,
+                "question": "이 여행 일정을 저장할까요?",
+                "approval_target": {"tool": call.name, "arguments": arguments},
+                "trace": state.trace,
+            }
+        result = execute_read_tool(call.name, arguments)
+        response = client.responses.create(
+            model=MODEL,
+            instructions=INSTRUCTIONS,
+            previous_response_id=response.id,
+            input=[
+                {
+                    "type": "function_call_output",
+                    "call_id": call.call_id,
+                    "output": json.dumps(result, ensure_ascii=False),
+                }
+            ],
+            tools=TOOLS,
+            tool_choice="auto",
+            parallel_tool_calls=False,
+        )
+    state.status = "blocked"
+    return {"status": state.status, "reason": "MAX_STEPS_EXCEEDED", "trace": state.trace}
+
+
+def resume_after_approval(
+    state: SafeAgentState,
+    actor: str,
+    decision: str,
+    approval_target: dict[str, Any],
+) -> dict[str, Any]:
+    if state.status != "waiting_approval" or not state.pending_call:
+        return {"status": "blocked", "reason": "NOT_WAITING_APPROVAL"}
+    if actor != state.owner_id:
+        return {"status": "blocked", "reason": "ACTOR_NOT_OWNER"}
+    expected = {"tool": state.pending_call["tool"], "arguments": state.pending_call["arguments"]}
+    if approval_target != expected:
+        return {"status": "blocked", "reason": "APPROVAL_TARGET_CHANGED"}
+    if decision == "reject":
+        state.status = "rejected"
+        return {"status": state.status, "reason": "USER_REJECTED"}
+    if decision != "approve":
+        return {"status": "blocked", "reason": "INVALID_DECISION"}
+    key = f"{state.run_id}:{state.pending_call['call_id']}"
+    if key in PROCESSED_CALLS:
+        return {"status": "blocked", "reason": "ALREADY_PROCESSED"}
+    if state.pending_call["tool"] != "save_itinerary":
+        return {"status": "blocked", "reason": "CHANGE_TOOL_NOT_ALLOWED"}
+
+    result = {"saved": True, **state.pending_call["arguments"]}
+    PROCESSED_CALLS.add(key)
+    audit = {"run_id": state.run_id, "actor": actor, "approval_target": expected, "result": result}
+    AUDIT_LOG.append(audit)
+    response = require_client().responses.create(
+        model=MODEL,
+        instructions=INSTRUCTIONS,
+        previous_response_id=state.previous_response_id,
+        input=[
+            {
+                "type": "function_call_output",
+                "call_id": state.pending_call["call_id"],
+                "output": json.dumps(result, ensure_ascii=False),
+            }
+        ],
+        tools=TOOLS,
+        tool_choice="auto",
+        parallel_tool_calls=False,
+    )
+    state.status = "completed"
+    return {"status": state.status, "answer": response.output_text, "result": result, "audit": audit}
+
+
+if __name__ == "__main__":
+    agent_state = SafeAgentState(
+        run_id="openai-safe-001",
+        owner_id="user-01",
+        question="제주 날씨에 맞는 장소를 찾아 여행 일정으로 저장해 줘.",
+    )
+    paused = run_until_approval(agent_state)
+    print("승인 대기:", json.dumps(paused, ensure_ascii=False, indent=2))
+    target = paused.get("approval_target", {})
+    completed = resume_after_approval(agent_state, "user-01", "approve", target)
+    print("승인 후:", json.dumps(completed, ensure_ascii=False, indent=2))

@@ -75,6 +75,28 @@ Tool이 2개뿐이어도 독립적인 판단 주체가 여러 개면 Multi-Agent
 
 Tool은 한 가지 기능을 수행합니다. Agent는 목표를 보고 다음 행동을 선택합니다. Orchestrator는 여러 Agent의 실행 순서와 정보 전달을 통제합니다.
 
+### 여러 독립 Single Agent 서비스도 아직 Orchestration은 아니다
+
+한 서비스가 Travel, Support와 Order Agent를 모두 제공하더라도 사용자가 Agent를 직접 선택하고 각 실행이 서로 독립적이면 Multi-Agent Orchestration이 아닙니다.
+
+```text
+사용자 선택 → Travel Agent → 종료
+사용자 선택 → Support Agent → 종료
+사용자 선택 → Order Agent → 종료
+```
+
+Agent Profile이 여러 개 있다는 것과 하나의 요청에서 여러 Agent가 협업한다는 것은 다릅니다.
+
+| 여러 독립 Single Agent 서비스 | Multi-Agent Orchestration |
+| --- | --- |
+| 사용자가 Agent 선택 | Coordinator가 Routing·위임 |
+| 한 요청에 Agent 하나 실행 | 한 요청에서 여러 Agent가 참여 가능 |
+| Agent 간 메시지 없음 | Handoff와 결과 전달 |
+| Agent별 독립 State·종료 | 공유 State와 전체 종료 조건 |
+| Agent별 Trace | 전체 Orchestration Trace |
+
+이 중간 단계를 만들면 각 Agent의 Goal, Prompt, Tool 권한과 완료 기준이 실제로 분리할 가치가 있는지 먼저 검증할 수 있습니다. 다음 과정에서는 검증된 Agent 경계를 그대로 사용하고 연결 책임만 추가합니다.
+
 ## 3. Node가 많아진 것과 Multi-Agent는 다르다
 
 다음 LangGraph는 Node가 네 개지만 Workflow일 수 있습니다.

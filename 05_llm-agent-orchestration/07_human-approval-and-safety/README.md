@@ -4,6 +4,15 @@
 
 앞 장까지 Tool, MCP, RAG, Memory와 Agent Loop를 배웠습니다. 이제 이 기능을 결합한 Agent에게 어떤 Tool과 데이터를 허용하고, 어떤 행동에서 멈춰 사용자 승인을 받아야 하는지 배웁니다.
 
+06의 미니 프로젝트에서는 Travel·Support·Order Single Agent가 서로 독립적으로 실행됐습니다. 07에서는 같은 Agent 경계를 유지하면서 읽기 Tool은 자동 실행하고, 외부 상태를 바꾸는 Tool만 승인 직전에 멈추는 구조로 확장합니다.
+
+07 미니 프로젝트는 세 Agent를 다시 선택하게 하지 않고 승인 필요성이 가장 명확한 Order Agent 하나를 대표 사례로 구현합니다. Travel의 일정 저장과 Support의 반품 접수에도 동일한 정책을 적용할 수 있습니다.
+
+```text
+06: 독립 Single Agent → 읽기 Tool → Result → 종료
+07: 독립 Single Agent → 읽기 Tool → 변경 Tool 제안 → 승인 → 실행
+```
+
 ```text
 사용자 목표
    ↓
@@ -219,6 +228,7 @@ Backend Policy
 | 7-5 | `05_approve_and_reject.py` | 승인·거절·잘못된 결정 검증 |
 | 7-6 | `06_safe_execution.py` | 승인 뒤 변경과 중복 실행 방지 |
 | 7-7 | `07_complete_safe_agent.py` | Multi-Tool부터 승인·Audit까지 전체 흐름 |
+| 7-8 | `08_openai_safe_agent.py` | 실제 OpenAI Tool Calling과 승인 전 실행 중단 |
 
 ## 13. 실행
 
@@ -234,6 +244,14 @@ python .\07_complete_safe_agent.py
 ```
 
 필수 예제는 Python 표준 라이브러리만 사용하며 실제 결제·예약·메시지 API를 호출하지 않습니다.
+
+`07_complete_safe_agent.py`까지는 안전 정책의 순서를 결정적으로 확인하는 규칙 기반 예제입니다. 과정 루트 `.env`에 `OPENAI_API_KEY`를 설정한 뒤 실제 AI Agent 예제를 실행합니다.
+
+```powershell
+python .\08_openai_safe_agent.py
+```
+
+이 예제에서는 OpenAI Model이 읽기·변경 Tool을 제안하지만 Backend가 위험도를 검사합니다. `save_itinerary`가 제안돼도 바로 실행하지 않고 Tool 이름과 arguments를 승인 Snapshot으로 저장한 뒤, 같은 사용자와 같은 Snapshot의 승인에서만 한 번 실행합니다.
 
 ## 선택 학습: LangGraph
 
