@@ -1,6 +1,6 @@
 # 30 · PostgreSQL HTTP MCP Memory
 
-기존 PostgreSQL 장기 Memory를 Agent가 호출할 수 있는 MCP Tool로 노출합니다. Mock 저장소를 사용하지 않으며 기본 주소는 `http://127.0.0.1:8012/mcp`입니다.
+기존 PostgreSQL 장기 Memory를 Agent가 호출할 수 있는 MCP Tool로 노출합니다. 실제 PostgreSQL만 사용하며 기본 주소는 `http://127.0.0.1:8012/mcp`입니다.
 
 ```text
 MCP Client

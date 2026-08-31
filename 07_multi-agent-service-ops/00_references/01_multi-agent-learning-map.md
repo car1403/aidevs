@@ -8,19 +8,16 @@ Agent가 정해진 계약과 순서로 협업하도록 통제하는 구조입니
 ## 전체 과정
 
 ```text
-01 역할 분리
-→ 02 Agent 계약
+00 Runtime과 배포
+→ 01 Single vs Multi AI Agent
+→ 02 Agent 역할과 계약
 → 03 Supervisor와 Routing
-→ 04 순차·병렬 Workflow
-→ 05 Plan·State·종료
-→ 06 LangGraph Multi-Agent
-→ 07 Handoff와 Context
-→ 08 검증·승인·보안
-→ 09 실패·복구·Trace
-→ 10 Queue·Task·Worker
-→ 11 FastAPI Backend
-→ 12 Streamlit Frontend
-→ 13 Integrated Lab
+→ 04 Orchestration
+→ 05 Handoff와 Context
+→ 06 Multi-Agent Safety
+→ 07 Failure·Evaluation·Tracing
+→ 08 실제 Multi AI Agent Service
+→ 09 HTTP MCP 통합 여행 서비스
 ```
 
 Docker Compose·GitHub Actions·AWS는 이 흐름 밖의 선택 운영 실습입니다.
@@ -29,9 +26,9 @@ Docker Compose·GitHub Actions·AWS는 이 흐름 밖의 선택 운영 실습입
 
 | 구간 | 단원 | 학생이 답해야 하는 질문 |
 | --- | --- | --- |
-| Multi-Agent 핵심 | 01~09 | 누가, 무엇을, 어떤 순서와 규칙으로 처리하는가? |
-| 서비스 연결 | 10~12 | 긴 작업을 어떻게 접수하고 상태를 보여 주는가? |
-| 통합과 회귀 | 13 | 정상·누락·실패·승인 경로가 모두 재현되는가? |
+| Multi AI Agent 핵심 | 01~05 | 누가, 무엇을, 어떤 순서와 계약으로 처리하는가? |
+| 안전과 평가 | 06~07 | 권한·실패·Trace·회귀를 어떻게 통제하는가? |
+| 서비스와 통합 | 08~09 | 긴 Task와 실제 HTTP MCP를 어떻게 연결하는가? |
 
 ## 용어를 일상 표현과 연결하기
 
@@ -55,40 +52,37 @@ Docker Compose·GitHub Actions·AWS는 이 흐름 밖의 선택 운영 실습입
 | 01 | 역할을 나누는 것이 정말 필요한가? |
 | 02 | Worker가 어떤 입력을 받고 무엇을 반환해야 하는가? |
 | 03 | 다음 Agent는 규칙과 LLM 중 누가 선택하는가? |
-| 04 | 어떤 작업을 순서대로 또는 동시에 실행할 수 있는가? |
-| 05 | 실행 상태와 종료 조건은 어디에서 통제하는가? |
-| 06 | 같은 흐름을 LangGraph로 표현하면 무엇이 달라지는가? |
-| 07 | 다음 Agent에게 무엇을 전달하고 무엇을 제거해야 하는가? |
-| 08 | 어떤 결과와 변경 작업을 코드가 차단해야 하는가? |
-| 09 | 실패를 다시 시도할지, 대체할지, 사람에게 넘길지 어떻게 정하는가? |
-| 10 | 긴 작업의 요청 접수와 실행을 어떻게 분리하는가? |
-| 11 | Backend는 어떤 Task API와 검증을 제공하는가? |
-| 12 | Frontend는 진행 상태와 승인을 어떻게 보여 주는가? |
-| 13 | 수정 후에도 기존 정상·실패 시나리오가 통과하는가? |
+| 04 | 여러 Agent의 병렬·Join·State·종료를 어떻게 Orchestration하는가? |
+| 05 | 다음 Agent에게 무엇을 Handoff하고 무엇을 제거해야 하는가? |
+| 06 | Agent별 Tool 권한·승인·중복 실행을 어떻게 차단하는가? |
+| 07 | 실패를 어떻게 복구하고 전체 Trace와 Scenario를 평가하는가? |
+| 08 | API·Queue·Worker·저장소를 어떻게 실제 서비스로 연결하는가? |
+| 09 | 실제 HTTP MCP Tool을 Multi AI Agent와 어떻게 통합하는가? |
 
 ## Provider 사용 원칙
 
 ```text
-Mock으로 계약 확인
-→ 01 Worker 결과 비교
-→ 03 Supervisor Routing 비교
-→ 중간 단원은 Mock으로 흐름 학습
-→ 마지막에 선택한 Provider와 회귀 비교
+Pydantic과 결정적 Python 예제로 계약·정책 확인
+→ 실제 Provider로 Agent 결과 확인
+→ 같은 계약으로 OpenAI·Gemini·Ollama 비교
+→ 실제 Provider 오류를 그대로 기록
+→ 자동 테스트에서만 Fake Client로 외부 비용 차단
 ```
 
-GPT·Gemini·Llama가 서로 다른 문장을 생성해도 `AgentResult`, `RouteDecision`,
-`Handoff` 계약은 동일하게 유지합니다.
+GPT·Gemini·Llama가 서로 다른 문장을 생성해도 `SpecialistResult`, `RouteDecision`,
+`TravelHandoff` 계약은 동일하게 유지합니다.
 
 ## 저장소와 배포 원칙
 
 ```text
-기본 학습
-Memory Queue + Memory 저장소 + Mock Provider
+01~07 기본 학습
+Pydantic + Python 정책 + 실제 Provider
 
-선택 실연동
-Redis 또는 Upstash
-PostgreSQL 또는 Supabase
-GPT·Gemini 또는 Local Llama
+08~09 실제 서비스
+Redis Queue와 현재 상태
+PostgreSQL Trace 이력
+OpenAI·Gemini·Ollama
+Streamable HTTP MCP + Open-Meteo
 
 선택 운영 체험
 Simple Compose + GitHub Actions + AWS EC2

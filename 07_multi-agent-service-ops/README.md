@@ -1,6 +1,6 @@
 # 07 Multi AI Agent Orchestration
 
-> 과정 재구성 상태: **4단계 04~05 Orchestration·Handoff 완료**
+> 과정 재구성 상태: **00~09 과정과 전체 검증 완료**
 
 `05_llm-agent-orchestration`에서 배운 Single AI Agent·Tool·MCP·RAG·Memory·승인·평가를 **Multi AI Agent와 Orchestration**으로 확장하는 초보자 과정입니다. 핵심은 여러 AI Agent를 만드는 것보다 역할·계약·Handoff·실패·권한·전체 종료를 Orchestration하는 것입니다. 전체 이전표와 세부 원칙은 [`CURRICULUM_REDESIGN.md`](./CURRICULUM_REDESIGN.md)에 있습니다.
 
@@ -67,8 +67,9 @@ Workflow는 Orchestration 내부의 결정적인 순서·검증·Join을 표현�
 2 00 Runtime·Compose·Actions·AWS          완료
 3 01~03 Multi AI Agent 기초·멀티 LLM      완료
 4 04~05 Orchestration·Handoff              완료
-5 06~07 Safety·Failure·Evaluation           다음 단계
-6 08 실제 Multi-Agent Service
-7 09 통합 여행 서비스
-8 전체 검증 후 mini_multi_agent_st 재구성
+5 06~07 Safety·Failure·Evaluation           완료
+6 08 실제 Multi-Agent Service               완료
+7 09 통합 여행 서비스                       완료
+8 과정 전체 검증                            완료
+9 mini_multi_agent_st 비누적 구조 재구성    다음 단계
 ```

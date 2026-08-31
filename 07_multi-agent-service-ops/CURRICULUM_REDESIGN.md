@@ -55,8 +55,8 @@
 
 | 기존 폴더 | 새 위치 | 처리 |
 | --- | --- | --- |
-| `00_local-runtime` | `00_runtime-and-deployment/00_local-runtime` | Docker 기반 Redis·PostgreSQL·Ollama 준비로 이동 |
-| `00_service_ops` | `00_runtime-and-deployment/01~07` | Gemini 전용 예제를 Multi-LLM 작은 Chat으로 변경 |
+| `00_local-runtime` | `00_runtime-and-deployment/00_local-services` | Docker 기반 Redis·PostgreSQL·Ollama 준비로 이동 |
+| `00_service_ops` | `00_runtime-and-deployment` | Gemini 전용 예제를 Multi-LLM 작은 Chat과 배포 과정으로 변경 |
 | `01_single-vs-multi-agent` | 동일 | 이사 예제를 여행 예제로 교체하고 파일 수 축소 |
 | `02_role-and-agent-contract` | `02_agent-role-and-contract` | 계약 예제를 여행 Agent 계약으로 변경 |
 | `03_supervisor-and-routing` | 동일 | 세 실제 Provider Router 비교 유지 |
@@ -66,9 +66,9 @@
 | `07_handoff-and-context` | `05_handoff-and-context` | 최소 Context와 Handoff Guard 중심으로 축소 |
 | `08_validation-and-human-approval` | `06_multi-agent-safety` | 이전 과정 반복을 줄이고 Agent 간 권한 상승 차단 추가 |
 | `09_failure-retry-and-fallback` | `07_failure-evaluation-and-tracing` | Multi-Agent Scenario·Regression·Safety Gate와 통합 |
-| `10_async-task-and-redis-worker` | `08_multi-agent-service` | Queue·Task·Worker 흐름으로 통합 |
-| `11_multi-agent-backend` | `08_multi-agent-service` | FastAPI와 저장소 경계로 통합 |
-| `12_multi-agent-frontend` | `08_multi-agent-service` | Task·승인·Trace 한 화면으로 통합 |
+| `10_async-task-and-redis-worker` | `08_multi-ai-agent-service` | Queue·Task·Worker 흐름으로 통합 |
+| `11_multi-agent-backend` | `08_multi-ai-agent-service` | FastAPI와 저장소 경계로 통합 |
+| `12_multi-agent-frontend` | `08_multi-ai-agent-service` | Task·승인·Trace 한 화면으로 통합 |
 | `13_integrated-multi-agent-lab` | `09_integrated-travel-multi-agent` | 이사 예제를 최종 여행 서비스로 교체 |
 | `shared` | `shared` | Provider·계약·Trace 공통 코드만 남기고 여행 도메인으로 변경 |
 | `tests` | `tests` | 새 00~09 계약과 핵심 안전 회귀 테스트로 재작성 |
@@ -140,9 +140,9 @@ Provider를 사용할 수 없으면 다른 실제 Provider를 명시적으로 �
 2 00 Runtime·Compose·Actions·AWS          완료
 3 01~03 Multi AI Agent 기초·멀티 LLM      완료
 4 04~05 Orchestration·Handoff              완료
-5 06~07 Safety·Failure·Evaluation           ← 다음 단계
-6 08 실제 Multi-Agent Service
-7 09 통합 여행 서비스
-8 과정 전체 검증
-9 mini_multi_agent_st를 비누적 구조로 재구성
+5 06~07 Safety·Failure·Evaluation           완료
+6 08 실제 Multi-Agent Service               완료
+7 09 통합 여행 서비스                       완료
+8 과정 전체 검증                            완료
+9 mini_multi_agent_st를 비누적 구조로 재구성 ← 다음 단계
 ```
