@@ -139,8 +139,8 @@ Provider를 사용할 수 없으면 다른 실제 Provider를 명시적으로 �
 1 과정 지도 확정                         완료
 2 00 Runtime·Compose·Actions·AWS          완료
 3 01~03 Multi AI Agent 기초·멀티 LLM      완료
-4 04~05 Orchestration·Handoff              ← 다음 단계
-5 06~07 Safety·Failure·Evaluation
+4 04~05 Orchestration·Handoff              완료
+5 06~07 Safety·Failure·Evaluation           ← 다음 단계
 6 08 실제 Multi-Agent Service
 7 09 통합 여행 서비스
 8 과정 전체 검증

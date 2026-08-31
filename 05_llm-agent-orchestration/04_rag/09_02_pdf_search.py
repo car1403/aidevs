@@ -4,8 +4,8 @@ from _pgvector_store import similarity_search
 
 
 COLLECTION = "rag_pdf_lesson"
-QUESTION = "당일 취소 규정은 어떻게 되나요?"
-TOP_K = 3
+QUESTION = "AI Agent의 도입 현황"
+TOP_K = 5
 
 
 def search_pdf(question: str) -> list[dict]:

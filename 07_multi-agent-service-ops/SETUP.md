@@ -75,6 +75,23 @@ ITINERARY_AGENT_PROVIDER=gemini
 
 실제 API Key가 없는 경우에도 계약·분리 기준·규칙 Router 예제는 실행할 수 있습니다. 실제 LLM 예제는 오류를 Mock 결과로 바꾸지 않고 원인을 그대로 보여 줍니다.
 
+## 04~05 Orchestration과 Handoff 실행
+
+```powershell
+python .\04_orchestration\01_execution_plan.py
+python .\04_orchestration\02_parallel_then_join.py
+python .\04_orchestration\03_orchestrator_loop.py
+python .\04_orchestration\04_stop_rules.py
+python .\04_orchestration\10_optional_langgraph\01_same_plan_graph.py
+
+python .\05_handoff-and-context\01_minimum_context.py
+python .\05_handoff-and-context\02_handoff_contract.py
+python .\05_handoff-and-context\03_handoff_guard.py
+python .\05_handoff-and-context\04_real_agent_handoff.py
+```
+
+`02_parallel_then_join.py`, `03_orchestrator_loop.py`, `04_real_agent_handoff.py`는 실제 LLM을 호출합니다. 나머지는 API Key 없이 실행 계획·종료 규칙·Context·Handoff Guard를 확인할 수 있습니다. LangGraph는 필수가 아니라 동일한 Orchestration 설계를 Graph로 옮기는 선택 예제입니다.
+
 ## 테스트
 
 ```powershell
@@ -85,4 +102,4 @@ python -m pytest -q
 
 ## 현재 재구성 상태
 
-00과 01~03 과정은 새 구조로 이동했습니다. 다음은 04~05 Orchestration·Handoff를 재구성합니다. 상세 진행 상태는 `README.md`와 `CURRICULUM_REDESIGN.md`를 확인합니다.
+00과 01~05 과정은 새 구조로 이동했습니다. 다음은 06~07 Safety·Failure·Evaluation·Tracing을 재구성합니다. 상세 진행 상태는 `README.md`와 `CURRICULUM_REDESIGN.md`를 확인합니다.
