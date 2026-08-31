@@ -78,8 +78,8 @@ LLM과 Agent 구분
 | `05_memory` | 사용자별 단기·장기 기억 |
 | `06_agent-workflow` | Workflow·Rule Loop·OpenAI Agent, LangGraph 비교와 Multi-Agent 연결 |
 | `07_human-approval-and-safety` | Agent 경계 설계, Single/Multi-Agent 선택, 권한·승인과 안전한 실행 |
-| `08_agent-evaluation-and-tracing` | 시나리오 평가와 실행 이력 |
-| `09_integrated-agent-lab` | `mini_agent_08_evaluation`로 전체 흐름을 실행·확장하는 통합 실습 |
+| `08_agent-evaluation-and-tracing` | Safe Order Agent의 Scenario·Check·Trace·Regression |
+| `09_integrated-agent-lab` | 다음 과정에서 별도로 구성할 통합 실습 |
 
 ## 예제 진행 방식
 
@@ -111,9 +111,10 @@ Mock 결과 확인
 
 ```text
 03 Tool Calling
-→ 06 Python/LangGraph 흐름 비교
-→ 08 동일 시나리오 평가
-→ 09 누적 Backend·Frontend 통합 실행
+→ 06 Single Agent와 Workflow 구분
+→ 07 승인과 안전 경계 적용
+→ 08 동일 Agent의 Scenario·Trace 회귀 평가
+→ 09 별도 통합 Mini Project
 ```
 
 Provider가 바뀌어도 Pydantic Schema, Tool 권한 검사, Graph 흐름, 평가
@@ -133,10 +134,10 @@ Backend 없이 실행하며, 실제 Provider 또는 완성 화면을 사용하�
 | 03 MCP | Backend 불필요 | stdio Client가 MCP Server를 자동 실행 |
 | 04 | 실습 1~3 불필요 | 실습 4는 Backend가 아니라 `C:\mini_agent_st\infra`의 PostgreSQL·Ollama 사용 |
 | 05 | 실습 1~5 불필요 | 실습 6~7은 Redis·PostgreSQL, 완성 화면은 `mini_agent_05_memory\backend` |
-| 06 | 실습 1~11 불필요 | 완성 화면: `mini_agent_06_langgraph\backend_langgraph` · Port 8001 |
-| 07 | 필수 예제·Lab 1~8 불필요 | 선택 비교 화면: `mini_agent_07_human_approval\backend_langgraph` · Port 8001 |
-| 08 | Lab 1~4 불필요 | Lab 5: `mini_agent_08_evaluation\backend_python` · Port 8000 |
-| 09 | 두 Backend 필요 | `backend_python` 8000 + `backend_langgraph` 8001 |
+| 06 | 필수 Python 예제는 Backend 불필요 | 완성 화면: `mini_agent_06_agent_workflow\backend` · Port 8000 |
+| 07 | 필수 Python 예제는 Backend 불필요 | 완성 화면: `mini_agent_07_human_approval\backend` · Port 8000 |
+| 08 | 필수 Python 예제는 Backend 불필요 | 평가 화면: `mini_agent_08_evaluation\backend` · Port 8008 |
+| 09 | 별도 안내 예정 | 별도 통합 Mini Project |
 
 Python 파일 맨 위의 `실행 전 준비` 주석도 같은 경로를 안내합니다.
 

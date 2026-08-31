@@ -9,7 +9,7 @@ from mcp.client.streamable_http import streamable_http_client
 
 
 load_dotenv()
-MCP_URL = os.getenv("MEMORY_MCP_URL", "http://127.0.0.1:8002/mcp")
+MCP_URL = os.getenv("MEMORY_MCP_URL", "http://127.0.0.1:8012/mcp")
 
 
 async def main() -> None:
