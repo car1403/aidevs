@@ -1,14 +1,21 @@
-def route_company_question(message: str) -> str:
-    if "휴가" in message or "근태" in message:
-        return "hr_agent"
-    if "노트북" in message or "계정" in message:
-        return "it_agent"
-    if "영수증" in message or "비용" in message:
-        return "finance_agent"
-    return "ask_user"
+"""LLM 없이 명시적인 규칙으로 요청을 Agent에 배정합니다."""
+
+from shared.travel_contracts import RouteDecision
 
 
-if __name__ == "__main__":
-    for question in ["휴가 신청", "노트북 고장", "무엇을 해야 하나요?"]:
-        print(question, "->", route_company_question(question))
+def route(message: str) -> RouteDecision:
+    selected = []
+    if any(word in message for word in ("날씨", "비", "기온")):
+        selected.append("weather_agent")
+    if any(word in message for word in ("장소", "관광", "맛집")):
+        selected.append("place_agent")
+    if any(word in message for word in ("예산", "비용", "가격")):
+        selected.append("budget_agent")
+    return RouteDecision(
+        selected_agents=selected or ["itinerary_agent"],
+        reason="개발자가 정의한 Keyword 규칙",
+        missing_information=[],
+    )
 
+
+print(route("부산 날씨와 예산을 고려해 장소를 추천해 줘.").model_dump_json(indent=2))
