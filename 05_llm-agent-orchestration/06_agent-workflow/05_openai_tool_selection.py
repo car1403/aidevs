@@ -1,7 +1,19 @@
-"""OpenAI Model이 사용자 질문과 Tool Schema를 보고 Tool Call을 제안합니다.
+"""규칙 기반 판단을 실제 OpenAI 모델의 Tool 선택으로 교체하는 중간 단계입니다.
 
-이 예제에서는 Tool을 실행하지 않습니다. 규칙 기반 분기와 달리 실제 Model이 어떤
-Tool과 arguments를 선택했는지 관찰하는 것이 목적입니다.
+01~04에서는 실행 순서나 다음 행동을 개발자 코드가 결정했습니다. 이번 파일부터는
+사용자 질문, Agent 지침과 Tool Schema를 OpenAI 모델에 전달하고 모델이 어떤 Tool과
+arguments가 필요한지 선택하게 합니다.
+
+이번 파일에서 하는 일
+----------------------
+1. 공유 모듈에서 OpenAI client와 최초 Responses API 호출을 준비합니다.
+2. 모델 응답 중 Function Call 항목만 추출합니다.
+3. 모델이 선택한 Tool 이름과 arguments를 backend allowlist로 검증합니다.
+4. 선택 결과를 출력하여 LLM이 행동을 결정했다는 사실을 관찰합니다.
+
+중요하게도 이 파일은 Tool을 실제로 실행하지 않고 Tool Result도 모델에 돌려주지
+않습니다. 따라서 완전한 Agent Loop가 아니라 LLM 기반 행동 선택 한 단계만 검사하는
+예제입니다. 실제 Tool 실행과 재판단은 06에서 완성합니다.
 """
 
 import json

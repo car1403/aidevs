@@ -1,4 +1,25 @@
-"""OpenAI Responses API Tool Calling 예제가 공유하는 실행 도우미입니다."""
+"""05와 06이 공유하는 OpenAI 기반 AI Agent 실행 엔진입니다.
+
+파일 이름의 backend는 FastAPI 웹 서버를 뜻하지 않습니다. 예제의 화면/진입점에서
+분리한 내부 실행 모듈이라는 뜻이며, Agent의 역할, 사용 가능한 Tool, 모델 호출,
+Tool 실행, 결과 전달, 반복 State와 종료 정책을 한곳에 모읍니다.
+
+주요 구성
+---------
+* ``INSTRUCTIONS``: 여행 AI Agent의 역할, 행동 순서와 근거 사용 규칙
+* ``OPENAI_TOOLS``: 모델에 공개하는 Function Tool Schema
+* ``require_openai_client``: API key를 확인하고 OpenAI client 생성
+* ``parse_and_validate_call``: 모델의 Tool Call을 allowlist와 JSON 규칙으로 검증
+* ``execute_openai_call``: 검증된 로컬 Tool을 실행하고 Function Call Output 생성
+* ``create_initial_response``: 질문을 바탕으로 모델의 첫 판단 요청
+* ``continue_after_tools``: Tool Result를 전달하여 모델의 다음 판단 요청
+* ``run_openai_agent``: 위 과정을 완료 또는 최대 단계까지 반복하는 Agent Loop
+
+03의 Rule-based Agent에서는 Python ``decide`` 함수가 다음 행동을 정했습니다. 여기서는
+OpenAI 모델이 그 판단을 수행하고, Python backend는 허용된 행동만 안전하게 실행합니다.
+따라서 ``run_openai_agent``와 이 모듈의 설정을 합친 것이 이 장의 실제 AI Agent 핵심이며,
+06 파일은 이를 호출하는 실행 진입점입니다.
+"""
 
 import json
 import os

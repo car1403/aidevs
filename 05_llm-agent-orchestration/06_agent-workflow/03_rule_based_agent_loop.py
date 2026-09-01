@@ -1,4 +1,21 @@
-"""Rule-based Agent Loop: 개발자 규칙으로 판단·실행·관찰·종료를 반복합니다."""
+"""State를 사용하는 규칙 기반 Agent Loop를 구현합니다.
+
+01과 02에서는 개발자가 작성한 Workflow가 한 방향으로 실행되었습니다. 이번 파일은
+목표와 현재 State를 매 단계 다시 확인하며 ``판단(Reason) → 실행(Act) →
+관찰(Observe)``을 반복하는 Agent Loop 구조를 처음 도입합니다.
+
+이번 파일에서 하는 일
+----------------------
+1. ``create_state``가 목표, Tool 결과, 오류, 진행 상태와 trace를 만듭니다.
+2. ``decide``가 현재 State를 보고 다음 행동, 완료 또는 중단을 선택합니다.
+3. ``execute_tool``이 선택된 행동을 실행합니다.
+4. ``observe``가 Tool Result를 State에 반영하여 다음 판단의 근거로 만듭니다.
+5. ``run_agent``가 목표 달성, 실패 또는 최대 단계 도달까지 이 과정을 반복합니다.
+
+구조적으로는 Agent Loop이지만 다음 행동을 정하는 주체는 Python if 문입니다. LLM이나
+AI 모델이 판단하지 않으므로 이 예제는 AI Agent가 아니라 Rule-based/Mock Agent입니다.
+06에서는 이 ``decide`` 역할을 OpenAI 모델이 수행하도록 교체합니다.
+"""
 
 from typing import Any
 from travel_tools import execute_tool

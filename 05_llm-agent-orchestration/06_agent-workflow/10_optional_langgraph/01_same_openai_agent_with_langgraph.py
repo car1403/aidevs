@@ -1,4 +1,22 @@
-"""06_openai_agent_loop.py와 동일한 OpenAI Agent를 LangGraph로 구성합니다."""
+"""06의 OpenAI AI Agent Loop를 선택 프레임워크인 LangGraph로 재구성합니다.
+
+필수 학습인 06에서는 Python의 for 문과 조건문으로 ``LLM 판단 → Tool 실행 →
+Tool Result 전달 → 재판단``을 구현했습니다. 이번 선택 예제는 새로운 Agent나 새로운
+Tool을 만드는 것이 아니라, 같은 OpenAI Agent 실행 흐름을 State Graph의 Node와
+Edge로 표현했을 때 코드 구조가 어떻게 달라지는지 비교합니다.
+
+이번 파일에서 하는 일
+----------------------
+1. ``OpenAIAgentState``로 Node 사이에서 공유할 상태 계약을 정의합니다.
+2. Agent Node에서 OpenAI 모델이 Tool Call 또는 최종 답변을 선택하게 합니다.
+3. Backend Tool Node에서 모델 요청을 검증하고 allowlist Tool을 실행합니다.
+4. 조건부 Edge로 Tool 실행, 모델 재판단 또는 종료 경로를 연결합니다.
+5. 06과 동일한 backend 함수들을 재사용해 표현 방식만 공정하게 비교합니다.
+
+LangGraph가 AI Agent를 자동으로 만들어 주는 것은 아닙니다. Agent의 판단 주체는 여전히
+OpenAI 모델이고 Tool의 안전한 실행은 Python backend가 담당합니다. LangGraph는 State,
+반복 경로와 종료 조건을 명시적인 Graph로 관리하는 Orchestration 수단입니다.
+"""
 
 import json
 import sys
