@@ -1,4 +1,9 @@
-"""사용자·RAG·Memory·다른 Agent의 문장이 시스템 권한을 바꾸지 못하게 합니다."""
+"""사용자·RAG·Memory·다른 Agent 메시지와 시스템 권한의 경계를 분리합니다.
+
+비신뢰 Context에 관리자 주장이나 승인 문장이 포함돼도 Backend의 Role, 소유권,
+Tool 정책과 승인 상태만으로 권한을 결정합니다. Prompt Injection을 탐지하는 예제가
+아니라, Injection 성공 여부와 관계없이 위험 행동을 차단하는 실행 경계 예제입니다.
+"""
 
 from typing import Any
 
@@ -18,7 +23,20 @@ def authorize_tool(
     approved: bool = False,
     untrusted_context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """비신뢰 문장은 참고 데이터일 뿐 Tool 정책의 입력으로 사용하지 않습니다."""
+    """Role, Resource 소유권과 승인 상태로 Tool 실행 권한을 결정합니다.
+
+    Args:
+        tool_name: 실행을 제안받은 Tool 이름입니다.
+        actor_role: Backend가 확인한 현재 Actor의 Role입니다.
+        actor_id: Backend가 확인한 Actor 식별자입니다.
+        resource_owner_id: 대상 Resource의 실제 소유자입니다.
+        approved: 변경 Tool의 구조화된 승인 여부입니다.
+        untrusted_context: 사용자·RAG·Memory·다른 Agent가 제공한 비신뢰 데이터입니다.
+
+    Returns:
+        허용 여부와 안정적인 reason code를 반환합니다. ``untrusted_context`` 내용은
+        참고 데이터일 뿐 권한 계산에 사용하지 않습니다.
+    """
     del untrusted_context
 
     policy = TOOL_POLICIES.get(tool_name)

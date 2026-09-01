@@ -1,4 +1,11 @@
-"""작업을 읽기, 초안, 변경, 금지 위험도로 분류합니다."""
+"""Human Approval을 적용하기 전에 Tool 행동을 위험도로 분류합니다.
+
+이번 파일에서 하는 일
+----------------------
+1. Action별 위험도를 read, draft, change와 forbidden으로 선언합니다.
+2. 위험도에 따라 자동 허용, 승인 요청 또는 차단 중 다음 통제를 결정합니다.
+3. 정책에 등록되지 않은 Action을 기본 차단하는 fail-closed 원칙을 확인합니다.
+"""
 
 from dataclasses import dataclass
 from typing import Literal
@@ -9,6 +16,8 @@ Risk = Literal["read", "draft", "change", "forbidden"]
 
 @dataclass(frozen=True)
 class ActionPolicy:
+    """Action 이름, 위험도와 사용자에게 보여줄 설명을 묶은 불변 정책입니다."""
+
     name: str
     risk: Risk
     description: str
@@ -23,6 +32,15 @@ POLICIES = {
 
 
 def classify_action(action_name: str) -> dict:
+    """Action 이름을 Backend 정책으로 분류해 다음 통제 단계를 반환합니다.
+
+    Args:
+        action_name: Model이나 Workflow가 실행하려고 제안한 Action 이름입니다.
+
+    Returns:
+        Action, 위험도와 ``allow``·``request_approval``·``block`` 중 다음 단계를
+        담은 dict입니다. 등록되지 않은 Action은 ``unknown``으로 분류하고 차단합니다.
+    """
     policy = POLICIES.get(action_name)
     if policy is None:
         return {"action": action_name, "risk": "unknown", "next": "block"}

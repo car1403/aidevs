@@ -227,8 +227,9 @@ Backend Policy
 | 7-4 | `04_pause_save_resume.py` | 일반 Python 중단·저장·재개 |
 | 7-5 | `05_approve_and_reject.py` | 승인·거절·잘못된 결정 검증 |
 | 7-6 | `06_safe_execution.py` | 승인 뒤 변경과 중복 실행 방지 |
-| 7-7 | `07_complete_safe_agent.py` | Multi-Tool부터 승인·Audit까지 전체 흐름 |
-| 7-8 | `08_openai_safe_agent.py` | 실제 OpenAI Tool Calling과 승인 전 실행 중단 |
+| 7-7 | `07_complete_safe_agent.py` | 결정적 예제로 Multi-Tool부터 승인·Audit까지 전체 흐름 |
+| 7-8 | `08_openai_safe_agent.py` | 실제 OpenAI Tool Calling과 승인 후 Agent Loop 재개 |
+| 7-9 | `09_openai_hotel_selection.py` | 호텔 후보 조회 → 사용자 선택 → Agent 재개 |
 
 ## 13. 실행
 
@@ -243,15 +244,40 @@ python .\06_safe_execution.py
 python .\07_complete_safe_agent.py
 ```
 
-필수 예제는 Python 표준 라이브러리만 사용하며 실제 결제·예약·메시지 API를 호출하지 않습니다.
+01~07은 정책과 실패 조건을 반복 학습할 수 있는 결정적 예제입니다. 최종 08은 실제
+OpenAI Model이 Tool을 선택하고, Python State에 승인 Snapshot을 보관했다가 승인 이후
+Tool Result를 Model에 전달해 Agent Loop를 계속 진행합니다.
+
+01~07은 Python 표준 라이브러리만 사용하며 실제 결제·예약·메시지 API를 호출하지 않습니다.
 
 `07_complete_safe_agent.py`까지는 안전 정책의 순서를 결정적으로 확인하는 규칙 기반 예제입니다. 과정 루트 `.env`에 `OPENAI_API_KEY`를 설정한 뒤 실제 AI Agent 예제를 실행합니다.
 
 ```powershell
-python .\08_openai_safe_agent.py
+cd C:\aidevs\05_llm-agent-orchestration
+python .\07_human-approval-and-safety\08_openai_safe_agent.py
+python .\07_human-approval-and-safety\09_openai_hotel_selection.py
 ```
 
-이 예제에서는 OpenAI Model이 읽기·변경 Tool을 제안하지만 Backend가 위험도를 검사합니다. `save_itinerary`가 제안돼도 바로 실행하지 않고 Tool 이름과 arguments를 승인 Snapshot으로 저장한 뒤, 같은 사용자와 같은 Snapshot의 승인에서만 한 번 실행합니다.
+이 예제에서는 실제 OpenAI Model이 읽기·변경 Tool을 제안하지만 Backend가 위험도를
+검사합니다. `save_itinerary`가 제안돼도 바로 실행하지 않고 Tool 이름과 arguments를
+승인 Snapshot으로 보관합니다. 같은 사용자가 같은 Snapshot을 승인한 경우에만 Mock
+변경 Result를 한 번 만들고 OpenAI에 전달하여 최종 답변까지 진행합니다. 실행 전 과정
+루트 `.env`의 `OPENAI_API_KEY`만 설정하면 되며 Database는 필요하지 않습니다.
+
+`09_openai_hotel_selection.py`는 승인과 정보 보완을 구분합니다. 호텔 선택은 외부 상태
+변경 허가가 아니므로 `waiting_approval`이 아니라 `waiting_user`로 중단합니다. 사용자가
+고른 `hotel_id`가 직전 검색 후보에 포함되어 있는지 Backend가 확인한 뒤, 선택값을
+OpenAI에 전달하여 취소 정책 조회와 예약 초안 작성을 계속합니다. 실제 예약은 실행하지
+않습니다.
+
+## 테스트
+
+정책과 승인 경계 테스트는 외부 서비스 없이 실행합니다.
+
+```powershell
+cd C:\aidevs\05_llm-agent-orchestration
+pytest -q .\07_human-approval-and-safety\tests
+```
 
 ## 선택 학습: LangGraph
 

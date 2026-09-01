@@ -9,6 +9,7 @@ from langgraph.types import Command, interrupt
 
 
 class ApprovalState(TypedDict, total=False):
+    """LangGraph Node 사이에서 공유하고 Checkpoint에 저장할 승인 State 계약입니다."""
     owner_id: str
     reservation: dict
     decision: str
@@ -19,10 +20,16 @@ class ApprovalState(TypedDict, total=False):
 
 
 def prepare(state: ApprovalState) -> dict:
+    """Graph 실행을 승인 대기 상태로 전환하고 준비 Trace를 추가합니다."""
     return {"status": "waiting_approval", "trace": ["prepare"]}
 
 
 def request_approval(state: ApprovalState) -> dict:
+    """구조화된 승인 질문으로 Graph를 중단하고 Command 입력을 검증합니다.
+
+    ``interrupt``가 반환한 값도 외부 입력이므로 decision과 actor를 다시 검사합니다.
+    LangGraph Checkpoint는 State를 복원하지만 사용자 인증과 권한 검사를 대신하지 않습니다.
+    """
     response = interrupt(
         {
             "question": "이 Mock 예약 요청을 승인하시겠습니까?",
@@ -42,6 +49,7 @@ def request_approval(state: ApprovalState) -> dict:
 
 
 def execute_mock(state: ApprovalState) -> dict:
+    """검증된 승인 또는 거절 결정에 따라 Mock 변경 단계와 종료 상태를 반환합니다."""
     if state["decision"] == "reject":
         return {"status": "rejected", "result": "사용자가 요청을 거절했습니다.", "trace": ["reject"]}
     return {"status": "completed", "result": "Mock 예약 요청이 한 번 기록되었습니다.", "trace": ["execute_mock"]}
