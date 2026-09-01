@@ -50,7 +50,8 @@ if __name__ == "__main__":
     memory.save("student-01", "food_restriction", "해산물 알레르기")
     memory.save("student-01", "hotel_preference", "조용한 호텔")
 
-    question = "부산에서 식당을 추천해줘"
+    # question = "부산에서 식당을 추천해줘"
+    question = "부산으 가는 교통편을 알려줘"
     selected = memory.relevant("student-01", question)
     print("질문:", question)
     print("선택한 Memory:", selected)

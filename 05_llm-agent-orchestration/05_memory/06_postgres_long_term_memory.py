@@ -61,9 +61,9 @@ if __name__ == "__main__":
         created = upsert_memory("student-01", "transportation", "대중교통")
         print("저장:", created)
         print("조회:", list_memories("student-01"))
-        print("다른 사용자 삭제 차단(False):", delete_memory("student-02", created["id"]))
-        print("본인 삭제 성공(True):", delete_memory("student-01", created["id"]))
-        print("삭제 후:", list_memories("student-01"))
+        # print("다른 사용자 삭제 차단(False):", delete_memory("student-02", created["id"]))
+        # print("본인 삭제 성공(True):", delete_memory("student-01", created["id"]))
+        # print("삭제 후:", list_memories("student-01"))
         print("\n핵심: 장기 Memory의 모든 SQL 조건에는 인증된 user_id가 포함되어야 합니다.")
     except psycopg.Error as error:
         print("\n[실행 실패] PostgreSQL에 연결하거나 Memory를 처리하지 못했습니다.")

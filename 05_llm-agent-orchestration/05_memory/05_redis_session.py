@@ -31,7 +31,7 @@ def session_key(user_id: str, session_id: str) -> str:
 def main() -> None:
     client = Redis.from_url(REDIS_URL, decode_responses=True)
     user_id = "student-01"
-    session_id = "travel-demo"
+    session_id = "travel-demo2"     
     key = session_key(user_id, session_id)
     state = {"current_step": "collect_information", "destination": "부산"}
 
