@@ -24,7 +24,8 @@ MAX_STEPS = 5
 
 
 def create_state(city: str) -> dict[str, Any]:
-    return {"goal": f"{city} 날씨에 맞는 장소 추천", "city": city, "weather": None, "places": [], "completed_actions": [], "status": "running", "termination_reason": None, "step": 0, "errors": [], "trace": []}
+    # None은 아직 검색하지 않음, []는 검색했지만 결과 없음이라는 서로 다른 상태입니다.
+    return {"goal": f"{city} 날씨에 맞는 장소 추천", "city": city, "weather": None, "places": None, "completed_actions": [], "status": "running", "termination_reason": None, "step": 0, "errors": [], "trace": []}
 
 
 def decide(state: dict[str, Any]) -> dict[str, Any]:
@@ -33,7 +34,9 @@ def decide(state: dict[str, Any]) -> dict[str, Any]:
         return {"action": "get_weather", "reason_code": "WEATHER_REQUIRED"}
     if not state["weather"].get("success"):
         return {"action": "stop", "reason_code": "WEATHER_TOOL_FAILED"}
-    if not state["places"]:
+    if state["errors"]:
+        return {"action": "stop", "reason_code": "TOOL_FAILED"}
+    if state["places"] is None:
         action = "search_indoor_places" if state["weather"]["condition"] == "비" else "search_outdoor_places"
         return {"action": action, "reason_code": "PLACE_SEARCH_REQUIRED"}
     return {"action": "finish", "reason_code": "GOAL_COMPLETED"}

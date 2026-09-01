@@ -29,7 +29,7 @@ from typing import Any
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from travel_tools import TOOLS, execute_tool
+from travel_tools import TOOL_DEFINITIONS, TOOLS, execute_tool
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,40 +50,12 @@ search_outdoor_places를 호출하세요. Tool Result에 없는 사실을 만들
 OPENAI_TOOLS: list[dict[str, Any]] = [
     {
         "type": "function",
-        "name": "get_weather",
-        "description": "도시의 현재 날씨를 조회합니다. 장소 추천 전에 먼저 사용합니다.",
-        "parameters": {
-            "type": "object",
-            "properties": {"city": {"type": "string", "description": "조회할 한국 도시 이름"}},
-            "required": ["city"],
-            "additionalProperties": False,
-        },
+        "name": name,
+        "description": definition["description"],
+        "parameters": definition["parameters"],
         "strict": True,
-    },
-    {
-        "type": "function",
-        "name": "search_indoor_places",
-        "description": "비가 올 때 방문하기 좋은 실내 장소를 검색합니다.",
-        "parameters": {
-            "type": "object",
-            "properties": {"city": {"type": "string", "description": "검색할 한국 도시 이름"}},
-            "required": ["city"],
-            "additionalProperties": False,
-        },
-        "strict": True,
-    },
-    {
-        "type": "function",
-        "name": "search_outdoor_places",
-        "description": "맑은 날 방문하기 좋은 야외 장소를 검색합니다.",
-        "parameters": {
-            "type": "object",
-            "properties": {"city": {"type": "string", "description": "검색할 한국 도시 이름"}},
-            "required": ["city"],
-            "additionalProperties": False,
-        },
-        "strict": True,
-    },
+    }
+    for name, definition in TOOL_DEFINITIONS.items()
 ]
 
 
@@ -220,6 +192,20 @@ def run_openai_agent(question: str, max_steps: int = MAX_STEPS) -> dict[str, Any
             return state
         state["llm_calls"] += 1
 
+    # 마지막 Tool Result 뒤의 Model 응답도 확인합니다. 최종 답변이면 정상 완료하고,
+    # 또 다른 Tool Call이면 실행하지 않은 채 반복 제한으로 안전하게 중단합니다.
+    if not function_calls(response):
+        state["status"] = "completed"
+        state["termination_reason"] = "model_finished"
+        state["answer"] = response.output_text
+        state["trace"].append(
+            {"step": max_steps + 1, "stage": "model_final_answer", "text": response.output_text}
+        )
+        return state
+
     state["status"] = "stopped"
     state["termination_reason"] = "max_steps_exceeded"
+    state["trace"].append(
+        {"step": max_steps + 1, "stage": "max_steps_exceeded", "pending_tools": [call.name for call in function_calls(response)]}
+    )
     return state

@@ -8,7 +8,8 @@
 -----------------------
 * ``get_weather``: 성공 또는 도시 없음 결과를 반환하는 읽기 전용 날씨 Tool
 * ``search_indoor_places`` / ``search_outdoor_places``: 조건별 장소 검색 Tool
-* ``TOOLS``: Agent가 실행할 수 있는 Tool allowlist
+* ``TOOL_DEFINITIONS``: 이름·설명·입력 Schema·실행 함수를 묶은 단일 Tool 계약
+* ``TOOLS``: 단일 계약에서 만든 Backend 실행 allowlist
 * ``execute_tool``: Tool 이름과 arguments를 검증한 뒤 허용된 함수만 실행하는 dispatcher
 
 이 파일은 판단하거나 다음 Tool을 선택하지 않으므로 Agent가 아닙니다. Workflow 또는
@@ -41,14 +42,50 @@ def search_outdoor_places(city: str) -> dict[str, Any]:
     return {"success": True, "city": city, "category": "outdoor", "items": OUTDOOR_PLACES.get(city, []), "source": "mock-places"}
 
 
-TOOLS = {"get_weather": get_weather, "search_indoor_places": search_indoor_places, "search_outdoor_places": search_outdoor_places}
+TOOL_DEFINITIONS: dict[str, dict[str, Any]] = {
+    "get_weather": {
+        "function": get_weather,
+        "description": "도시의 현재 날씨를 조회합니다. 장소 추천 전에 먼저 사용합니다.",
+        "parameters": {
+            "type": "object",
+            "properties": {"city": {"type": "string", "description": "조회할 한국 도시 이름"}},
+            "required": ["city"],
+            "additionalProperties": False,
+        },
+    },
+    "search_indoor_places": {
+        "function": search_indoor_places,
+        "description": "비가 올 때 방문하기 좋은 실내 장소를 검색합니다.",
+        "parameters": {
+            "type": "object",
+            "properties": {"city": {"type": "string", "description": "검색할 한국 도시 이름"}},
+            "required": ["city"],
+            "additionalProperties": False,
+        },
+    },
+    "search_outdoor_places": {
+        "function": search_outdoor_places,
+        "description": "맑은 날 방문하기 좋은 야외 장소를 검색합니다.",
+        "parameters": {
+            "type": "object",
+            "properties": {"city": {"type": "string", "description": "검색할 한국 도시 이름"}},
+            "required": ["city"],
+            "additionalProperties": False,
+        },
+    },
+}
+
+# Backend Allowlist도 같은 정의에서 생성하여 Model Schema와 이름이 어긋나지 않게 합니다.
+TOOLS = {name: definition["function"] for name, definition in TOOL_DEFINITIONS.items()}
 
 
-def execute_tool(tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+def execute_tool(tool_name: str, arguments: Any) -> dict[str, Any]:
     """학습용 Allowlist에서 찾은 Tool만 실행합니다."""
     tool = TOOLS.get(tool_name)
     if tool is None:
         return {"success": False, "error": "TOOL_NOT_ALLOWED", "retryable": False}
+    if not isinstance(arguments, dict):
+        return {"success": False, "error": "INVALID_ARGUMENTS", "retryable": False}
     city = arguments.get("city")
     if not isinstance(city, str) or not city.strip():
         return {"success": False, "error": "INVALID_CITY", "retryable": False}

@@ -1,6 +1,6 @@
 # 선택 학습 · 같은 OpenAI Agent를 LangGraph로 구현
 
-이 예제는 `06_openai_agent_loop.py`와 동일한 OpenAI Model, instructions, Function Tool Schema, mock Tool과 종료 조건을 사용합니다.
+이 예제는 `06_openai_agent_loop.py`와 동일한 OpenAI Model, instructions, Function Tool Schema와 mock Tool을 사용합니다. Function Call이 없으면 종료한다는 기본 조건도 같지만, 반복 제한과 오류를 상태로 변환하는 방식은 Python Loop와 LangGraph 예제에서 다릅니다.
 
 ```text
 순수 Python OpenAI Agent

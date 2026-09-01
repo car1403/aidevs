@@ -202,7 +202,7 @@ Node가 여러 개다 = Multi-Agent다        X
 LLM이 목표와 State로 행동을 판단한다    → AI Agent
 ```
 
-> 관련 예제: `10_optional_langgraph/01_same_openai_agent_with_langgraph.py`는 `06`과 동일한 Model, Instructions, Tool Schema, Mock Tool과 종료 조건을 사용합니다. Agent가 달라진 것이 아니라 Python Loop를 State, Node와 Edge로 다시 표현한 것입니다.
+> 관련 예제: `10_optional_langgraph/01_same_openai_agent_with_langgraph.py`는 `06`과 동일한 Model, Instructions, Tool Schema와 Mock Tool을 사용합니다. Function Call이 없으면 종료한다는 기본 조건은 같지만 반복 제한과 오류 처리 방식은 다릅니다. Agent가 달라진 것이 아니라 Python Loop를 State, Node와 Edge로 다시 표현한 것입니다.
 
 최신 정의와 기능은 [LangGraph 공식 저장소](https://github.com/langchain-ai/langgraph)와 [공식 제품 구조 문서](https://docs.langchain.com/oss/python/concepts/products)를 참고합니다.
 

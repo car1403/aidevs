@@ -33,7 +33,7 @@ def run(city: str) -> dict[str, Any]:
     weather = execute_tool("get_weather", {"city": city})
     trace.append({"stage": "tool_result", "tool": "get_weather", "data": weather})
     decision = choose_place_tool(weather)
-    trace.append({"stage": "agent_decision", **decision})
+    trace.append({"stage": "routing_decision", **decision})
     if decision["action"] == "stop":
         return {"city": city, "weather": weather, "places": [], "selected_action": "stop", "status": "stopped", "termination_reason": decision["reason"], "trace": trace}
     places = execute_tool(decision["action"], {"city": city})
