@@ -22,6 +22,17 @@ from openai_agent_backend import OPENAI_MODEL, create_initial_response, function
 
 
 def inspect_selection(question: str) -> dict:
+    """OpenAI Model이 제안한 Tool Call을 실행하지 않고 검사합니다.
+
+    ``__main__``에서 호출됩니다. 최초 Model 판단을 한 번 요청하고 Function Call을
+    Backend 규칙으로 검증하지만 실제 Tool과 재판단 Loop는 실행하지 않습니다.
+
+    Args:
+        question: Model이 필요한 Tool을 판단할 사용자 요청입니다.
+
+    Returns:
+        Model, 선택된 Tool·arguments 또는 Tool이 없을 때의 직접 답변입니다.
+    """
     client = require_openai_client()
     response = create_initial_response(client, question)
     selections = []

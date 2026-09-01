@@ -25,7 +25,17 @@ OUTDOOR_PLACES = {"서울": ["서울숲", "북한산"], "제주": ["비자림", 
 
 
 def get_weather(city: str) -> dict[str, Any]:
-    """도시의 현재 날씨를 조회하는 읽기 전용 mock Tool입니다."""
+    """도시의 날씨를 고정 데이터에서 조회하는 읽기 전용 Mock Tool입니다.
+
+    Fixed·Conditional Workflow 또는 Agent가 ``get_weather`` 행동을 실행할 때 호출합니다.
+    알려진 도시는 날씨 근거를, 없는 도시는 구조화된 실패를 반환합니다.
+
+    Args:
+        city: 날씨를 조회할 도시 이름입니다.
+
+    Returns:
+        성공 여부, 도시, 날씨와 Mock 출처 또는 도시 없음 오류입니다.
+    """
     data = WEATHER.get(city)
     if data is None:
         return {"success": False, "error": "CITY_NOT_FOUND", "retryable": False, "city": city, "source": "mock-weather"}
@@ -33,12 +43,32 @@ def get_weather(city: str) -> dict[str, Any]:
 
 
 def search_indoor_places(city: str) -> dict[str, Any]:
-    """비 오는 날에 적합한 실내 장소를 검색하는 mock Tool입니다."""
+    """비 오는 날의 실내 장소 목록을 반환하는 Mock Tool입니다.
+
+    날씨 Result가 비일 때 Workflow 규칙이나 Agent 판단에 의해 호출됩니다. 외부 검색을
+    수행하지 않고 고정 장소 목록과 출처를 반환합니다.
+
+    Args:
+        city: 실내 장소를 검색할 도시 이름입니다.
+
+    Returns:
+        성공 여부, 도시, indoor category, 장소 목록과 Mock 출처입니다.
+    """
     return {"success": True, "city": city, "category": "indoor", "items": INDOOR_PLACES.get(city, []), "source": "mock-places"}
 
 
 def search_outdoor_places(city: str) -> dict[str, Any]:
-    """맑은 날에 적합한 야외 장소를 검색하는 mock Tool입니다."""
+    """비가 아닌 날의 야외 장소 목록을 반환하는 Mock Tool입니다.
+
+    Fixed Workflow에서는 날씨와 무관하게, Conditional Workflow와 Agent에서는 날씨가
+    비가 아닐 때 호출됩니다.
+
+    Args:
+        city: 야외 장소를 검색할 도시 이름입니다.
+
+    Returns:
+        성공 여부, 도시, outdoor category, 장소 목록과 Mock 출처입니다.
+    """
     return {"success": True, "city": city, "category": "outdoor", "items": OUTDOOR_PLACES.get(city, []), "source": "mock-places"}
 
 
@@ -80,7 +110,18 @@ TOOLS = {name: definition["function"] for name, definition in TOOL_DEFINITIONS.i
 
 
 def execute_tool(tool_name: str, arguments: Any) -> dict[str, Any]:
-    """학습용 Allowlist에서 찾은 Tool만 실행합니다."""
+    """Tool 이름과 arguments를 검증하고 Allowlist 함수만 실행합니다.
+
+    Rule-based Agent, Tool Result Routing과 OpenAI Agent Backend가 선택한 행동을 실제
+    함수로 바꾸는 시점에 호출합니다. 검증 실패도 예외 대신 구조화 Result로 반환합니다.
+
+    Args:
+        tool_name: 실행을 요청받은 Tool 이름입니다.
+        arguments: Model 또는 Workflow가 만든 Tool 인자입니다.
+
+    Returns:
+        Tool 실행 Result 또는 허용·인자 검증 실패 Result입니다.
+    """
     tool = TOOLS.get(tool_name)
     if tool is None:
         return {"success": False, "error": "TOOL_NOT_ALLOWED", "retryable": False}

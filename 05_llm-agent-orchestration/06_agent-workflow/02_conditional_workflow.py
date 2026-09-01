@@ -19,19 +19,51 @@ from travel_tools import get_weather, search_indoor_places, search_outdoor_place
 
 
 def run_workflow(city: str) -> dict:
+    """비교 기준이 되는 고정 Workflow를 실행합니다.
+
+    ``__main__``에서 Conditional Workflow보다 먼저 호출됩니다. 날씨와 관계없이 야외
+    장소 Tool을 실행하여 이후 규칙 기반 분기 결과와 비교할 기준을 만듭니다.
+
+    Args:
+        city: 조회할 도시 이름입니다.
+
+    Returns:
+        판단 주체, 날씨·장소 Result와 선택한 행동입니다.
+    """
     weather = get_weather(city)
     places = search_outdoor_places(city)
     return {"decision_maker": "developer", "weather": weather, "places": places, "selected_action": "search_outdoor_places"}
 
 
 def choose_action_by_rule(weather_result: dict) -> str:
-    """개발자가 작성한 규칙으로 다음 행동을 선택합니다."""
+    """날씨 Tool Result를 개발자 규칙으로 다음 행동 이름에 변환합니다.
+
+    ``run_conditional_workflow``가 날씨를 조회한 직후 호출합니다. 조회가 실패하면
+    ``stop``, 비이면 실내 검색, 그 외에는 야외 검색을 반환합니다.
+
+    Args:
+        weather_result: ``get_weather``가 반환한 성공 여부와 날씨 정보입니다.
+
+    Returns:
+        실행할 장소 Tool 이름 또는 중단을 뜻하는 ``stop``입니다.
+    """
     if not weather_result.get("success"):
         return "stop"
     return "search_indoor_places" if weather_result["condition"] == "비" else "search_outdoor_places"
 
 
 def run_conditional_workflow(city: str) -> dict:
+    """날씨 Result에 따라 서로 다른 장소 Tool로 분기합니다.
+
+    ``__main__``에서 고정 Workflow 다음에 호출됩니다. 날씨 조회 후 규칙 함수에 판단을
+    위임하고 해당 Tool 하나를 실행합니다. 한 번 분기한 뒤 종료하므로 Agent Loop는 아닙니다.
+
+    Args:
+        city: 날씨와 장소를 조회할 도시 이름입니다.
+
+    Returns:
+        판단 주체, Tool Result와 선택한 행동입니다.
+    """
     weather = get_weather(city)
     action = choose_action_by_rule(weather)
     if action == "search_indoor_places":

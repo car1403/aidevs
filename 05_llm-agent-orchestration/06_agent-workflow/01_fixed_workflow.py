@@ -18,6 +18,17 @@ from travel_tools import get_weather, search_outdoor_places
 
 
 def run_workflow(city: str) -> dict:
+    """개발자가 정한 두 Tool을 고정된 순서로 한 번씩 실행합니다.
+
+    이 파일을 직접 실행할 때 ``__main__``에서 호출됩니다. 먼저 날씨를 조회하지만
+    Result를 분기 조건으로 사용하지 않고 항상 야외 장소를 검색합니다.
+
+    Args:
+        city: 날씨와 장소를 조회할 도시 이름입니다.
+
+    Returns:
+        날씨·장소 Result, 완료 상태, 종료 이유와 단계별 Trace입니다.
+    """
     trace = []
     weather = get_weather(city)
     trace.append({"step": 1, "action": "get_weather", "result": weather})

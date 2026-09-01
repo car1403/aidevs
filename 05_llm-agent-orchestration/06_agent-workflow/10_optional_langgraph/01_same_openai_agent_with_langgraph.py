@@ -231,7 +231,18 @@ def route_after_agent(state: OpenAIAgentState) -> str:
 
 
 def route_after_tools(state: OpenAIAgentState) -> str:
-    """Tool 실행 실패 시 종료하고, 성공한 경우에만 Model 재판단으로 이동합니다."""
+    """Backend Tool Node 이후 재판단 또는 종료 경로를 선택합니다.
+
+    ``backend_tool_node``가 Tool 실행 결과를 State에 반영한 직후 호출됩니다. Tool 검증
+    또는 실행이 실패해 ``status=failed``가 되면 ``finish``를 반환해 END로 이동하고,
+    성공하면 ``agent``를 반환해 OpenAI Agent Node가 Tool Result를 보고 재판단하게 합니다.
+
+    Args:
+        state: Backend Tool 실행 상태와 오류 정보가 반영된 Graph State입니다.
+
+    Returns:
+        실패 종료를 뜻하는 ``finish`` 또는 Model 재판단을 뜻하는 ``agent``입니다.
+    """
     return "finish" if state.get("status") == "failed" else "agent"
 
 

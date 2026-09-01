@@ -1,5 +1,10 @@
 """Tool Result가 다음 행동과 종료를 바꾸는 라우팅을 집중적으로 살펴봅니다.
 
+이 파일은 Agent를 이용하는 예제가 아니라, Tool Result를 Python 규칙으로 확인하여
+다음 행동을 선택하는 Conditional Workflow에 가깝습니다. ``weather``, ``decision``,
+``places``와 ``trace`` 같은 실행 데이터는 있지만, 목표와 전체 State를 다시 확인하며
+판단·실행·관찰을 반복하는 Agent Loop는 없습니다.
+
 03의 Agent Loop 안에도 Tool Result 기반 분기가 포함되어 있습니다. 이번 파일은 전체
 Loop보다 ``관찰한 결과 → 다음 행동 선택`` 관계에 집중할 수 있도록 그 부분을 떼어
 제주, 서울, 없는 도시라는 서로 다른 입력으로 비교합니다.
@@ -21,6 +26,18 @@ from travel_tools import execute_tool
 
 
 def choose_place_tool(weather_result: dict[str, Any]) -> dict[str, str]:
+    """날씨 Tool Result를 장소 Tool 또는 중단 경로로 변환합니다.
+
+    ``run``이 날씨를 조회한 직후 한 번 호출합니다. Agent가 판단하는 것이 아니라
+    개발자가 작성한 Python 규칙이 다음 Tool을 선택합니다. 결정적 Router이므로 LLM
+    판단이나 반복적인 Agent Loop를 수행하지 않습니다.
+
+    Args:
+        weather_result: 날씨 조회의 성공 여부와 condition을 담은 Result입니다.
+
+    Returns:
+        선택한 ``action``과 선택 근거인 ``reason``입니다.
+    """
     if not weather_result.get("success"):
         return {"action": "stop", "reason": "missing_weather_evidence"}
     if weather_result["condition"] == "비":
@@ -29,6 +46,17 @@ def choose_place_tool(weather_result: dict[str, Any]) -> dict[str, str]:
 
 
 def run(city: str) -> dict[str, Any]:
+    """한 도시의 날씨 Result에 따른 다음 행동과 종료를 실행합니다.
+
+    ``__main__``에서 각 도시에 대해 호출됩니다. 날씨 Tool, 규칙 Router, 선택된 장소
+    Tool 순서로 실행하며 날씨 근거가 없으면 장소 Tool 없이 중단합니다.
+
+    Args:
+        city: 라우팅 차이를 확인할 도시 이름입니다.
+
+    Returns:
+        날씨·장소 결과, 선택한 행동, 종료 이유와 Trace입니다.
+    """
     trace = []
     weather = execute_tool("get_weather", {"city": city})
     trace.append({"stage": "tool_result", "tool": "get_weather", "data": weather})

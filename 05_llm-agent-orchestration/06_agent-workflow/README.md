@@ -108,7 +108,10 @@ Tool 사용 여부만으로는 구분할 수 없습니다. Workflow, Rule-based 
 
 `05_openai_tool_selection.py`는 LLM이 Tool과 arguments를 선택하는 것까지만 관찰합니다. Tool 실행과 재판단이 없으므로 아직 완성된 Agent Loop는 아닙니다.
 
-`06_openai_agent_loop.py`와 `openai_agent_backend.py`는 전체 AI Agent Loop를 완성합니다.
+`06_openai_agent_loop.py`는 공용 Backend 함수들을 조합하여 전체 AI Agent Loop를 완성합니다.
+
+이전에 만든 단순 Tool-calling Agent와 이번 State 기반 Agent Loop의 차이는
+[`openai_agent_backend.md`](openai_agent_backend.md)에서 자세히 설명합니다.
 
 ```text
 LLM 판단 → Tool Call → Backend 검증·실행 → Tool Result 전달
@@ -145,7 +148,7 @@ LLM 판단 → Tool Call → Backend 검증·실행 → Tool Result 전달
 
 Agent의 판단은 시스템 정책보다 우선하지 않습니다. Model이 Tool을 요청해도 Backend Allowlist, arguments 검증과 사용자 권한을 통과해야 실행됩니다.
 
-> 관련 예제: `openai_agent_backend.py`에서 OpenAI Model은 행동을 제안하고 Python Backend는 Tool Call을 검증·실행합니다. `06_openai_agent_loop.py`는 이 실행 엔진을 호출하는 진입점입니다.
+> 관련 예제: `openai_agent_backend.py`는 OpenAI 호출과 Tool 검증·실행 함수를 제공합니다. `06_openai_agent_loop.py`의 `run_openai_agent()`가 이 함수들을 State, 반복과 종료 조건으로 연결한 실제 AI Agent Loop입니다.
 
 ## 5. LangGraph는 Workflow와 Agent를 어떻게 표현하는가?
 
