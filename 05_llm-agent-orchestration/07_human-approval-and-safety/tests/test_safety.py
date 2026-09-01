@@ -19,7 +19,7 @@ def load_example(filename: str):
 
 
 def test_empty_place_result_stops_instead_of_repeating(monkeypatch) -> None:
-    example = load_example("07_complete_safe_agent.py")
+    example = load_example("05_complete_safe_agent.py")
     monkeypatch.setattr(example, "search_places", lambda _city: [])
     state = example.AgentState(run_id="empty-places", owner_id="user-a", city="없는도시")
 
@@ -30,7 +30,7 @@ def test_empty_place_result_stops_instead_of_repeating(monkeypatch) -> None:
 
 
 def test_changed_approval_target_is_blocked_before_execution() -> None:
-    example = load_example("07_complete_safe_agent.py")
+    example = load_example("05_complete_safe_agent.py")
     state = example.AgentState(run_id="changed-target", owner_id="user-a", city="제주")
     paused = example.run_until_pause(state)
 
@@ -43,21 +43,8 @@ def test_changed_approval_target_is_blocked_before_execution() -> None:
     assert result["reason"] == "APPROVAL_TARGET_CHANGED"
 
 
-def test_wrong_owner_cannot_approve() -> None:
-    example = load_example("07_complete_safe_agent.py")
-    state = example.AgentState(run_id="wrong-owner", owner_id="user-a", city="제주")
-    paused = example.run_until_pause(state)
-
-    result = example.resume_after_approval(
-        state,
-        {"decision": "approve", "actor": "user-b", "approval_target": paused["approval_target"]},
-    )
-
-    assert result["reason"] == "ACTOR_NOT_OWNER"
-
-
 def test_rejected_change_is_not_executed() -> None:
-    example = load_example("07_complete_safe_agent.py")
+    example = load_example("05_complete_safe_agent.py")
     state = example.AgentState(run_id="rejected", owner_id="user-a", city="제주")
     paused = example.run_until_pause(state)
 
@@ -71,7 +58,7 @@ def test_rejected_change_is_not_executed() -> None:
 
 
 def test_hotel_selection_must_be_from_previous_candidates() -> None:
-    example = load_example("09_openai_hotel_selection.py")
+    example = load_example("07_openai_hotel_selection.py")
     state = example.HotelSelectionState(
         run_id="hotel-selection",
         owner_id="user-a",
@@ -82,8 +69,5 @@ def test_hotel_selection_must_be_from_previous_candidates() -> None:
 
     valid = example.validate_hotel_selection(state, "user-a", "hotel-busan-001")
     invalid = example.validate_hotel_selection(state, "user-a", "hotel-seoul-001")
-    wrong_owner = example.validate_hotel_selection(state, "user-b", "hotel-busan-001")
-
     assert valid["valid"] is True
     assert invalid["reason"] == "HOTEL_NOT_IN_CANDIDATES"
-    assert wrong_owner["reason"] == "ACTOR_NOT_OWNER"

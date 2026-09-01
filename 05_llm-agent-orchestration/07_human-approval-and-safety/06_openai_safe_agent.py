@@ -1,4 +1,25 @@
-"""OpenAI Agent의 변경 Tool Call을 승인 전 중단하고 승인 후 한 번 실행합니다."""
+"""OpenAI 기반 여행 AI Agent가 사용자 승인을 받아 일정을 저장하는 예제입니다.
+
+상황:
+사용자가 "제주 날씨에 맞는 여행 장소를 찾아 일정으로 저장해 줘"라고 요청합니다.
+Agent는 OpenAI Model의 판단으로 날씨와 장소를 조회하고 일정 초안까지 만들 수
+있습니다. 그러나 일정 저장은 외부 상태를 변경하므로 바로 실행하지 않고 사용자에게
+승인 여부를 묻습니다.
+
+실행 흐름:
+사용자 요청
+→ OpenAI가 날씨 Tool 선택 및 실행
+→ Tool Result를 받은 OpenAI가 장소 검색 Tool 선택 및 실행
+→ OpenAI가 여행 일정 저장 Tool 제안
+→ Backend가 Tool 이름과 arguments를 State에 저장하고 실행 중단
+→ 터미널에서 사용자에게 승인 여부 입력 요청
+   ├─ y: 승인 대상을 확인하고 Mock 일정 저장
+   └─ n: 아무것도 저장하지 않고 종료
+→ 저장 Result를 OpenAI에 전달하여 최종 답변 생성
+
+Model이 ``save_itinerary``를 선택했다는 사실은 실행 권한을 의미하지 않습니다.
+Model은 행동을 제안하고 Backend가 승인 필요 여부와 실제 실행을 통제합니다.
+"""
 
 import json
 import os
@@ -236,6 +257,18 @@ def resume_after_approval(
     }
 
 
+def ask_user_decision() -> str:
+    """터미널에서 사용자가 y 또는 n을 입력할 때까지 승인 여부를 묻습니다."""
+
+    while True:
+        answer = input("일정을 저장할까요? [y/n]: ").strip().lower()
+        if answer in {"y", "yes", "승인"}:
+            return "approve"
+        if answer in {"n", "no", "거절"}:
+            return "reject"
+        print("y(승인) 또는 n(거절)을 입력해 주세요.")
+
+
 if __name__ == "__main__":
     agent_state = SafeAgentState(
         run_id="openai-safe-001",
@@ -244,6 +277,8 @@ if __name__ == "__main__":
     )
     paused = run_until_approval(agent_state)
     print("승인 대기:", json.dumps(paused, ensure_ascii=False, indent=2))
-    target = paused.get("approval_target", {})
-    completed = resume_after_approval(agent_state, "user-01", "approve", target)
-    print("승인 후:", json.dumps(completed, ensure_ascii=False, indent=2))
+    if paused["status"] == "waiting_approval":
+        decision = ask_user_decision()
+        target = paused["approval_target"]
+        completed = resume_after_approval(agent_state, "user-01", decision, target)
+        print("처리 결과:", json.dumps(completed, ensure_ascii=False, indent=2))
