@@ -21,7 +21,8 @@ Docker가 처음이라면 모든 환경을 한 번에 설치하지 않습니다.
 | `04` pgvector 확장 | Local Database | Docker Desktop, PostgreSQL/pgvector |
 | `05` Memory 확장 | Local Cache/Database | Docker Desktop, Redis, PostgreSQL |
 | Provider 비교 | Real 또는 Local LLM | API Key 또는 Docker Ollama |
-| `09` 통합 Lab | Mock부터 시작 | `mini_agent_08_evaluation`의 두 Backend와 Streamlit |
+| `08` 평가와 Trace | 저장 Fixture부터 시작 | 선택 실습에서 Mini Agent 06·07 Backend 사용 |
+| `09` 통합 Lab | 별도 과정 | 별도 통합 Mini Project에서 구성 |
 
 먼저 Mock으로 Agent의 계약과 흐름을 이해한 뒤 필요한 서비스만 추가합니다.
 Docker가 설치되지 않았다는 이유로 초반 단원 학습을 중단할 필요는 없습니다.
@@ -111,69 +112,28 @@ python .\01_llm-to-agent\02_travel_example.py
 
 각 단원의 README에 실행 순서가 있습니다.
 
-## 6. 통합 Lab의 두 Backend
+## 6. 08 평가와 Trace
 
-누적 완성본의 환경을 처음 한 번 준비합니다.
-
-```powershell
-cd C:\mini_agent_st\mini_agent_08_evaluation
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-Copy-Item .env.example .env
-```
-
-Python Agent Backend:
-
-```powershell
-cd C:\mini_agent_st\mini_agent_08_evaluation\backend_python
-..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
-```
-
-새 PowerShell에서 LangGraph Agent Backend:
-
-```powershell
-cd C:\mini_agent_st\mini_agent_08_evaluation\backend_langgraph
-..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8001
-```
-
-확인 주소:
+08은 별도 Mini Agent 애플리케이션이 아닙니다. 다음 두 Backend를 각각 실행하고 Live 평가합니다.
 
 ```text
-Health: http://127.0.0.1:8000/health
-Docs:   http://127.0.0.1:8000/docs
-Health: http://127.0.0.1:8001/health
-Docs:   http://127.0.0.1:8001/docs
+C:\mini_agent_st\mini_agent_06_agent_workflow
+C:\mini_agent_st\mini_agent_07_human_approval
 ```
-
-## 7. 통합 Frontend
-
-새 PowerShell에서 실행합니다.
 
 ```powershell
-cd C:\mini_agent_st\mini_agent_08_evaluation
-.\.venv\Scripts\python.exe -m streamlit run .\frontend\app.py
+cd C:\aidevs\05_llm-agent-orchestration\08_agent-evaluation-and-tracing
+python .\01_evaluate_live_agent_06.py
+python .\02_evaluate_live_agent_07.py
 ```
 
-## 8. 테스트
+06과 07이 같은 기본 Port를 사용하므로 한 번에 하나씩 실행합니다. 별도의 `mini_agent_08_evaluation` Backend나 Frontend는 사용하지 않습니다.
 
-Python Backend:
+## 7. 테스트
 
-```powershell
-cd C:\mini_agent_st\mini_agent_08_evaluation\backend_python
-..\.venv\Scripts\python.exe -m pytest tests -q
-```
+각 Mini Agent 프로젝트의 Backend Test를 먼저 통과시킨 뒤 08의 Live 평가를 실행합니다.
 
-LangGraph Backend:
-
-```powershell
-cd C:\mini_agent_st\mini_agent_08_evaluation\backend_langgraph
-..\.venv\Scripts\python.exe -m pytest tests -q
-```
-
-두 Backend가 각각 `app` 패키지를 사용하므로 테스트도 별도 프로세스로 실행합니다.
-
-## 9. 실행 모드
+## 8. 실행 모드
 
 Mock:
 
@@ -201,11 +161,10 @@ LLM_PROVIDER=gemini
 LLM_PROVIDER=ollama
 ```
 
-Frontend에서는 Sidebar에서 Backend를 선택할 수 있습니다. 8-1~8-5 평가는
-Mock 기반으로 실행하고, 8-6 Provider 비교를 선택한 경우에만 설정과 비용을
-확인한 뒤 한 Provider씩 호출합니다.
+08의 필수 평가는 저장 Fixture로 실행합니다. 실제 06·07 Agent 반복 평가는
+각 Mini Agent의 실행 모드와 Provider 비용을 확인한 뒤 선택적으로 진행합니다.
 
-## 10. 선택 환경
+## 9. 선택 환경
 
 pgvector, Redis, Ollama는 해당 단원의 확장 실습에서만 사용합니다. Dockerfile과 Docker Compose 운영은 `07_multi-agent-service-ops`에서 학습합니다.
 
@@ -224,7 +183,7 @@ Docker Compose 파일 자체가 AWS의 모든 운영 문제를 해결하는 것�
 후속 과정에서는 학습 범위를 명확히 하기 위해 EC2 한 대에서 수동 Compose 배포를
 먼저 경험하고, 완전한 CI/CD와 관리형 Container 운영은 선택 확장으로 구분합니다.
 
-## 11. 자주 발생하는 문제
+## 10. 자주 발생하는 문제
 
 | 증상 | 확인 |
 | --- | --- |

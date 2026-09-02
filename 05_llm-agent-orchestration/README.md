@@ -78,7 +78,7 @@ LLM과 Agent 구분
 | `05_memory` | 사용자별 단기·장기 기억 |
 | `06_agent-workflow` | Workflow·Rule Loop·OpenAI Agent, LangGraph 비교와 Multi-Agent 연결 |
 | `07_human-approval-and-safety` | Agent 경계 설계, Single/Multi-Agent 선택, 권한·승인과 안전한 실행 |
-| `08_agent-evaluation-and-tracing` | Safe Order Agent의 Scenario·Check·Trace·Regression |
+| `08_agent-evaluation-and-tracing` | Mini Agent 06·07의 실제 Live 실행 평가 |
 | `09_integrated-agent-lab` | 다음 과정에서 별도로 구성할 통합 실습 |
 
 ## 예제 진행 방식
@@ -136,7 +136,7 @@ Backend 없이 실행하며, 실제 Provider 또는 완성 화면을 사용하�
 | 05 | 실습 1~5 불필요 | 실습 6~7은 Redis·PostgreSQL, 완성 화면은 `mini_agent_05_memory\backend` |
 | 06 | 필수 Python 예제는 Backend 불필요 | 완성 화면: `mini_agent_06_agent_workflow\backend` · Port 8000 |
 | 07 | 필수 Python 예제는 Backend 불필요 | 완성 화면: `mini_agent_07_human_approval\backend` · Port 8000 |
-| 08 | 필수 Python 예제는 Backend 불필요 | 평가 화면: `mini_agent_08_evaluation\backend` · Port 8008 |
+| 08 | Mini Agent Backend 필요 | Live 평가 대상: `mini_agent_06_agent_workflow`, `mini_agent_07_human_approval` |
 | 09 | 별도 안내 예정 | 별도 통합 Mini Project |
 
 Python 파일 맨 위의 `실행 전 준비` 주석도 같은 경로를 안내합니다.
