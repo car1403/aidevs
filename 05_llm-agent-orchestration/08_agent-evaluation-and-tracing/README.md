@@ -9,6 +9,17 @@
 
 Scenario JSON, 저장 Fixture와 전체 회귀 Suite는 지금 추가하지 않습니다. 두 Live 평가를 먼저 이해한 뒤 필요할 때 확장합니다.
 
+각 파일의 맨 위에는 `SCENARIO`가 있습니다.
+
+```text
+SCENARIO
+├─ name: 시험 이름
+├─ input: Agent에게 보낼 실제 입력
+└─ expected: 기대 상태와 행동
+```
+
+따라서 한 파일을 위에서 아래로 읽으면 `Scenario 선언 → Live API 호출 → 실제 결과 → 기대값 비교 → PASS/FAIL` 전체가 보입니다.
+
 ## 1. Mini Agent 06 Live 평가
 
 ### 평가할 행동
@@ -20,7 +31,7 @@ Scenario JSON, 저장 Fixture와 전체 회귀 Suite는 지금 추가하지 않�
 get_weather → search_indoor_places → 최종 답변
 ```
 
-평가 파일은 실제 Backend의 `/api/agents/run`을 호출하고 다음 세 가지를 검사합니다.
+평가 파일의 `SCENARIO`에 질문과 기대값을 선언합니다. 실제 Backend의 `/api/agents/run`을 호출하고 다음 세 가지를 검사합니다.
 
 - `status == completed`
 - `termination_reason == model_finished`
@@ -51,7 +62,7 @@ python .\01_evaluate_live_agent_06.py
 
 ## 2. Mini Agent 07 Live 평가
 
-07은 승인 때문에 두 단계로 평가합니다.
+07의 `SCENARIO`에는 입력, 승인 결정, 승인 전 기대값과 승인 후 기대값이 함께 있습니다. 승인이 필요하므로 두 단계로 평가합니다.
 
 ```text
 Agent 실행

@@ -6,8 +6,18 @@ from urllib.request import Request, urlopen
 
 
 API_URL = os.getenv("MINI_AGENT_06_API_URL", "http://127.0.0.1:8000/api/agents/run")
-QUESTION = "제주 날씨를 확인하고 비가 오면 실내 관광지를 추천해줘"
-EXPECTED_TOOLS = ["get_weather", "search_indoor_places"]
+SCENARIO = {
+    "name": "비 오는 제주 실내 장소 추천",
+    "input": {
+        "agent_id": "travel",
+        "question": "제주 날씨를 확인하고 비가 오면 실내 관광지를 추천해줘",
+    },
+    "expected": {
+        "status": "completed",
+        "termination_reason": "model_finished",
+        "tools": ["get_weather", "search_indoor_places"],
+    },
+}
 
 
 def post_json(url: str, body: dict) -> dict:
@@ -17,7 +27,7 @@ def post_json(url: str, body: dict) -> dict:
         return json.loads(response.read().decode("utf-8"))
 
 
-actual = post_json(API_URL, {"agent_id": "travel", "question": QUESTION})
+actual = post_json(API_URL, SCENARIO["input"])
 actual_tools = [
     event["tool"]
     for event in actual["trace"]
@@ -25,13 +35,14 @@ actual_tools = [
 ]
 
 checks = {
-    "정상 완료": actual["status"] == "completed",
-    "정상 종료": actual["termination_reason"] == "model_finished",
-    "Tool 실행 순서": actual_tools == EXPECTED_TOOLS,
+    "정상 완료": actual["status"] == SCENARIO["expected"]["status"],
+    "정상 종료": actual["termination_reason"] == SCENARIO["expected"]["termination_reason"],
+    "Tool 실행 순서": actual_tools == SCENARIO["expected"]["tools"],
 }
 
 print("평가 대상: Mini Agent 06 · Travel Agent")
-print("질문:", QUESTION)
+print("Scenario:", SCENARIO["name"])
+print("질문:", SCENARIO["input"]["question"])
 print("실행된 Tool:", actual_tools)
 for name, passed in checks.items():
     print(f"- {name}: {'PASS' if passed else 'FAIL'}")
