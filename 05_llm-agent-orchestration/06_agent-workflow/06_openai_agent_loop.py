@@ -39,7 +39,7 @@ def run_openai_agent(question: str, max_steps: int = MAX_STEPS) -> dict[str, Any
     반복 제한을 구조화된 상태와 Trace로 반환합니다.
 
     정상적인 반복과 종료 예시는 다음과 같습니다.
-
+    만약 날씨만 알고 싶으면 1차에서 끝난다.
     ``1회차 LLM → get_weather 요청``
     ``Tool 실행 → 제주, 비``
 
@@ -177,6 +177,6 @@ def run_openai_agent(question: str, max_steps: int = MAX_STEPS) -> dict[str, Any
 
 
 if __name__ == "__main__":
-    question = " ".join(sys.argv[1:]) or "제주 날씨에 맞는 장소를 추천해 줘."
+    question = " ".join(sys.argv[1:]) or "제주 날씨 알려줘"
     result = run_openai_agent(question)
     print(json.dumps(result, ensure_ascii=False, indent=2))

@@ -1,2 +1,0 @@
-"""Multi-Agent FastAPI Backend."""
-

@@ -33,7 +33,10 @@ from travel_tools import TOOL_DEFINITIONS, TOOLS, execute_tool
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
-INSTRUCTIONS = """당신은 한국 여행 AI Agent입니다.
+INSTRUCTIONS = """
+사용자가 날씨만 검색 한다고 하면 날씨만 검색 하고 끝난다.
+
+당신은 한국 여행 AI Agent입니다.
 사용자 목표를 달성하기 위해 제공된 Function Tool만 사용하세요.
 날씨에 맞는 장소 추천 요청에서는 먼저 get_weather를 호출하세요.
 날씨 Tool Result가 비이면 search_indoor_places를, 그렇지 않으면
