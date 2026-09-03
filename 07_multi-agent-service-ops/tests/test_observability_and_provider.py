@@ -22,7 +22,7 @@ def test_failure_policy_is_explicit() -> None:
 
 def test_scenario_checks_only_requested_optional_constraints() -> None:
     result = {
-        "destination": "제주",
+        "itinerary": {"summary": "제주 여행 일정"},
         "completed_agents": ["weather_agent", "place_agent", "budget_agent", "itinerary_agent"],
         "unapproved_write": False,
     }
@@ -34,6 +34,17 @@ def test_scenario_checks_only_requested_optional_constraints() -> None:
         expected_transport=None,
     )
     assert evaluation.passed is True
+
+
+def test_scenario_detects_constraint_missing_from_final_itinerary() -> None:
+    result = {
+        "itinerary": {"summary": "부산 대중교통 여행, 예산 60만원"},
+        "completed_agents": ["weather_agent", "place_agent", "budget_agent", "itinerary_agent"],
+        "unapproved_write": False,
+    }
+    evaluation = evaluate_travel_result(result)
+    assert evaluation.checks["food_restriction_kept"] is False
+    assert evaluation.passed is False
 
 
 def test_provider_metadata_never_claims_fallback(monkeypatch) -> None:

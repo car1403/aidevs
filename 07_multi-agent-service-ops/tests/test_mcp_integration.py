@@ -12,7 +12,7 @@ sys.path.insert(0, str(FINAL_ROOT))
 
 from app.models import TaskRecord  # noqa: E402
 import integrated_orchestrator as integrated  # noqa: E402
-from shared.travel_contracts import SpecialistResult  # noqa: E402
+from shared.travel_contracts import RouteDecision, SpecialistResult  # noqa: E402
 
 
 def load_mcp_server():
@@ -58,7 +58,7 @@ def specialist(agent_id: str) -> SpecialistResult:
     return SpecialistResult(
         agent_id=agent_id,
         goal="여행 작업",
-        summary=f"{agent_id} 완료, 알레르기와 대중교통, 예산 60만원 반영",
+        summary=f"{agent_id} 부산 일정 완료, 알레르기와 대중교통, 예산 60만원 반영",
         recommendations=["추천"],
         completed=True,
     )
@@ -95,6 +95,14 @@ def test_integrated_orchestrator_connects_mcp_handoff_and_evaluation(monkeypatch
     )
     monkeypatch.setattr(
         integrated,
+        "route_agents",
+        lambda task: RouteDecision(
+            selected_agents=["weather_agent", "place_agent", "budget_agent"],
+            reason="모든 조건을 확인합니다.",
+        ),
+    )
+    monkeypatch.setattr(
+        integrated,
         "run_structured",
         lambda provider, prompt, schema: specialist("itinerary_agent"),
     )
@@ -110,3 +118,41 @@ def test_integrated_orchestrator_connects_mcp_handoff_and_evaluation(monkeypatch
     assert len(result.result["handoffs"]) == 3
     assert result.result["evaluation"]["passed"] is True
     assert any(item["action"] == "mcp:get_weather" for item in result.trace)
+
+
+def test_integrated_orchestrator_traces_failed_specialist(monkeypatch) -> None:
+    async def fake_tool(name, arguments):
+        return {"source": "Open-Meteo"}
+
+    monkeypatch.setattr(integrated, "call_travel_tool", fake_tool)
+    monkeypatch.setattr(
+        integrated,
+        "extract_intent",
+        lambda task: integrated.TripIntent(destination="부산", days=3),
+    )
+    monkeypatch.setattr(
+        integrated,
+        "route_agents",
+        lambda task: RouteDecision(
+            selected_agents=["weather_agent", "place_agent"],
+            reason="날씨와 장소가 필요합니다.",
+        ),
+    )
+
+    def fail_place(task, agent_id, extra_context=None):
+        if agent_id == "place_agent":
+            raise RuntimeError("provider failed")
+        return specialist(agent_id)
+
+    monkeypatch.setattr(integrated, "run_specialist", fail_place)
+    task = TaskRecord(user_id="user-1", request="부산 여행 장소와 날씨를 알려줘")
+
+    try:
+        asyncio.run(integrated.run_integrated(task))
+    except RuntimeError:
+        pass
+
+    failure = next(item for item in task.trace if item.get("status") == "failed")
+    assert failure["actor"] == "place_agent"
+    assert failure["provider"]
+    assert failure["error_type"] == "RuntimeError"

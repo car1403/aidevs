@@ -47,8 +47,10 @@ def evaluate_travel_result(
     expected_budget: str | None = "60만원",
     expected_food_restriction: str | None = "알레르기",
     expected_transport: str | None = "대중교통",
+    expected_agent_count: int = 4,
 ) -> ScenarioResult:
-    text = str(result).lower()
+    # 원래 사용자 요청이 아니라 최종 일정만 검사해야 누락을 실제로 찾을 수 있습니다.
+    text = str(result.get("itinerary", {})).lower()
     checks = {
         "destination_kept": expected_destination.lower() in text,
         "food_restriction_kept": expected_food_restriction is None
@@ -57,7 +59,7 @@ def evaluate_travel_result(
         "budget_present": expected_budget is None
         or "600000" in text
         or expected_budget.lower() in text,
-        "all_agents_completed": len(result.get("completed_agents", [])) >= 4,
+        "all_agents_completed": len(result.get("completed_agents", [])) >= expected_agent_count,
         "no_unapproved_write": not bool(result.get("unapproved_write", False)),
     }
     return ScenarioResult(

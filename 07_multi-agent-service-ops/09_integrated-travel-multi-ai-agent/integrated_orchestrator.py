@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from app.models import TaskRecord
 from mcp_client import call_travel_tool
-from shared.travel_contracts import SPECIALIST_GOALS, SpecialistResult
+from shared.travel_contracts import RouteDecision, SPECIALIST_GOALS, SpecialistResult
 from shared.travel_llm import run_structured
 from shared.travel_observability import evaluate_travel_result
 from shared.travel_orchestration import TravelHandoff, guard_handoff
@@ -38,6 +38,16 @@ def extract_intent(task: TaskRecord) -> TripIntent:
     )
 
 
+def route_agents(task: TaskRecord) -> RouteDecision:
+    provider = os.getenv("SUPERVISOR_PROVIDER", os.getenv("LLM_PROVIDER", "openai"))
+    prompt = f"""당신은 Travel Supervisor입니다.
+사용자 요청: {task.request}
+weather_agent, place_agent, budget_agent 중 필요한 Agent만 선택하세요.
+최종 일정은 별도의 itinerary_agent가 작성하므로 selected_agents에 넣지 마세요.
+RouteDecision 계약으로 답하세요."""
+    return run_structured(provider, prompt, RouteDecision)
+
+
 def run_specialist(task: TaskRecord, agent_id: str, extra_context: object | None = None) -> SpecialistResult:
     prompt = f"""당신은 {agent_id}입니다.
 목표: {SPECIALIST_GOALS[agent_id]}
@@ -58,29 +68,46 @@ async def run_integrated(task: TaskRecord) -> TaskRecord:
     intent = await asyncio.to_thread(extract_intent, task)
     trace(task, "supervisor", "extract_intent", "completed", destination=intent.destination)
 
-    tool_request = ToolRequest(
-        task_id=task.task_id,
-        user_id=task.user_id,
-        agent_id="weather_agent",
-        tool_name="get_weather",
-        arguments={"city": intent.destination, "forecast_days": intent.days},
-    )
-    authorize_tool(tool_request, expected_user_id=task.user_id)
-    trace(task, "weather_agent", "mcp:get_weather", "started")
-    weather_data = await call_travel_tool("get_weather", tool_request.arguments)
-    trace(task, "weather_agent", "mcp:get_weather", "completed", source=weather_data.get("source"))
+    trace(task, "supervisor", "route", "started")
+    decision = await asyncio.to_thread(route_agents, task)
+    selected = [agent_id for agent_id in decision.selected_agents if agent_id != "itinerary_agent"]
+    if not selected:
+        raise RuntimeError("Supervisor가 전문 Agent를 선택하지 않았습니다.")
+    trace(task, "supervisor", "route", "completed", selected_agents=selected, reason=decision.reason)
 
-    weather_future = asyncio.to_thread(run_specialist, task, "weather_agent", weather_data)
-    place_future = asyncio.to_thread(run_specialist, task, "place_agent")
-    budget_future = asyncio.to_thread(run_specialist, task, "budget_agent")
-    weather, place, budget = await asyncio.gather(weather_future, place_future, budget_future)
-    results = {
-        "weather_agent": weather,
-        "place_agent": place,
-        "budget_agent": budget,
-    }
-    for agent_id in results:
-        trace(task, agent_id, "specialist", "completed")
+    weather_data = None
+    if "weather_agent" in selected:
+        tool_request = ToolRequest(
+            task_id=task.task_id,
+            user_id=task.user_id,
+            agent_id="weather_agent",
+            tool_name="get_weather",
+            arguments={"city": intent.destination, "forecast_days": intent.days},
+        )
+        authorize_tool(tool_request, expected_user_id=task.user_id)
+        trace(task, "weather_agent", "mcp:get_weather", "started")
+        weather_data = await call_travel_tool("get_weather", tool_request.arguments)
+        trace(task, "weather_agent", "mcp:get_weather", "completed", source=weather_data.get("source"))
+
+    async def run_selected(agent_id: str) -> tuple[str, SpecialistResult]:
+        try:
+            context = weather_data if agent_id == "weather_agent" else None
+            result = await asyncio.to_thread(run_specialist, task, agent_id, context)
+            trace(task, agent_id, "specialist", "completed")
+            return agent_id, result
+        except Exception as error:
+            trace(
+                task,
+                agent_id,
+                "specialist",
+                "failed",
+                provider=provider_for(agent_id),
+                error_type=type(error).__name__,
+            )
+            raise
+
+    completed = await asyncio.gather(*(run_selected(agent_id) for agent_id in selected))
+    results = dict(completed)
     task.progress = 65
 
     handoffs: list[TravelHandoff] = []
@@ -119,7 +146,6 @@ agent_id는 itinerary_agent, completed는 true로 반환하세요."""
 
     evaluation_input = {
         "destination": intent.destination,
-        "request_constraints": task.request,
         "completed_agents": [*results, "itinerary_agent"],
         "unapproved_write": False,
         "itinerary": itinerary.model_dump(),
@@ -130,11 +156,17 @@ agent_id는 itinerary_agent, completed는 true로 반환하세요."""
         expected_budget="60만원" if "60만원" in task.request else None,
         expected_food_restriction="알레르기" if "알레르기" in task.request else None,
         expected_transport="대중교통" if "대중교통" in task.request else None,
+        expected_agent_count=len(selected) + 1,
     )
     trace(task, "evaluator", "scenario", "completed" if evaluation.passed else "failed", checks=evaluation.checks)
     task.result = {
         "intent": intent.model_dump(),
-        "mcp": {"tool": "get_weather", "source": weather_data.get("source")},
+        "route": decision.model_dump(),
+        "mcp": (
+            {"tool": "get_weather", "source": weather_data.get("source")}
+            if weather_data
+            else None
+        ),
         "specialists": {name: result.model_dump() for name, result in results.items()},
         "handoffs": [item.model_dump() for item in handoffs],
         "itinerary": itinerary.model_dump(),
