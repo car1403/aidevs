@@ -57,7 +57,30 @@ docker run --rm hello-world
 `docker version`에서 Client만 나오고 Server 연결 오류가 보이면 Docker Desktop이
 아직 시작 중이거나 실행되지 않은 것입니다.
 
-## 4. 수업 전 체크
+정상 상태에서는 다음을 확인합니다.
+
+| 명령 | 정상 확인 기준 |
+| --- | --- |
+| `wsl --status` | 기본 버전이 2이고 오류가 없음 |
+| `docker version` | Client와 Server가 모두 표시됨 |
+| `docker compose version` | Compose 버전이 표시됨 |
+| `docker run --rm hello-world` | 성공 안내 뒤 종료 코드 0 |
+
+## 4. 과정 Port 확인
+
+이 과정은 Host Port `5434`, `6380`, `8200`, `8503`, 선택적으로 `11435`를 사용합니다.
+
+```powershell
+Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
+    Where-Object LocalPort -In 5434, 6380, 8200, 8503, 11435 |
+    Select-Object LocalAddress, LocalPort, OwningProcess
+```
+
+결과가 없다면 현재 듣고 있는 Process가 없는 것입니다. 결과가 있다면 소유 프로그램을
+확인하고, 다른 수업 Compose라면 해당 폴더에서 정상 종료합니다. Process를 임의로
+강제 종료하지 않습니다.
+
+## 5. 수업 전 체크
 
 ```text
 [ ] 관리자 권한 또는 담당자 지원이 준비되었다.
@@ -66,6 +89,7 @@ docker run --rm hello-world
 [ ] docker version에서 Client와 Server를 확인했다.
 [ ] docker compose version을 확인했다.
 [ ] hello-world Container가 종료 코드 0으로 끝났다.
+[ ] 과정에서 사용할 Host Port 충돌 여부를 확인했다.
 ```
 
 Docker Desktop 설치가 불가능한 PC에서는 01의 코드를 읽고 GitHub Actions의 Linux

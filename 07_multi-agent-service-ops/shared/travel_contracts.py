@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 AgentId = Literal["weather_agent", "place_agent", "budget_agent", "itinerary_agent"]
@@ -14,6 +14,20 @@ class TravelPlanDraft(BaseModel):
     cautions: list[str] = Field(default_factory=list, max_length=8)
 
 
+class LearningAgentResult(BaseModel):
+    """01 단원의 여러 역할이 공통으로 사용하는 작은 출력 계약입니다."""
+
+    agent_id: str
+    summary: str
+    details: list[str] = Field(default_factory=list, max_length=8)
+    completed: bool = True
+
+
+class LearningRouteDecision(BaseModel):
+    selected_agent: Literal["refund_agent", "delivery_agent", "technical_support_agent"]
+    reason: str
+
+
 class SpecialistResult(BaseModel):
     agent_id: AgentId
     goal: str
@@ -21,6 +35,65 @@ class SpecialistResult(BaseModel):
     recommendations: list[str] = Field(min_length=1, max_length=6)
     missing_information: list[str] = Field(default_factory=list, max_length=5)
     completed: bool
+
+
+class WeatherResult(BaseModel):
+    """Weather Agent만 반환할 수 있는 최소 결과 계약입니다."""
+
+    agent_id: Literal["weather_agent"] = "weather_agent"
+    forecast_summary: str
+    cautions: list[str] = Field(default_factory=list, max_length=5)
+    source_confirmed: bool
+
+
+class PlaceResult(BaseModel):
+    """Place Agent의 장소 후보와 선택 근거 계약입니다."""
+
+    agent_id: Literal["place_agent"] = "place_agent"
+    places: list[str] = Field(min_length=1, max_length=6)
+    selection_reason: str
+
+
+class BudgetResult(BaseModel):
+    """Budget Agent의 항목별 금액과 합계 계약입니다."""
+
+    agent_id: Literal["budget_agent"] = "budget_agent"
+    currency: Literal["KRW"] = "KRW"
+    breakdown: dict[str, int]
+    total: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def total_must_match_breakdown(self) -> "BudgetResult":
+        if any(amount < 0 for amount in self.breakdown.values()):
+            raise ValueError("예산 항목은 음수일 수 없습니다.")
+        if sum(self.breakdown.values()) != self.total:
+            raise ValueError("예산 합계가 항목별 금액의 합과 다릅니다.")
+        return self
+
+
+class ItineraryResult(BaseModel):
+    """Itinerary Agent의 날짜별 일정 계약입니다."""
+
+    agent_id: Literal["itinerary_agent"] = "itinerary_agent"
+    destination: str
+    day_plans: list[str] = Field(min_length=1, max_length=30)
+    applied_constraints: list[str] = Field(default_factory=list, max_length=10)
+
+
+class ValidationResult(BaseModel):
+    """최종 일정의 조건 누락과 충돌을 보고하는 계약입니다."""
+
+    agent_id: Literal["validation_agent"] = "validation_agent"
+    passed: bool
+    issues: list[str] = Field(default_factory=list, max_length=10)
+
+    @model_validator(mode="after")
+    def passed_result_cannot_have_issues(self) -> "ValidationResult":
+        if self.passed and self.issues:
+            raise ValueError("통과한 검증 결과에는 issue가 없어야 합니다.")
+        if not self.passed and not self.issues:
+            raise ValueError("실패한 검증 결과에는 issue가 필요합니다.")
+        return self
 
 
 class RouteDecision(BaseModel):

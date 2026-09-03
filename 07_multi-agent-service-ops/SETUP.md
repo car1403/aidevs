@@ -26,6 +26,18 @@ GEMINI_API_KEY=
 GEMINI_MODEL=gemini-2.5-flash
 OLLAMA_BASE_URL=http://127.0.0.1:11435
 OLLAMA_MODEL=llama3.2
+GEMMA_MODEL=gemma3:4b
+```
+
+Docker Ollama에는 두 로컬 Model을 준비합니다.
+
+```powershell
+cd .\00_runtime-and-deployment\00_local-services
+docker compose up -d ollama
+docker compose exec ollama ollama pull llama3.2
+docker compose exec ollama ollama pull gemma3:4b
+docker compose exec ollama ollama list
+cd ..\..\..
 ```
 
 실행 중 Provider 오류를 Mock 성공으로 바꾸지 않습니다. 자동 테스트에서만 Fake Client를 사용합니다.
@@ -70,7 +82,7 @@ SUPERVISOR_PROVIDER=openai
 WEATHER_AGENT_PROVIDER=gemini
 PLACE_AGENT_PROVIDER=ollama
 BUDGET_AGENT_PROVIDER=openai
-ITINERARY_AGENT_PROVIDER=gemini
+ITINERARY_AGENT_PROVIDER=gemma
 ```
 
 실제 API Key가 없는 경우에도 계약·분리 기준·규칙 Router 예제는 실행할 수 있습니다. 실제 LLM 예제는 오류를 Mock 결과로 바꾸지 않고 원인을 그대로 보여 줍니다.

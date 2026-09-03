@@ -31,4 +31,22 @@ with ThreadPoolExecutor(max_workers=3) as executor:
         print(f"완료: {agent_id}")
 
 print("\nJoin 완료:", list(results))
-print("이제 세 결과를 입력으로 itinerary_agent를 실행할 수 있습니다.")
+missing = set(agent_ids) - set(results)
+if missing:
+    raise RuntimeError(f"Join에 필요한 결과가 없습니다: {sorted(missing)}")
+
+itinerary_provider = os.getenv("ITINERARY_AGENT_PROVIDER", os.getenv("LLM_PROVIDER", "openai"))
+joined_context = {name: result.model_dump() for name, result in results.items()}
+itinerary = run_structured(
+    itinerary_provider,
+    f"""당신은 itinerary_agent입니다.
+사용자 요청: {REQUEST}
+검증된 전문 Agent 결과: {joined_context}
+세 결과를 종합해 SpecialistResult 계약으로 일정 초안을 반환하세요.
+agent_id는 반드시 itinerary_agent로 반환하세요.""",
+    SpecialistResult,
+)
+if itinerary.agent_id != "itinerary_agent":
+    raise RuntimeError("Join 결과를 처리한 Agent가 itinerary_agent가 아닙니다.")
+
+print("일정 Join 결과:", itinerary.model_dump_json(indent=2))
