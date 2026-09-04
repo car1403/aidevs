@@ -32,15 +32,20 @@ def sequential_orchestrator_agent(topic: str) -> dict[str, object]:
     try:
         trace.append("research:started")
         facts = research_agent(topic)
-        trace.append("research:completed")
         if facts["error"]:
+            trace.append("research:failed")
             raise RuntimeError(facts["error"])
+        trace.append("research:completed")
+        trace.append("writer:started")
         draft = writer_agent(topic, facts["result"])
-        trace.append("writer:completed")
         if draft["error"]:
+            trace.append("writer:failed")
             raise RuntimeError(draft["error"])
+        trace.append("writer:completed")
+        trace.append("reviewer:started")
         result = reviewer_agent(topic, draft["result"])
         if result["error"]:
+            trace.append("reviewer:failed")
             raise RuntimeError(result["error"])
         trace.append("reviewer:completed")
         return {"status": "completed", "result": result, "trace": trace}
@@ -57,7 +62,9 @@ if __name__ == "__main__":
     expected_trace = [
         "research:started",
         "research:completed",
+        "writer:started",
         "writer:completed",
+        "reviewer:started",
         "reviewer:completed",
     ]
     print("Trace 순서 일치:", output["trace"] == expected_trace)

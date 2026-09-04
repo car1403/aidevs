@@ -3,7 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, model_validator
 
 
-AgentId = Literal["weather_agent", "place_agent", "budget_agent", "itinerary_agent"]
+AgentId = Literal["weather_agent", "place_agent", "budget_agent", "itinerary_agent", "safety_agent"]
 
 
 class TravelPlanDraft(BaseModel):
@@ -26,6 +26,21 @@ class LearningAgentResult(BaseModel):
 class LearningRouteDecision(BaseModel):
     selected_agent: Literal["refund_agent", "delivery_agent", "technical_support_agent"]
     reason: str
+
+
+class HandoffDecision(BaseModel):
+    agent_id: Literal["support_agent"] = "support_agent"
+    handoff_required: bool
+    target_agent: Literal["refund_agent"] | None = None
+    reason: str
+    handoff_context: dict[str, object] = Field(default_factory=dict)
+
+
+class EvaluationResult(BaseModel):
+    agent_id: Literal["evaluator_agent"] = "evaluator_agent"
+    passed: bool
+    feedback: str
+    missing_requirements: list[str] = Field(default_factory=list, max_length=5)
 
 
 class SpecialistResult(BaseModel):
@@ -107,4 +122,5 @@ SPECIALIST_GOALS: dict[AgentId, str] = {
     "place_agent": "사용자 조건에 맞는 장소 탐색 기준과 후보를 정리한다.",
     "budget_agent": "여행 예산 항목과 계산에 필요한 정보를 정리한다.",
     "itinerary_agent": "검증된 정보를 날짜별 일정 초안으로 구성한다.",
+    "safety_agent": "알레르기와 이동 조건에서 주의할 사항을 독립적으로 정리한다.",
 }

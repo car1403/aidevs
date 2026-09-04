@@ -49,7 +49,7 @@ Invoke-RestMethod http://127.0.0.1:8200/health
 OLLAMA_ENABLED=true
 OLLAMA_BASE_URL=http://ollama:11434
 OLLAMA_MODEL=llama3.2
-GEMMA_MODEL=gemma3:4b
+GEMMA_MODEL=gemma
 ```
 
 Ollama Profile을 함께 실행하고 Model을 최초 한 번 내려받습니다.
@@ -57,7 +57,7 @@ Ollama Profile을 함께 실행하고 Model을 최초 한 번 내려받습니다
 ```powershell
 docker compose --profile ollama up -d --build
 docker compose --profile ollama exec ollama ollama pull llama3.2
-docker compose --profile ollama exec ollama ollama pull gemma3:4b
+docker compose --profile ollama exec ollama ollama pull gemma
 docker compose --profile ollama exec ollama ollama list
 ```
 

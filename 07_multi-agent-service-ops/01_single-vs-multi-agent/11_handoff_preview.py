@@ -15,7 +15,8 @@
 
 from dataclasses import dataclass
 
-from shared.travel_llm import run_learning_agent
+from shared.travel_contracts import HandoffDecision
+from shared.travel_llm import provider_for_agent, run_learning_agent, run_with_metadata
 
 
 @dataclass(frozen=True)
@@ -26,32 +27,65 @@ class Handoff:
     context: dict[str, object]
 
 
-def support_agent() -> tuple[Handoff, dict]:
-    result = run_learning_agent("support_agent", "배송 지연 상태를 분석하고 환불 담당자에게 넘길 정보를 정리한다.", "order-301 배송 지연 환불 요청")
+def support_agent(request: str) -> dict:
+    prompt = f"""당신은 support_agent입니다.
+배송 상태를 안내할 수 있지만 환불 실행은 refund_agent에게 넘겨야 합니다.
+승인 ID가 있는 환불 요청만 handoff_required=true로 판단하세요.
+요청: {request}
+HandoffDecision 계약으로 반환하세요."""
+    return run_with_metadata(provider_for_agent("support_agent"), prompt, HandoffDecision)
+
+
+def create_handoff(decision: dict) -> Handoff | None:
+    if not decision["handoff_required"]:
+        return None
+    if decision["target_agent"] != "refund_agent":
+        raise ValueError("허용되지 않은 Handoff 대상입니다.")
+    required_keys = {"order_id", "amount", "approval_id"}
+    missing_keys = required_keys - set(decision["handoff_context"])
+    if missing_keys:
+        raise ValueError(f"Handoff Context 필수 항목 누락: {sorted(missing_keys)}")
     return Handoff(
         from_agent="support_agent",
         to_agent="refund_agent",
-        responsibility="승인된 배송 지연 환불을 처리한다.",
-        context={"order_id": "order-301", "amount": 35_000, "approval_id": "approval-901"},
-    ), result
+        responsibility=decision["reason"],
+        context=decision["handoff_context"],
+    )
 
 
 def refund_agent(handoff: Handoff, current_agent: str) -> dict[str, object]:
     if handoff.to_agent != current_agent:
         raise PermissionError("Handoff 대상 Agent만 책임을 인수할 수 있습니다.")
     result = run_learning_agent("refund_agent", "승인된 환불 요청을 검토하고 처리 안내를 작성한다.", handoff.responsibility, handoff.context)
-    return {"owner": current_agent, "responsibility": handoff.responsibility, "accepted": True, "agent_result": result}
+    return {
+        "owner": current_agent,
+        "responsibility": handoff.responsibility,
+        "accepted": result["error"] is None,
+        "agent_result": result,
+    }
 
 
 if __name__ == "__main__":
-    handoff, support_result = support_agent()
-    accepted = refund_agent(handoff, "refund_agent")
-    print("Handoff:", handoff)
+    request = "order-301 배송 지연으로 35,000원 환불이 승인되었습니다. 승인 ID는 approval-901입니다."
+    support_result = support_agent(request)
     print("Support Agent 결과:", support_result)
-    print("인수 결과:", accepted)
-    print("책임 주체 변경:", accepted["owner"] == "refund_agent")
+    if support_result["error"]:
+        print("Handoff 중단: Support Agent가 실패했습니다.")
+    else:
+        try:
+            handoff = create_handoff(support_result["result"])
+        except ValueError as error:
+            handoff = None
+            print("Handoff 계약 오류:", error)
+        if handoff is None:
+            print("Handoff 없음: Support Agent가 계속 책임집니다.")
+        else:
+            accepted = refund_agent(handoff, "refund_agent")
+            print("Handoff:", handoff)
+            print("인수 결과:", accepted)
+            print("책임 주체 변경:", accepted["owner"] == "refund_agent" and accepted["accepted"])
 
-    try:
-        refund_agent(handoff, "support_agent")
-    except PermissionError as error:
-        print("잘못된 인수 차단:", error)
+            try:
+                refund_agent(handoff, "support_agent")
+            except PermissionError as error:
+                print("잘못된 인수 차단:", error)

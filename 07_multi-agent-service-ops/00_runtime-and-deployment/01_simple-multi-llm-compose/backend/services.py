@@ -117,7 +117,7 @@ class MultiLLMChatService:
     def model(self, provider: str) -> str:
         models = {
             "openai": os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
-            "gemini": os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+            "gemini": os.getenv("GEMINI_MODEL", "gemini-3.5-flash"),
             "ollama": os.getenv("OLLAMA_MODEL", "llama3.2"),
         }
         if provider not in models:

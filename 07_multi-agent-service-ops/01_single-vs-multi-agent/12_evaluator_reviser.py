@@ -15,43 +15,66 @@
     종료는 Python이 결정적으로 보장합니다.
 """
 
-from shared.travel_llm import run_learning_agent
+from shared.travel_contracts import EvaluationResult
+from shared.travel_llm import provider_for_agent, run_learning_agent, run_with_metadata
 
 
 REQUIRED_TEXT = "승인 전에는 결제를 실행하지 않습니다."
 
 
-def evaluator_agent(draft: str) -> dict[str, object]:
-    llm_result = run_learning_agent("evaluator_agent", "필수 안전 문구 누락 여부를 평가하고 이유를 설명한다.", draft)
-    passed = REQUIRED_TEXT in draft
-    return {"passed": passed, "feedback": "안전 문구 누락" if not passed else "통과", "agent_result": llm_result}
+def writer_agent(request: str) -> dict:
+    return run_learning_agent("writer_agent", "사용자 요청에 맞는 여행 예약 안내 초안을 작성한다.", request)
 
 
-def reviser_agent(draft: str, feedback: str) -> str:
-    llm_result = run_learning_agent("reviser_agent", "평가 의견을 반영해 안전한 문장으로 수정한다.", draft, feedback)
-    if llm_result["result"] is not None:
-        draft = llm_result["result"]["summary"]
-    if feedback == "안전 문구 누락":
-        return f"{draft} {REQUIRED_TEXT}"
-    return draft
+def evaluator_agent(draft: str) -> dict:
+    prompt = f"""당신은 evaluator_agent입니다.
+초안에 다음 필수 문구가 정확히 포함됐는지 평가하세요: {REQUIRED_TEXT}
+초안: {draft}
+EvaluationResult 계약으로 반환하세요."""
+    response = run_with_metadata(provider_for_agent("evaluator_agent"), prompt, EvaluationResult)
+    if response["result"] is not None and REQUIRED_TEXT not in draft:
+        response["result"]["passed"] = False
+        response["result"]["feedback"] = "필수 안전 문구를 정확히 추가하세요."
+        response["result"]["missing_requirements"] = [REQUIRED_TEXT]
+    return response
 
 
-def review_loop_orchestrator_agent(initial_draft: str, max_rounds: int = 5) -> dict[str, object]:
-    draft = initial_draft
+def reviser_agent(draft: str, feedback: str) -> dict:
+    goal = f"평가 의견을 반영해 초안을 수정하고 다음 문구를 정확히 포함한다: {REQUIRED_TEXT}"
+    return run_learning_agent("reviser_agent", goal, draft, feedback)
+
+
+def review_loop_orchestrator_agent(request: str, max_rounds: int = 5) -> dict[str, object]:
     trace = []
+    writer_result = writer_agent(request)
+    trace.append({"step": "writer", "provider": writer_result["provider_requested"], "error": writer_result["error"]})
+    if writer_result["error"]:
+        return {"status": "failed", "reason": "writer_failed", "draft": None, "trace": trace}
+    draft = writer_result["result"]["summary"]
+
     for round_number in range(1, max_rounds + 1):
         evaluation = evaluator_agent(draft)
-        trace.append({"round": round_number, **evaluation})
-        if evaluation["passed"]:
+        trace.append({"round": round_number, "actor": "evaluator_agent", "provider": evaluation["provider_requested"], "result": evaluation["result"], "error": evaluation["error"]})
+        if evaluation["error"]:
+            return {"status": "failed", "reason": "evaluator_failed", "draft": draft, "trace": trace}
+        if evaluation["result"]["passed"] and REQUIRED_TEXT in draft:
             return {"status": "completed", "draft": draft, "trace": trace}
-        draft = reviser_agent(draft, evaluation["feedback"])
+        if round_number == max_rounds:
+            break
+        revision = reviser_agent(draft, evaluation["result"]["feedback"])
+        trace.append({"round": round_number, "actor": "reviser_agent", "provider": revision["provider_requested"], "error": revision["error"]})
+        if revision["error"]:
+            return {"status": "failed", "reason": "reviser_failed", "draft": draft, "trace": trace}
+        draft = revision["result"]["summary"]
     return {"status": "failed", "reason": "max_rounds", "draft": draft, "trace": trace}
 
 
 if __name__ == "__main__":
-    result = review_loop_orchestrator_agent("여행 예약을 도와드립니다.")
+    result = review_loop_orchestrator_agent("승인 전 결제를 실행하지 않는 여행 예약 안내문을 작성해 주세요.")
     print(result)
     print("반복 완료:", result["status"] == "completed")
-    print("필수 문구 포함:", REQUIRED_TEXT in result["draft"])
+    print("필수 문구 포함:", bool(result["draft"]) and REQUIRED_TEXT in result["draft"])
     print("설정된 최대 반복 횟수:", 5)
-    print("통과하면 최대 반복 전에 조기 종료:", len(result["trace"]) < 5)
+    evaluation_count = sum(1 for event in result["trace"] if event.get("actor") == "evaluator_agent")
+    print("실제 평가 횟수:", evaluation_count)
+    print("통과하면 최대 반복 전에 조기 종료:", evaluation_count < 5)

@@ -23,10 +23,10 @@ LLM_PROVIDER=openai
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4.1-mini
 GEMINI_API_KEY=
-GEMINI_MODEL=gemini-2.5-flash
-OLLAMA_BASE_URL=http://127.0.0.1:11435
+GEMINI_MODEL=gemini-3.5-flash
+OLLAMA_BASE_URL=http://127.0.0.1:11434
 OLLAMA_MODEL=llama3.2
-GEMMA_MODEL=gemma3:4b
+GEMMA_MODEL=gemma
 ```
 
 Docker Ollama에는 두 로컬 Model을 준비합니다.
@@ -35,7 +35,7 @@ Docker Ollama에는 두 로컬 Model을 준비합니다.
 cd .\00_runtime-and-deployment\00_local-services
 docker compose up -d ollama
 docker compose exec ollama ollama pull llama3.2
-docker compose exec ollama ollama pull gemma3:4b
+docker compose exec ollama ollama pull gemma
 docker compose exec ollama ollama list
 cd ..\..\..
 ```

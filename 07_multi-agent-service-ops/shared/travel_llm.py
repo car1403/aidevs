@@ -18,6 +18,7 @@ DEFAULT_AGENT_PROVIDERS = {
     "weather_agent": "gemini",
     "place_agent": "ollama",
     "budget_agent": "openai",
+    "safety_agent": "gemma",
     "research_agent": "gemini",
     "writer_agent": "openai",
     "reviewer_agent": "gemma",
@@ -38,9 +39,9 @@ DEFAULT_AGENT_PROVIDERS = {
 def provider_model(provider: str) -> str:
     models = {
         "openai": os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
-        "gemini": os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+        "gemini": os.getenv("GEMINI_MODEL", "gemini-3.5-flash"),
         "ollama": os.getenv("OLLAMA_MODEL", "llama3.2"),
-        "gemma": os.getenv("GEMMA_MODEL", "gemma3:4b"),
+        "gemma": os.getenv("GEMMA_MODEL", "gemma"),
     }
     if provider not in models:
         raise ValueError(f"지원하지 않는 Provider입니다: {provider}")
@@ -72,7 +73,7 @@ def run_structured(provider: str, prompt: str, schema: type[T]) -> T:
             raise RuntimeError("Gemini가 구조화된 결과를 반환하지 않았습니다.")
         return schema.model_validate_json(response.text)
     if provider in {"ollama", "gemma"}:
-        base_url = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11435").rstrip("/")
+        base_url = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
         response = httpx.post(
             f"{base_url}/api/chat",
             json={
@@ -131,7 +132,13 @@ Goal: {goal}
 이전 Agent가 전달한 Context: {context}
 LearningAgentResult 형식으로 반환하고 agent_id는 반드시 {agent_id}로 작성하세요.
 """.strip()
-    return run_with_metadata(provider, prompt, LearningAgentResult)
+    response = run_with_metadata(provider, prompt, LearningAgentResult)
+    if response["result"] is not None and response["result"]["agent_id"] != agent_id:
+        actual_agent_id = response["result"]["agent_id"]
+        response["result"] = None
+        response["provider_used"] = None
+        response["error"] = f"Agent 역할 불일치: expected={agent_id}, actual={actual_agent_id}"
+    return response
 
 
 def run_learning_agent_with_failover(
@@ -145,6 +152,11 @@ def run_learning_agent_with_failover(
     for provider in providers:
         prompt = f"당신은 {agent_id}입니다. Goal: {goal}\n요청: {request}\nagent_id는 반드시 {agent_id}입니다."
         response = run_with_metadata(provider, prompt, LearningAgentResult)
+        if response["result"] is not None and response["result"]["agent_id"] != agent_id:
+            actual_agent_id = response["result"]["agent_id"]
+            response["result"] = None
+            response["provider_used"] = None
+            response["error"] = f"Agent 역할 불일치: expected={agent_id}, actual={actual_agent_id}"
         attempts.append({
             "provider": provider,
             "model": response["model"],

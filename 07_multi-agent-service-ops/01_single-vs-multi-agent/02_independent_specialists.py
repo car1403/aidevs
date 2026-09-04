@@ -1,7 +1,7 @@
 """Lab 01-2: 독립 Goal을 가진 Specialist를 Orchestration 없이 실행합니다.
 
 시나리오:
-    Weather·Place·Budget·Itinerary Agent가 같은 여행 요청을 각각 처리합니다.
+    Weather·Place·Budget·Safety Agent가 같은 여행 요청을 각각 처리합니다.
     GPT·Gemini·Llama·Gemma를 하나씩 배정하지만 Agent마다 독립
     Goal은 있지만 누가 실행 순서를 정하고 결과를 합치며 전체 완료를 선언하는지는
     아직 구현하지 않습니다.
@@ -16,7 +16,7 @@ from shared.travel_llm import provider_for_agent, run_with_metadata
 
 
 REQUEST = "부산 2박 3일 여행, 해산물 알레르기, 대중교통, 총예산 60만 원"
-AGENTS = ("weather_agent", "place_agent", "budget_agent", "itinerary_agent")
+AGENTS = ("weather_agent", "place_agent", "budget_agent", "safety_agent")
 
 
 def specialist_agent(agent_id: str, request: str) -> dict:
@@ -45,4 +45,4 @@ if __name__ == "__main__":
     print("성공과 실패 목록이 겹치지 않음:", set(succeeded).isdisjoint(failed))
     print("\n성공 Agent:", succeeded)
     print("실패 Agent:", failed)
-    print("주의: 세 결과를 연결하거나 전체 완료를 판단하지 않았으므로 아직 Orchestration은 아닙니다.")
+    print("주의: 네 결과를 연결하거나 전체 완료를 판단하지 않았으므로 아직 Orchestration은 아닙니다.")

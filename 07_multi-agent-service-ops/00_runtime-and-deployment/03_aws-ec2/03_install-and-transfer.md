@@ -112,7 +112,7 @@ nano .env
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4.1-mini
 GEMINI_API_KEY=
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.5-flash
 OLLAMA_ENABLED=false
 OLLAMA_BASE_URL=http://ollama:11434
 OLLAMA_MODEL=llama3.2

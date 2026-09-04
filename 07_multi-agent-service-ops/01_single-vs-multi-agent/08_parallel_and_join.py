@@ -1,4 +1,4 @@
-"""Lab 01-8: Parallel + Join 패턴을 결정적인 실행으로 미리 확인합니다.
+"""Lab 01-8: Parallel + Join 구조를 실제 LLM 결과로 미리 확인합니다.
 
 시나리오:
     Weather·Place·Budget Agent는 같은 여행 요청만 있으면 서로 기다리지 않고 조사할
@@ -44,10 +44,13 @@ if __name__ == "__main__":
         "places": place_agent(request),
         "budget": budget_agent(request),
     }
-    itinerary = itinerary_agent(independent_results, {"weather", "places", "budget"})
     print("독립 결과:", independent_results)
-    print("Join 결과:", itinerary)
-    print("Join 결과 생성:", itinerary["result"] is not None)
+    try:
+        itinerary = itinerary_agent(independent_results, {"weather", "places", "budget"})
+        print("Join 결과:", itinerary)
+        print("Join 결과 생성:", itinerary["result"] is not None)
+    except (RuntimeError, ValueError) as error:
+        print("Join 실패:", error)
 
     try:
         itinerary_agent({"weather": "맑음"}, {"weather", "places", "budget"})

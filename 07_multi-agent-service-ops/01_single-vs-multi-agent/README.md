@@ -10,7 +10,7 @@ Single AI Agent
 ├─ Weather Agent
 ├─ Place Agent
 ├─ Budget Agent
-└─ Itinerary Agent
+└─ Safety Agent
 
 Multi AI Agent Orchestration
 └─ 위 Agent의 선택·순서·결과 전달·실패·전체 종료까지 통제
@@ -21,18 +21,29 @@ Multi AI Agent Orchestration
 `.env`에서 GPT·Gemini·Llama·Gemma를 준비합니다. Llama와 Gemma는 같은 Ollama
 Container를 사용하지만 서로 다른 Model입니다.
 
+이 과정은 이미 실행 중인 공용 Docker Container `aidevs-ollama`를 사용합니다.
+
+```powershell
+docker ps --filter "name=aidevs-ollama"
+docker exec aidevs-ollama ollama list
+Invoke-RestMethod http://127.0.0.1:11434/api/tags
+```
+
+목록에 `llama3.2:latest`와 `gemma:latest`가 표시되어야 합니다. 01 과정에서 별도의
+Ollama Container를 만들지 않습니다.
+
 | Agent | 실행 이름 | 실제 Model |
 | --- | --- | --- |
 | Budget Agent | `openai` | GPT |
 | Weather Agent | `gemini` | Gemini |
 | Place Agent | `ollama` | Llama |
-| Itinerary Agent | `gemma` | Gemma |
+| Safety/Reviewer Agent | `gemma` | Gemma |
 
 ```powershell
 cd .\00_runtime-and-deployment\00_local-services
 docker compose up -d ollama
 docker compose exec ollama ollama pull llama3.2
-docker compose exec ollama ollama pull gemma3:4b
+docker compose exec ollama ollama pull gemma
 docker compose exec ollama ollama list
 cd ..\..\..
 ```
@@ -55,7 +66,29 @@ python .\01_single-vs-multi-agent\13_provider_failover.py
 
 `01`, `02`, `06~13`은 실제 LLM을 호출합니다. 특히 `02`와 `08`은 네 Agent를 네 LLM에 하나씩
 배정합니다. 실패를 Mock 성공으로 바꾸지 않고 Metadata의
-`error`에 표시합니다. `03`, `04`는 API Key 없이 분리 기준과 구조적 비용을 비교합니다.
+`error`에 표시합니다. `03~05`는 API Key 없이 분리 기준·구조적 비용·권한 경계를 비교합니다.
+
+## 실행 전 확인과 예상 호출 수
+
+실제 LLM Lab은 호출 비용과 로컬 실행 시간이 발생합니다. 아래 횟수는 정상 흐름의
+대략적인 값이며 Evaluator 반복과 Failover 여부에 따라 달라집니다.
+
+| Lab | 필요한 실행 환경 | 예상 LLM 호출 |
+| --- | --- | ---: |
+| `01` | 선택한 Provider 하나 | 2회 |
+| `02` | GPT·Gemini·Llama·Gemma | 4회 |
+| `03~05` | 없음 | 0회 |
+| `06` | GPT·Gemini | 4회: 독립 실행 2회 + 조정 실행 2회 |
+| `07` | Gemini·GPT·Gemma | 최대 3회 |
+| `08` | 네 LLM | 최대 4회 |
+| `09` | GPT와 선택 Worker Provider | 예제 3건 기준 최대 6회 |
+| `10` | Gemini·Llama·Gemma | 최대 3회 |
+| `11` | Gemini·Gemma | 최대 2회 |
+| `12` | GPT·Gemini, 최대 5회 반복 | 2~10회 |
+| `13` | Gemma, 실패 시 GPT | 1~2회 |
+
+네 모델을 모두 준비하지 못했다면 먼저 `03~05`를 실행할 수 있습니다. 실제 LLM Lab의
+실패는 성공 결과로 바꾸지 않으며 출력의 `error`, `provider_used`, `model`을 확인합니다.
 
 ## Lab 진행 순서
 
@@ -94,8 +127,9 @@ python .\01_single-vs-multi-agent\13_provider_failover.py
 
 ## Orchestration Pattern 지도
 
-`01~05`에서는 개념과 설계 기준을 먼저 확인하고, `06~13`에서는 실제 LLM Agent로
-패턴을 실행합니다. Python Orchestrator가 허용 Agent·필수 결과·최대 반복·종료를
+`01~02`에서는 Single과 여러 독립 LLM Agent를 비교하고, `03~05`에서는 호출 없이
+분리 기준을 정리합니다. `06~12`에서는 실제 LLM Agent로 패턴을 실행하고 `13`에서는
+Failover를 확인합니다. Python Orchestrator가 허용 Agent·필수 결과·최대 반복·종료를
 통제하며, LLM은 전문 결과 생성·분류·검토·수정을 담당합니다.
 
 ### 1. Sequential
@@ -116,9 +150,9 @@ Place Agent   ─┼→ Join → Itinerary Agent
 Budget Agent  ─┘
 ```
 
-서로 의존하지 않는 조사는 독립적으로 실행할 수 있습니다. Join은 단순히 목록을 합치는
-것이 아니라 필요한 결과가 모두 준비됐는지 확인하는 경계입니다. 실제 병렬 처리와 부분
-실패는 04에서 확장합니다.
+서로 의존하지 않는 조사는 병렬로 실행할 수 있습니다. 이 입문 예제는 아직 Thread나
+비동기를 사용하지 않고 독립 Agent를 순서대로 호출하여 구조와 Join 경계만 확인합니다.
+실제 병렬 처리와 부분 실패는 04 단원에서 확장합니다.
 
 ### 3. Router
 
@@ -160,6 +194,16 @@ Writer → Evaluator ── 통과 → 종료
 
 생성과 평가에 독립 기준이 필요할 때 적합합니다. 평가가 실패할 때 무한 수정하지 않도록
 최대 5회 반복과 종료 이유를 기록하며, 기준을 통과하면 즉시 조기 종료합니다.
+
+### 7. Provider Failover
+
+```text
+Gemma Primary ── 실패 → GPT Secondary
+```
+
+동일한 출력 계약을 유지한 채 다른 실제 Provider를 시도합니다. 첫 실패를 숨기지 않고
+`attempts`에 모델과 오류를 남깁니다. 수업에서는 Gemma가 정상인 경우를 먼저 실행한 뒤,
+`GEMMA_MODEL`을 존재하지 않는 이름으로 잠시 바꿔 Failover를 관찰하고 즉시 복원합니다.
 
 ## 어떤 Pattern을 선택할까요?
 

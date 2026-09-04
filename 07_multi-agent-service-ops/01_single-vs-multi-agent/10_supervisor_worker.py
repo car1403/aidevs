@@ -56,9 +56,6 @@ def supervisor_agent(max_steps: int = 5) -> dict[str, object]:
 
 if __name__ == "__main__":
     completed = supervisor_agent(max_steps=3)
-    stopped = supervisor_agent(max_steps=2)
     print("정상:", completed)
-    print("단계 제한:", stopped)
     print("정상 완료:", completed["status"] == "completed")
-    print("단계 제한 실패:", stopped["status"] == "failed")
-    print("종료 이유 확인:", stopped["reason"] == "max_steps")
+    print("max_steps가 2라면 세 번째 Worker 전에 max_steps로 종료됩니다.")

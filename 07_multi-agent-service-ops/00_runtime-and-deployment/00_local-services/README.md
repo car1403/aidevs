@@ -70,7 +70,7 @@ Ollama를 사용할 때 최초 한 번 Model을 받습니다.
 ```powershell
 docker compose up -d ollama
 docker compose exec ollama ollama pull llama3.2
-docker compose exec ollama ollama pull gemma3:4b
+docker compose exec ollama ollama pull gemma
 docker compose exec ollama ollama list
 ```
 

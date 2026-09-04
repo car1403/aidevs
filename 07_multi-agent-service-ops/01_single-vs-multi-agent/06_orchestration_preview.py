@@ -43,13 +43,19 @@ def orchestrate(request: str) -> dict[str, object]:
     for agent_id in selected:
         trace.append(f"started:{agent_id}")
         results[agent_id] = AGENTS[agent_id](request)
-        trace.append(f"completed:{agent_id}")
+        if results[agent_id]["error"]:
+            trace.append(f"failed:{agent_id}")
+        else:
+            trace.append(f"completed:{agent_id}")
 
-    summary = " / ".join(str(results[name]["result"]) for name in selected)
-    trace.append("orchestrator:completed")
+    failed_agents = [name for name in selected if results[name]["error"]]
+    status = "failed" if failed_agents else "completed"
+    summary = None if failed_agents else " / ".join(str(results[name]["result"]) for name in selected)
+    trace.append(f"orchestrator:{status}")
     return {
-        "status": "completed",
+        "status": status,
         "selected_agents": selected,
+        "failed_agents": failed_agents,
         "results": results,
         "summary": summary,
         "trace": trace,
@@ -67,6 +73,7 @@ if __name__ == "__main__":
 
     print("독립 Agent 수가 2개:", len(independent) == 2)
     print("선택 Agent 확인:", coordinated["selected_agents"] == ["weather_agent", "budget_agent"])
-    print("전체 완료:", coordinated["status"] == "completed")
-    print("종료 Trace 확인:", coordinated["trace"][-1] == "orchestrator:completed")
+    print("전체 실행 상태:", coordinated["status"])
+    print("실패 Agent:", coordinated["failed_agents"])
+    print("종료 Trace 확인:", coordinated["trace"][-1] == f"orchestrator:{coordinated['status']}")
     print("확인: Orchestration은 Agent 수가 아니라 선택·전달·상태·종료를 관리합니다.")
