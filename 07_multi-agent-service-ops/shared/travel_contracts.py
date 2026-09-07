@@ -28,6 +28,38 @@ class LearningRouteDecision(BaseModel):
     reason: str
 
 
+class SupportRouteDecision(BaseModel):
+    """고객지원 Router가 한 Worker 또는 추가 정보 요청을 선택하는 계약입니다."""
+
+    agent_id: Literal["router_agent"] = "router_agent"
+    selected_agent: Literal[
+        "delivery_agent",
+        "refund_agent",
+        "technical_support_agent",
+        "request_information",
+    ]
+    reason: str
+    missing_information: list[str] = Field(default_factory=list, max_length=5)
+
+    @model_validator(mode="after")
+    def missing_information_must_match_route(self) -> "SupportRouteDecision":
+        if self.selected_agent == "request_information" and not self.missing_information:
+            raise ValueError("추가 정보 요청에는 missing_information이 필요합니다.")
+        if self.selected_agent != "request_information" and self.missing_information:
+            raise ValueError("Worker를 선택한 경우 missing_information은 비어 있어야 합니다.")
+        return self
+
+
+class SupervisorDecision(BaseModel):
+    """Supervisor가 현재 State를 보고 반환하는 다음 행동 계약입니다."""
+
+    agent_id: Literal["supervisor_agent"] = "supervisor_agent"
+    next_agent: Literal["analyst_agent", "developer_agent", "reviewer_agent", "finish"]
+    instruction: str
+    context_keys: list[str] = Field(default_factory=list, max_length=5)
+    reason: str
+
+
 class HandoffDecision(BaseModel):
     agent_id: Literal["support_agent"] = "support_agent"
     handoff_required: bool
@@ -67,6 +99,14 @@ class PlaceResult(BaseModel):
     agent_id: Literal["place_agent"] = "place_agent"
     places: list[str] = Field(min_length=1, max_length=6)
     selection_reason: str
+
+
+class SafetyResult(BaseModel):
+    """Safety Agent의 위험 요소와 확인 행동 계약입니다."""
+
+    agent_id: Literal["safety_agent"] = "safety_agent"
+    risks: list[str] = Field(min_length=1, max_length=6)
+    required_actions: list[str] = Field(min_length=1, max_length=6)
 
 
 class BudgetResult(BaseModel):

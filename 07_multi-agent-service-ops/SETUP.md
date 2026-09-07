@@ -58,21 +58,31 @@ Docker와 AWS가 없어도 01~07의 작은 Python 예제는 실행할 수 있습
 
 ## 01~03 Multi AI Agent 기초 실행
 
-아래 예제는 모두 과정 루트에서 실행합니다. `01_single_ai_agent.py`, `02_independent_specialists.py`, `03_real_structured_result.py`, `02_real_supervisor.py`, `03_compare_supervisors.py`, `04_supervisor_to_worker.py`는 선택한 실제 LLM을 호출합니다.
+아래 예제는 모두 과정 루트에서 실행합니다. 02의 `01~06`은 LLM 없이 역할·Task·계약을
+확인하고, `07~08`은 실제 LLM을 호출합니다. 03의 실제 Supervisor 예제도 선택한 실제
+LLM을 호출합니다.
 
 ```powershell
 python .\01_single-vs-multi-agent\01_single_ai_agent.py
 python .\01_single-vs-multi-agent\02_independent_specialists.py
 python .\01_single-vs-multi-agent\03_split_decision.py
 
-python .\02_agent-role-and-contract\01_contract.py
-python .\02_agent-role-and-contract\02_invalid_contract.py
-python .\02_agent-role-and-contract\03_real_structured_result.py
+python .\02_agent-role-and-contract\01_role_definition.py
+python .\02_agent-role-and-contract\02_task_decomposition.py
+python .\02_agent-role-and-contract\03_input_output_contract.py
+python .\02_agent-role-and-contract\04_role_specific_contracts.py
+python .\02_agent-role-and-contract\05_contract_validation.py
+python .\02_agent-role-and-contract\06_incomplete_result.py
+python .\02_agent-role-and-contract\07_real_multi_llm_contracts.py
+python .\02_agent-role-and-contract\08_verified_result_flow.py
 
 python .\03_supervisor-and-routing\01_rule_router.py
-python .\03_supervisor-and-routing\02_real_supervisor.py
-python .\03_supervisor-and-routing\03_compare_supervisors.py
-python .\03_supervisor-and-routing\04_supervisor_to_worker.py
+python .\03_supervisor-and-routing\02_llm_router.py
+python .\03_supervisor-and-routing\03_router_contract.py
+python .\03_supervisor-and-routing\04_supervisor_decision.py
+python .\03_supervisor-and-routing\05_supervisor_worker_loop.py
+python .\03_supervisor-and-routing\06_router_vs_supervisor.py
+python .\03_supervisor-and-routing\07_multi_llm_supervisor_team.py
 ```
 
 Provider를 Agent마다 다르게 지정할 수도 있습니다.
@@ -91,9 +101,12 @@ ITINERARY_AGENT_PROVIDER=gemma
 
 ```powershell
 python .\04_orchestration\01_execution_plan.py
-python .\04_orchestration\02_parallel_then_join.py
-python .\04_orchestration\03_orchestrator_loop.py
-python .\04_orchestration\04_stop_rules.py
+python .\04_orchestration\02_sequential_workflow.py
+python .\04_orchestration\03_parallel_workers.py
+python .\04_orchestration\04_join_results.py
+python .\04_orchestration\05_partial_failure.py
+python .\04_orchestration\06_handoff_workflow.py
+python .\04_orchestration\07_distributed_workflow.py
 python .\04_orchestration\10_optional_langgraph\01_same_plan_graph.py
 
 python .\05_handoff-and-context\01_minimum_context.py
@@ -102,7 +115,10 @@ python .\05_handoff-and-context\03_handoff_guard.py
 python .\05_handoff-and-context\04_real_agent_handoff.py
 ```
 
-`02_parallel_then_join.py`, `03_orchestrator_loop.py`, `04_real_agent_handoff.py`는 실제 LLM을 호출합니다. 나머지는 API Key 없이 실행 계획·종료 규칙·Context·Handoff Guard를 확인할 수 있습니다. LangGraph는 필수가 아니라 동일한 Orchestration 설계를 Graph로 옮기는 선택 예제입니다.
+04의 `02`, `03`, `04`, `06`, `07`은 실제 LLM을 호출합니다. `01`, `05`는 API Key 없이
+실행 계획과 부분 실패 정책을 확인할 수 있습니다. 현재 05의 `04_real_agent_handoff.py`도
+실제 LLM을 호출합니다. LangGraph는 필수가 아니라 동일한 Orchestration 설계를 Graph로
+옮기는 선택 예제입니다.
 
 ## 06~07 Safety·Failure·Evaluation·Tracing 실행
 

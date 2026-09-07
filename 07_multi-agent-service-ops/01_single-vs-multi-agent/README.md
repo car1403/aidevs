@@ -18,8 +18,33 @@ Multi AI Agent Orchestration
 
 ## 실행
 
-`.env`에서 GPT·Gemini·Llama·Gemma를 준비합니다. Llama와 Gemma는 같은 Ollama
-Container를 사용하지만 서로 다른 Model입니다.
+모든 명령은 과정 루트 `C:\aidevs\07_multi-agent-service-ops`에서 실행합니다. 처음
+실행한다면 먼저 Python 환경과 `.env`를 준비합니다.
+
+```powershell
+cd C:\aidevs\07_multi-agent-service-ops
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+pip install -e .
+Copy-Item .env.example .env
+```
+
+`.env`에는 다음 네 가지 LLM 설정이 필요합니다. GPT와 Gemini는 API Key가 필요하고,
+Llama와 Gemma는 같은 Ollama API를 사용하지만 서로 다른 Model입니다. 이 예제에서
+`ollama`와 `gemma`는 서로 다른 서버를 뜻하는 것이 아니라 Llama와 Gemma를 구분하기
+위한 논리적인 Provider 이름입니다.
+
+```dotenv
+OPENAI_API_KEY=본인의_API_KEY
+OPENAI_MODEL=gpt-4.1-mini
+GEMINI_API_KEY=본인의_API_KEY
+GEMINI_MODEL=gemini-3.5-flash
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+OLLAMA_MODEL=llama3.2
+GEMMA_MODEL=gemma
+```
 
 이 과정은 이미 실행 중인 공용 Docker Container `aidevs-ollama`를 사용합니다.
 
@@ -30,23 +55,24 @@ Invoke-RestMethod http://127.0.0.1:11434/api/tags
 ```
 
 목록에 `llama3.2:latest`와 `gemma:latest`가 표시되어야 합니다. 01 과정에서 별도의
-Ollama Container를 만들지 않습니다.
-
-| Agent | 실행 이름 | 실제 Model |
-| --- | --- | --- |
-| Budget Agent | `openai` | GPT |
-| Weather Agent | `gemini` | Gemini |
-| Place Agent | `ollama` | Llama |
-| Safety/Reviewer Agent | `gemma` | Gemma |
+Ollama Container를 만들지 않습니다. Model이 없다면 실행 중인 공용 Container 안에
+추가합니다.
 
 ```powershell
-cd .\00_runtime-and-deployment\00_local-services
-docker compose up -d ollama
-docker compose exec ollama ollama pull llama3.2
-docker compose exec ollama ollama pull gemma
-docker compose exec ollama ollama list
-cd ..\..\..
+docker exec aidevs-ollama ollama pull llama3.2
+docker exec aidevs-ollama ollama pull gemma
 ```
+
+| Agent | 논리 Provider | 실제 Model |
+| --- | --- | --- |
+| Budget/Writer Agent | `openai` | GPT (`gpt-4.1-mini`) |
+| Weather/Evaluator Agent | `gemini` | Gemini (`gemini-3.5-flash`) |
+| Place/Developer Agent | `ollama` | Llama (`llama3.2`) |
+| Safety/Reviewer Agent | `gemma` | Gemma (`gemma`) |
+
+> `00_runtime-and-deployment/00_local-services/docker-compose.yml`의 Ollama는 독립적인
+> 실습 환경이며 Host Port `11435`를 사용합니다. 현재 01 실습은 이미 실행 중인
+> `aidevs-ollama`의 `11434`를 사용하므로 두 실행 방법을 섞지 않습니다.
 
 ```powershell
 python .\01_single-vs-multi-agent\01_single_ai_agent.py
@@ -90,6 +116,19 @@ python .\01_single-vs-multi-agent\13_provider_failover.py
 네 모델을 모두 준비하지 못했다면 먼저 `03~05`를 실행할 수 있습니다. 실제 LLM Lab의
 실패는 성공 결과로 바꾸지 않으며 출력의 `error`, `provider_used`, `model`을 확인합니다.
 
+로컬 Model은 최초 호출 때 메모리에 적재되어 응답이 늦을 수 있습니다. 특히 Gemma가
+90초 안에 응답하지 못하면 예제는 `ReadTimeout`을 오류로 출력합니다. 이때 고정된 성공
+결과로 대체하지 말고 다음 순서로 상태를 확인합니다.
+
+```powershell
+docker stats aidevs-ollama --no-stream
+docker logs --tail 50 aidevs-ollama
+docker exec aidevs-ollama ollama ps
+```
+
+수업에서는 먼저 `03~05`로 개념을 확인한 뒤 `01~02`, 마지막으로 `06~13`의 패턴을
+실행하면 개념과 실제 LLM 호출을 분리해 관찰하기 쉽습니다.
+
 ## Lab 진행 순서
 
 | Lab | 질문 | 확인할 출력 |
@@ -103,7 +142,7 @@ python .\01_single-vs-multi-agent\13_provider_failover.py
 | `07` | 앞 결과가 다음 입력이면 어떻게 실행하는가? | Sequential 결과 전달과 중간 실패 |
 | `08` | 독립 결과는 언제 합칠 수 있는가? | Parallel 개념과 필수 Join 결과 |
 | `09` | 요청마다 필요한 Agent가 다르면 어떻게 선택하는가? | Router의 단일 선택과 Worker 실행 |
-| `10` | 결과를 보며 다음 Agent를 선택하려면? | Supervisor 반복과 최대 단계 |
+| `10` | 결과를 보며 다음 Agent를 선택하려면? | Python Supervisor의 반복과 최대 단계 |
 | `11` | 실행 책임을 다른 Agent에게 어떻게 넘기는가? | Handoff 대상·책임·최소 Context |
 | `12` | 생성과 평가를 분리하고 어떻게 반복하는가? | Evaluator–Reviser와 최대 반복 |
 | `13` | Primary LLM 실패를 어떻게 투명하게 복구하는가? | 시도 순서·오류·최종 Provider |
@@ -173,7 +212,9 @@ Supervisor → Worker 선택 → 결과 확인 → 다음 Worker 또는 종료
 
 한 번의 Routing으로 끝나지 않고 중간 결과에 따라 다음 작업을 정할 때 사용합니다.
 최대 단계와 완료 조건을 Python이 보장해야 하며 Supervisor에게 무제한 반복 권한을
-주지 않습니다.
+주지 않습니다. 이 입문 예제의 Supervisor는 Python으로 순서를 통제하고 Worker만 실제
+LLM을 사용합니다. 결과를 보고 다음 역할을 동적으로 선택하는 LLM Supervisor는 03
+단원에서 확장합니다.
 
 ### 5. Handoff
 
@@ -243,6 +284,8 @@ Pattern 이름부터 선택하지 않습니다. 의존성, 책임, Context, 권�
 - 권한 격리가 필요할 때 얻는 이점과 늘어나는 호출·실패 지점을 함께 말할 수 있습니다.
 - Agent별 Context와 Tool 권한이 실제 경계라는 것을 코드에서 확인할 수 있습니다.
 - 여러 독립 Agent 실행과 Orchestration을 구분할 수 있습니다.
+- GPT·Gemini·Llama·Gemma의 실제 결과와 Provider 오류 Metadata를 구분해 읽을 수 있습니다.
+- 각 Pattern의 최대 단계·최대 반복·중간 실패 종료 조건을 출력에서 확인할 수 있습니다.
 
 ## 직접 확인하기
 

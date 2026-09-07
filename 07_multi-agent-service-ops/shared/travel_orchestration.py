@@ -45,6 +45,33 @@ class OrchestrationState(BaseModel):
     error: str | None = None
 
 
+class TraceEvent(BaseModel):
+    """Agent 협업의 선택·실행·실패·종료를 기록하는 구조화 Trace입니다."""
+
+    step: int
+    actor: str
+    action: str
+    status: Literal["started", "completed", "failed", "blocked", "skipped"]
+    provider: str | None = None
+    model: str | None = None
+    latency_ms: float | None = None
+    details: dict[str, object] = Field(default_factory=dict)
+
+
+class CollaborationState(BaseModel):
+    """Worker는 직접 수정하지 않고 Orchestrator만 갱신하는 협업 State입니다."""
+
+    task_id: str
+    request: str
+    status: RunStatus = "planned"
+    current_step: str | None = None
+    results: dict[str, object] = Field(default_factory=dict)
+    errors: dict[str, str] = Field(default_factory=dict)
+    completed_agents: list[str] = Field(default_factory=list)
+    failed_agents: list[str] = Field(default_factory=list)
+    trace: list[TraceEvent] = Field(default_factory=list)
+
+
 class TravelHandoff(BaseModel):
     task_id: str
     trace_id: str
