@@ -1,3 +1,10 @@
+"""
+[통합 Orchestration 시나리오]
+Supervisor가 여행 요청을 분석하고 Weather·Place·Budget Agent에 업무를 분배합니다.
+Weather Agent만 허용된 MCP Tool을 사용하며, 각 결과는 구조화 Handoff와 보안 검사를 거쳐
+Itinerary Agent로 전달됩니다. 마지막에는 품질 평가와 사용자 승인 경계를 적용합니다.
+"""
+
 from __future__ import annotations
 
 import asyncio

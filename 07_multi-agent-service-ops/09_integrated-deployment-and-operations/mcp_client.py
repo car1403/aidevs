@@ -1,3 +1,9 @@
+"""
+[MCP 연결 점검 시나리오]
+전체 서비스를 실행하기 전에 MCP Server만 독립적으로 확인합니다. 실제 Open-Meteo 기반
+Tool 결과 또는 연결 오류를 그대로 확인하여 Agent 문제와 Tool 문제를 분리합니다.
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,7 +15,7 @@ from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 
 
-MCP_URL = os.getenv("TRAVEL_MCP_URL", "http://127.0.0.1:8200/mcp")
+MCP_URL = os.getenv("TRAVEL_MCP_URL", "http://127.0.0.1:8010/mcp")
 
 
 async def call_travel_tool(name: str, arguments: dict[str, object]) -> dict[str, object]:

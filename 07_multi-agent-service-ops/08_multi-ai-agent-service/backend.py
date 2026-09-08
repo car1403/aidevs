@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 
 from app.models import TaskCreate, TaskDecision, TaskRecord
 from app.repositories import PostgresHistory, RedisTasks
+from app.observability import structured_log
 
 
 app = FastAPI(title="Travel Multi AI Agent Service", version="1.0.0")
@@ -35,6 +36,21 @@ def health() -> dict[str, object]:
     return {"status": "ok" if checks == {"redis": True, "postgresql": True} else "degraded", **checks}
 
 
+@app.get("/health/live")
+def liveness() -> dict[str, str]:
+    """Process가 HTTP 요청에 응답할 수 있는지만 확인합니다."""
+    return {"status": "alive"}
+
+
+@app.get("/health/ready")
+def readiness() -> dict[str, object]:
+    """Redis와 PostgreSQL을 포함해 Task 처리 준비 여부를 확인합니다."""
+    checks = health()
+    if checks["status"] != "ok":
+        raise HTTPException(status_code=503, detail=checks)
+    return {"status": "ready", "dependencies": checks}
+
+
 @app.post("/api/tasks", response_model=TaskRecord, status_code=202)
 def create_task(payload: TaskCreate) -> TaskRecord:
     repository = redis_tasks()
@@ -46,6 +62,7 @@ def create_task(payload: TaskCreate) -> TaskRecord:
     repository.enqueue(task)
     repository.remember_idempotency(payload.user_id, payload.idempotency_key, task.task_id)
     postgres_history().save(task)
+    structured_log("info", "task_queued", task_id=task.task_id, trace_id=task.trace_id, actor=payload.user_id)
     return task
 
 
@@ -77,4 +94,21 @@ def decide(task_id: str, payload: TaskDecision) -> TaskRecord:
         task.trace.append({"actor": payload.user_id, "action": "reject", "status": "completed"})
     redis_tasks().save(task)
     postgres_history().save(task)
+    structured_log("info", f"task_{task.status}", task_id=task.task_id, trace_id=task.trace_id, actor=payload.user_id)
     return task
+
+
+@app.get("/api/operations/live")
+def live_tasks() -> list[dict[str, object]]:
+    return [task.model_dump(mode="json") for task in redis_tasks().active_tasks()]
+
+
+@app.get("/api/operations/history")
+def recent_history() -> list[dict[str, object]]:
+    return postgres_history().recent_runs()
+
+
+@app.get("/api/operations/summary")
+def operations_summary() -> dict[str, object]:
+    live = redis_tasks().active_tasks()
+    return {"live_task_count": len(live), **postgres_history().operation_summary()}

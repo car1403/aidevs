@@ -191,7 +191,7 @@ Evaluator–Reviser는 최대 5회로 제한하고 기준을 통과하면 즉시
 
 ## 10 Integrated Multi-Agent Service
 
-기존 Multi-Agent Service와 Integrated Travel Multi-Agent 내용을 최종 프로젝트로
+기존 Multi-Agent Service와 Integrated Deployment and Operations 내용을 최종 프로젝트로
 통합합니다.
 
 ```text

@@ -291,7 +291,7 @@ Pattern 이름부터 선택하지 않습니다. 의존성, 책임, Context, 권�
 | Sequential·Parallel·Join·Supervisor Loop | 04 Orchestration |
 | 책임 이전과 최소 Context | 05 Handoff and Context |
 | Agent별 권한과 승인 | 06 Multi-Agent Safety |
-| 반복 실패·평가·Trace | 07 Failure, Evaluation and Tracing |
+| 결과 평가·Feedback·Retry·Trace | 07 Evaluation, Feedback, Retry and Tracing |
 
 ## 핵심
 

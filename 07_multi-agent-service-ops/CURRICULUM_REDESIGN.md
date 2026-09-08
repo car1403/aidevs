@@ -45,9 +45,9 @@
 | 04 | `04_orchestration` | 여러 AI Agent의 순차·병렬·Join·반복·종료를 어떻게 통제하는가? | Python Orchestrator, 선택 LangGraph |
 | 05 | `05_handoff-and-context` | Agent 사이에 무엇만 전달해야 하는가? | Handoff 계약과 Context Filter |
 | 06 | `06_multi-agent-safety` | 입력부터 Agent·Tool·응답까지 어떻게 안전 경계를 만드는가? | Prompt Injection, 입력·응답 Policy, Context 격리, Allowlist, 승인, 멱등성, Audit |
-| 07 | `07_failure-evaluation-and-tracing` | 어느 Agent에서 왜 실패했는지 어떻게 검증하는가? | Retry, Fallback, Scenario, Trace |
+| 07 | `07_failure-evaluation-and-tracing` | 결과를 어떻게 평가·개선하고 실패를 복구·추적하는가? | Evaluation, Feedback, 최대 5회 Reviser, Retry, Partial Recovery, Trace |
 | 08 | `08_multi-ai-agent-service` | Multi AI Agent를 실제 비동기 서비스로 어떻게 연결하는가? | FastAPI, Worker, Redis, PostgreSQL, UI |
-| 09 | `09_integrated-travel-multi-ai-agent` | 전체 여행 Multi AI Agent 서비스를 어떻게 통합하고 회귀 검증하는가? | 실제 LLM·MCP·승인·평가 통합 |
+| 09 | `09_integrated-deployment-and-operations` | 관측 가능한 Multi-Agent 서비스를 어떻게 배포하고 복구하는가? | Docker·AWS·CI/CD·Auto Healing 통합 운영 |
 
 `00_references`는 번호 과정 밖의 참고 자료로 유지합니다.
 
@@ -69,7 +69,7 @@
 | `10_async-task-and-redis-worker` | `08_multi-ai-agent-service` | Queue·Task·Worker 흐름으로 통합 |
 | `11_multi-agent-backend` | `08_multi-ai-agent-service` | FastAPI와 저장소 경계로 통합 |
 | `12_multi-agent-frontend` | `08_multi-ai-agent-service` | Task·승인·Trace 한 화면으로 통합 |
-| `13_integrated-multi-agent-lab` | `09_integrated-travel-multi-agent` | 이사 예제를 최종 여행 서비스로 교체 |
+| `13_integrated-multi-agent-lab` | `09_integrated-deployment-and-operations` | 여행 서비스를 배포 대상 워크로드로 사용 |
 | `shared` | `shared` | Provider·계약·Trace 공통 코드만 남기고 여행 도메인으로 변경 |
 | `tests` | `tests` | 새 00~09 계약과 핵심 안전 회귀 테스트로 재작성 |
 

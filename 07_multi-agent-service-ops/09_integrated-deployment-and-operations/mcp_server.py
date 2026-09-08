@@ -1,3 +1,9 @@
+"""
+[MCP 배포 시나리오]
+Weather Agent의 실제 날씨 Tool을 분리된 MCP Server로 실행합니다. Container에서는
+0.0.0.0:8010으로 공개하며 오류를 고정 Mock 날씨로 성공 처리하지 않습니다.
+"""
+
 from __future__ import annotations
 
 import os
@@ -10,7 +16,7 @@ mcp = FastMCP(
     "Travel Real Data Tools",
     instructions="Open-Meteo의 실제 도시 좌표와 날씨 예보를 제공합니다.",
     host=os.getenv("MCP_HOST", "127.0.0.1"),
-    port=int(os.getenv("MCP_PORT", "8200")),
+    port=int(os.getenv("MCP_PORT", "8010")),
     json_response=True,
 )
 

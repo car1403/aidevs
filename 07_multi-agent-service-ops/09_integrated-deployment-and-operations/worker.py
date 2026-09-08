@@ -1,3 +1,10 @@
+"""
+[통합 Worker 시나리오]
+API가 Redis Queue에 넣은 여행 Task를 Worker가 가져옵니다. Worker는 실제 LLM Agent와
+HTTP MCP 날씨 Tool을 사용해 협업을 실행하고, Redis에 현재 상태를, PostgreSQL에 실행
+이력을 저장합니다. Docker에서는 API와 Worker를 서로 다른 Process로 분리합니다.
+"""
+
 from __future__ import annotations
 
 import asyncio

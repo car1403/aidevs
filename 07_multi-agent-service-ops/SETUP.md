@@ -137,22 +137,45 @@ python .\06_multi-agent-safety\06_idempotent_write.py
 python .\06_multi-agent-safety\07_role_context_access_control.py
 python .\06_multi-agent-safety\08_integrated_guardrails.py
 
-python .\07_failure-evaluation-and-tracing\01_failure_policy.py
-python .\07_failure-evaluation-and-tracing\02_bounded_retry.py
-python .\07_failure-evaluation-and-tracing\03_partial_failure.py
-python .\07_failure-evaluation-and-tracing\04_structured_trace.py
-python .\07_failure-evaluation-and-tracing\05_scenario_evaluation.py
+python .\07_failure-evaluation-and-tracing\01_evaluation_criteria.py
+python .\07_failure-evaluation-and-tracing\02_evaluator_agent.py
+python .\07_failure-evaluation-and-tracing\03_feedback_loop.py
+python .\07_failure-evaluation-and-tracing\04_bounded_retry.py
+python .\07_failure-evaluation-and-tracing\05_failure_policy.py
+python .\07_failure-evaluation-and-tracing\06_partial_recovery.py
+python .\07_failure-evaluation-and-tracing\07_quality_trace.py
 ```
 
-06은 입력·응답 Policy, 권한, 승인과 멱등성을 결정적으로 검증하므로 API Key가 필요하지 않습니다. 07에서는 평가·Retry·Trace를 학습합니다. 실제 Redis 멱등성 상태와 PostgreSQL Trace·평가 이력은 운영 서비스 단계에서 연결합니다.
+06은 입력·응답 Policy, 권한, 승인과 멱등성을 결정적으로 검증하므로 API Key가 필요하지 않습니다. 07의 `03_feedback_loop.py`만 실제 OpenAI·Gemini를 호출하며 나머지는 API Key 없이 평가·Retry·Trace 구조를 확인할 수 있습니다. 실제 Redis 멱등성 상태와 PostgreSQL Trace·평가 이력은 운영 서비스 단계에서 연결합니다.
 
 ## 08 실제 Multi AI Agent Service 실행
 
-먼저 `00_runtime-and-deployment/00_local-services`의 Redis와 PostgreSQL을 실행하고 `08_multi-ai-agent-service/schema.sql`을 적용합니다. 이후 과정 루트의 서로 다른 터미널에서 실행합니다.
+먼저 공통 Redis와 PostgreSQL을 실행하고 08의 실행·Trace Schema를 적용합니다.
+
+```powershell
+cd C:\aidevs\07_multi-agent-service-ops\08_multi-ai-agent-service
+python .\init_database.py
+python .\check_environment.py
+```
+
+01~07 관측성 Lab을 순서대로 실행합니다.
+
+```powershell
+cd C:\aidevs\07_multi-agent-service-ops
+python .\08_multi-ai-agent-service\01_structured_logging.py
+python .\08_multi-ai-agent-service\02_trace_context.py
+python .\08_multi-ai-agent-service\03_agent_provider_status.py
+python .\08_multi-ai-agent-service\04_health_check.py
+python .\08_multi-ai-agent-service\05_live_execution_state.py
+python .\08_multi-ai-agent-service\06_execution_history.py
+python .\08_multi-ai-agent-service\07_operations_dashboard.py
+```
+
+이후 과정 루트의 서로 다른 터미널에서 실제 서비스를 실행합니다.
 
 ```powershell
 $env:PYTHONPATH='C:\aidevs\07_multi-agent-service-ops'
-uvicorn backend:app --app-dir .\08_multi-ai-agent-service --reload --port 8100
+uvicorn backend:app --app-dir .\08_multi-ai-agent-service --reload --port 8000
 ```
 
 ```powershell
@@ -162,7 +185,7 @@ python .\08_multi-ai-agent-service\worker.py
 
 ```powershell
 $env:PYTHONPATH='C:\aidevs\07_multi-agent-service-ops'
-streamlit run .\08_multi-ai-agent-service\frontend.py
+streamlit run .\08_multi-ai-agent-service\frontend.py --server.port 8508
 ```
 
 Backend, Worker, Frontend는 같은 `REDIS_URL`, `DATABASE_URL`을 사용해야 합니다. Worker만 실제 LLM을 호출하며 Provider 오류는 Task의 `failed` 상태와 Trace에 기록합니다.

@@ -9,6 +9,10 @@ from pydantic import BaseModel, Field
 EventStatus = Literal["started", "completed", "failed", "blocked", "waiting_human"]
 
 
+def current_utc_time() -> datetime:
+    return datetime.now(timezone.utc)
+
+
 class TraceEvent(BaseModel):
     task_id: str
     trace_id: str
@@ -20,7 +24,7 @@ class TraceEvent(BaseModel):
     duration_ms: float | None = Field(default=None, ge=0)
     error_type: str | None = None
     details: dict[str, object] = Field(default_factory=dict)
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=current_utc_time)
 
 
 def classify_failure(error: Exception) -> Literal["retry", "replan", "block", "human"]:

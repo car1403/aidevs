@@ -2,6 +2,7 @@ import time
 
 from app.repositories import PostgresHistory, RedisTasks
 from app.service import append_trace, run_multi_agent
+from app.observability import structured_log
 
 
 def process_one(tasks: RedisTasks, history: PostgresHistory, timeout: int = 5):
@@ -12,13 +13,16 @@ def process_one(tasks: RedisTasks, history: PostgresHistory, timeout: int = 5):
     if task is None or task.status != "queued":
         return None
     try:
+        structured_log("info", "worker_started", task_id=task.task_id, trace_id=task.trace_id, actor="worker")
         task = run_multi_agent(task)
     except Exception as error:
         task.status = "failed"
         task.error = f"{type(error).__name__}: {error}"
         append_trace(task, "worker", "orchestrate", "failed", error=task.error)
+        structured_log("error", "worker_failed", task_id=task.task_id, trace_id=task.trace_id, actor="worker", details={"error": task.error})
     tasks.save(task)
     history.save(task)
+    structured_log("info", "worker_finished", task_id=task.task_id, trace_id=task.trace_id, actor="worker", details={"status": task.status})
     return task
 
 
