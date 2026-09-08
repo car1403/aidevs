@@ -70,7 +70,27 @@ Host Python → 127.0.0.1:6379, 127.0.0.1:5433
 Compose Service → redis:6379, postgres:5432
 ```
 
-## 5. Ollama 선택 실행
+## 5. 과정 Database 구조 초기화
+
+PostgreSQL Container가 정상이라면 Host PowerShell에서 Python 초기화 프로그램을
+실행합니다.
+
+```powershell
+python -m pip install "psycopg[binary]>=3.2,<4" "python-dotenv>=1.0,<2"
+python .\init_database.py
+```
+
+프로그램은 `.env`의 다음 값을 읽습니다.
+
+```ini
+DATABASE_URL=postgresql://agent_user:agent_password@127.0.0.1:5433/agent_db
+```
+
+`init_database.py`는 같은 폴더의 `init.sql`을 실행하여 `vector` Extension과 과정 공통
+Table을 준비합니다. `DROP TABLE`이나 데이터 삭제는 수행하지 않습니다. SQL을 수정한 후
+초기화 프로그램을 다시 실행해도 `IF NOT EXISTS`가 적용된 객체는 유지됩니다.
+
+## 6. Ollama 선택 실행
 
 Ollama를 사용할 때 최초 한 번 Model을 받습니다.
 
@@ -86,7 +106,7 @@ OpenAI 또는 Gemini만 사용한다면 Ollama를 실행하거나 Model을 받�
 Host Python은 Ollama `127.0.0.1:11434`를 사용하고, Compose 내부 서비스는
 `ollama:11434`, `postgres:5432`, `redis:6379`로 연결합니다.
 
-## 6. 종료와 다시 시작
+## 7. 종료와 다시 시작
 
 ```powershell
 docker compose down
@@ -98,12 +118,13 @@ docker compose ps
 PostgreSQL·Redis 데이터와 내려받은 Ollama Model을 삭제하므로 현재 Volume과 학습
 데이터를 확인한 뒤 완전 초기화가 확실할 때만 사용합니다.
 
-## 7. 완료 체크
+## 8. 완료 체크
 
 ```text
 [ ] Compose 설정 검사를 통과했다.
 [ ] Redis가 PONG을 반환한다.
 [ ] PostgreSQL이 accepting connections를 반환한다.
+[ ] init_database.py로 과정 공통 Table을 준비했다.
 [ ] Host Port와 Container Port의 차이를 설명할 수 있다.
 [ ] down과 down -v의 차이를 설명할 수 있다.
 ```

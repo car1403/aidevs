@@ -1,58 +1,67 @@
-# Compose 핵심 이해
+# 두 Docker Compose 구성 이해하기
 
-## 기본 실행 서비스
+## 기본 `compose.yml`
+
+현재 수업 PC에 이미 실행 중인 PostgreSQL·Redis·Ollama를 재사용합니다.
+
+```text
+frontend Container → backend Container
+                         ├─ host.docker.internal:6379 Redis
+                         ├─ host.docker.internal:5433 PostgreSQL
+                         ├─ host.docker.internal:11434 Ollama
+                         ├─ OpenAI HTTPS API
+                         └─ Gemini HTTPS API
+```
+
+`host.docker.internal`은 Container에서 Windows Host 방향으로 접근하는 이름입니다.
+Backend Container에서 `127.0.0.1`은 Backend Container 자기 자신을 뜻합니다.
+
+## 선택 `compose.full-stack.yml`
+
+공용 Container가 없는 PC에서 전체 환경을 별도로 만듭니다.
 
 ```text
 frontend → backend → redis
                    → database
-                   → OpenAI 또는 Gemini API
+                   → 선택 ollama
 ```
 
-Frontend와 Backend만 자체 Dockerfile로 Image를 만들고 Redis와 PostgreSQL은 공식 Image를 사용합니다.
+같은 Compose Network에서는 `redis`, `database`, `ollama`, `backend` 같은 Service 이름을
+DNS 주소로 사용합니다.
 
-## 선택 Ollama Profile
+## 설정 주소 비교
 
-```yaml
-ollama:
-  profiles: ["ollama"]
-  image: ollama/ollama:latest
-  volumes:
-    - ollama_data:/root/.ollama
-```
+| 호출 위치 | PostgreSQL | Redis | Ollama |
+| --- | --- | --- | --- |
+| Host Python | `127.0.0.1:5433` | `127.0.0.1:6379` | `127.0.0.1:11434` |
+| 기본 Backend Container | `host.docker.internal:5433` | `host.docker.internal:6379` | `host.docker.internal:11434` |
+| Full Stack Backend | `database:5432` | `redis:6379` | `ollama:11434` |
 
-기본 `docker compose up`에서는 Ollama를 만들지 않습니다. 다음 명령에서만 실행합니다.
-
-```powershell
-docker compose --profile ollama up -d --build
-```
-
-Backend에서 Ollama Container를 호출하는 주소는 `http://ollama:11434`입니다. `ollama`는 Compose 내부 DNS 서비스 이름입니다.
-
-## Redis와 PostgreSQL 주소
+## 환경 변수 역할
 
 ```text
-Backend → redis://redis:6379/0
-Backend → postgresql://...@database:5432/service_ops
+POSTGRES_USER·POSTGRES_PASSWORD·POSTGRES_DB
+└─ Full Stack PostgreSQL Container 초기 생성
+
+DATABASE_URL
+└─ 기본 Backend가 기존 공용 PostgreSQL에 접속
+
+REDIS_URL
+└─ 기본 Backend가 기존 공용 Redis에 접속
 ```
 
-Container 내부에서는 Windows의 `localhost`가 아니라 Compose 서비스 이름을 사용합니다.
+Full Stack Compose는 Backend 주소를 내부 Service 이름으로 명시적으로 바꾸므로 같은
+`.env`를 사용해도 Host 주소와 혼동하지 않습니다.
 
 ## Volume
 
+기본 Compose는 Application Container만 만들기 때문에 공용 저장소의 기존 Volume을
+변경하지 않습니다. Full Stack Compose는 다음 전용 Volume을 만듭니다.
+
 ```text
-postgres_data → 전체 Chat과 여행 메모
+redis_data    → Redis AOF 데이터
+postgres_data → Chat과 여행 메모
 ollama_data   → 내려받은 Model
-Redis         → 이 예제에서는 임시 상태라 Volume 없음
 ```
 
-`docker compose down`은 Volume을 유지합니다. `down -v`는 PostgreSQL 데이터와 Ollama Model을 삭제합니다.
-
-## Provider 환경 변수
-
-```text
-OpenAI  → OPENAI_API_KEY, OPENAI_MODEL
-Gemini  → GEMINI_API_KEY, GEMINI_MODEL
-Ollama  → OLLAMA_ENABLED, OLLAMA_BASE_URL, OLLAMA_MODEL
-```
-
-설정하지 않은 Provider는 `503`을 반환하며 Mock으로 대체되지 않습니다.
+일반 `down`은 Volume을 유지하고 `down -v`는 삭제합니다.

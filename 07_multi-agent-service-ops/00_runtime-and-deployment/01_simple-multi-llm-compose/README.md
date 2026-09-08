@@ -1,107 +1,152 @@
 # 01 Simple Multi-LLM Docker Compose
 
-하나의 여행 준비 Chat으로 Container 연결을 배웁니다. Multi AI Agent와 Orchestration은 아직 넣지 않습니다. 이 폴더는 자체 Redis·PostgreSQL을 사용하므로 `00_local-services`를 먼저 실행하지 않습니다.
+하나의 여행 준비 Chat으로 Frontend와 Backend Container 연결을 배웁니다. Multi-Agent와
+Orchestration은 아직 넣지 않습니다. 현재 수업 PC에는 PostgreSQL·Redis·Ollama Container가
+이미 있으므로 기본 실행에서는 Application Container 두 개만 생성합니다.
+
+## 두 실행 방식을 구분하세요
+
+| 파일 | 실행 대상 | 사용하는 경우 |
+| --- | --- | --- |
+| `compose.yml` | Frontend·Backend | 현재 수업 환경, 기본 권장 |
+| `compose.full-stack.yml` | Frontend·Backend·Redis·PostgreSQL·선택 Ollama | 공용 Container가 없는 별도 PC |
+
+두 Compose를 동시에 실행하지 않습니다. 같은 Host Port를 사용하므로 충돌할 수 있습니다.
+
+## 1. 기본 실행: 기존 공용 Container 사용
 
 ```text
-Frontend + Backend + Redis + PostgreSQL
-                    ↓
-        OpenAI·Gemini·Ollama 중 선택
-                              └─ Ollama는 선택 Profile
-```
+기존 공용 Container
+├─ PostgreSQL :5433
+├─ Redis      :6379
+└─ Ollama     :11434
 
-## 실행
+이번 Compose
+├─ Backend    :8000
+└─ Frontend   :8501
+```
 
 ```powershell
 cd C:\aidevs\07_multi-agent-service-ops\00_runtime-and-deployment\01_simple-multi-llm-compose
 Copy-Item .env.example .env
 docker compose config --quiet
-docker compose up -d redis database
+docker compose up --build -d
 docker compose ps
-docker compose exec redis redis-cli ping
-docker compose exec database pg_isready -U service_ops -d service_ops
 ```
 
-Redis의 `PONG`과 PostgreSQL의 `accepting connections`를 확인한 뒤 애플리케이션을
-추가합니다.
+Backend도 Container이므로 Host의 공용 서비스에는 `127.0.0.1`이 아니라
+`host.docker.internal`로 접근합니다.
+
+```ini
+DATABASE_URL=postgresql://agent_user:agent_password@host.docker.internal:5433/agent_db
+REDIS_URL=redis://host.docker.internal:6379/0
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+```
+
+## 2. 전체 실행: 공용 Container가 없는 PC
+
+이 방식은 자체 Network 안에 저장소를 생성합니다.
 
 ```powershell
-docker compose up --build -d backend frontend
-docker compose ps
+docker compose -f .\compose.full-stack.yml config --quiet
+docker compose -f .\compose.full-stack.yml up --build -d
+docker compose -f .\compose.full-stack.yml ps
+docker compose -f .\compose.full-stack.yml exec redis redis-cli ping
+docker compose -f .\compose.full-stack.yml exec database pg_isready -U agent_user -d agent_db
+```
+
+Full Stack 내부에서는 Compose Service 이름을 사용합니다.
+
+```text
+Backend → redis:6379
+Backend → database:5432
+Backend → 선택 Ollama: ollama:11434
+```
+
+## 3. 실제 LLM 설정
+
+`.env`에 OpenAI 또는 Gemini Key를 입력합니다.
+
+```ini
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-4.1-mini
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-3.5-flash
+```
+
+기존 공용 Ollama를 사용할 때:
+
+```ini
+OLLAMA_ENABLED=true
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+OLLAMA_MODEL=llama3.2
+GEMMA_MODEL=gemma
+```
+
+Full Stack이 Ollama까지 새로 만들 때만 Profile을 사용합니다.
+
+```powershell
+docker compose -f .\compose.full-stack.yml --profile ollama up --build -d
+docker compose -f .\compose.full-stack.yml --profile ollama exec ollama ollama pull llama3.2
+docker compose -f .\compose.full-stack.yml --profile ollama exec ollama ollama pull gemma
+docker compose -f .\compose.full-stack.yml --profile ollama exec ollama ollama list
+```
+
+## 4. 실행 확인
+
+```powershell
 Invoke-RestMethod http://127.0.0.1:8000/health/live
 Invoke-RestMethod http://127.0.0.1:8000/health
 Invoke-RestMethod http://127.0.0.1:8000/health/ready
 ```
 
-`/health/live`는 Backend Process 자체를 확인합니다. `/health`는 의존성 상태를 관찰하고,
-`/health/ready`는 Redis·PostgreSQL이 준비되지 않으면 HTTP 503을 반환합니다. Container
-재시작에는 Liveness를, 신규 트래픽 허용에는 Readiness를 사용합니다.
+| 확인 대상 | 주소 |
+| --- | --- |
+| Streamlit | `http://127.0.0.1:8501` |
+| FastAPI 문서 | `http://127.0.0.1:8000/docs` |
+| Liveness | `http://127.0.0.1:8000/health/live` |
+| Readiness | `http://127.0.0.1:8000/health/ready` |
 
-- Streamlit: `http://127.0.0.1:8501`
-- FastAPI: `http://127.0.0.1:8000/docs`
-- Health: `http://127.0.0.1:8000/health`
+- Liveness: Backend Process가 살아 있는지 확인합니다.
+- Readiness: PostgreSQL과 Redis를 포함해 요청을 받을 준비가 됐는지 확인합니다.
+- 설정하지 않은 Provider 오류는 Mock 성공으로 바꾸지 않습니다.
 
-`.env`에는 사용할 실제 Provider 하나 이상을 설정합니다. OpenAI나 Gemini를 사용할 때는 위 명령만 실행합니다.
+## 5. 저장소 역할
 
-## Ollama 선택 실행
-
-`.env`를 다음처럼 바꿉니다.
-
-```dotenv
-OLLAMA_ENABLED=true
-OLLAMA_BASE_URL=http://ollama:11434
-OLLAMA_MODEL=llama3.2
-GEMMA_MODEL=gemma
-```
-
-Ollama Profile을 함께 실행하고 Model을 최초 한 번 내려받습니다.
-
-```powershell
-docker compose --profile ollama up -d --build
-docker compose --profile ollama exec ollama ollama pull llama3.2
-docker compose --profile ollama exec ollama ollama pull gemma
-docker compose --profile ollama exec ollama ollama list
-```
-
-Backend Container는 Compose 내부 주소 `http://ollama:11434`로 Llama와 Gemma를 호출합니다. Host Port를 공개하지 않으므로 Windows의 다른 프로그램에서는 이 Ollama에 직접 접근하지 않습니다.
-
-## 저장소 역할
-
-| 서비스 | 저장 내용 | 유지 방식 |
+| 서비스 | 저장 내용 | 기본 실행에서 관리 위치 |
 | --- | --- | --- |
-| Redis | 최근 대화·현재 Session·요청 횟수 | 임시 상태, 별도 Volume 없음 |
-| PostgreSQL | 전체 Chat 이력·여행 메모 | `postgres_data` Volume |
-| Ollama | 내려받은 Model | `ollama_data` Volume |
+| Redis | 최근 대화·Session·요청 횟수 | 기존 공용 Redis Container |
+| PostgreSQL | 전체 Chat 이력·여행 메모 | 기존 공용 PostgreSQL Container |
+| Ollama | Llama·Gemma Model | 기존 공용 Ollama Container |
 
-## 확인 순서
+Full Stack 방식에서는 이 폴더의 `redis_data`, `postgres_data`, `ollama_data` Volume을
+사용합니다.
 
-1. `docker compose ps`에서 `redis`, `database`, `backend`, `frontend`를 확인합니다.
-2. `/health/live`와 `/health`의 차이를 확인합니다.
-3. 화면에서 실제 Provider를 선택합니다.
-4. 부산 여행 준비 질문을 보냅니다.
-5. Redis 최근 Session과 PostgreSQL 전체 이력의 차이를 확인합니다.
-6. 설정하지 않은 Provider를 선택해 `503` 오류가 Mock 성공으로 바뀌지 않는지 확인합니다.
-7. `docker compose logs --tail=100 backend`에서 첫 실패 지점을 찾습니다.
+## 6. 종료
 
-화면이 열리지 않으면 다음 순서로 범위를 좁힙니다.
-
-```text
-docker compose ps
-→ Backend Health
-→ Backend Log
-→ Frontend Log
-→ Browser 주소와 Host Port
-```
-
-## 종료
+기본 Application만 종료:
 
 ```powershell
 docker compose down
 ```
 
-PostgreSQL 이력과 Ollama Model까지 지우려는 것이 확실할 때만 `docker compose --profile ollama down -v`를 사용합니다. 일반 `down`은 Volume을 유지합니다.
+이 명령은 기존 공용 PostgreSQL·Redis·Ollama를 중단하지 않습니다.
 
-## 직접 확인하기
+Full Stack 종료:
 
-- 같은 질문을 두 Provider로 실행하고 실제 Provider·Model Metadata를 비교합니다.
-- Backend Container를 중지했을 때 Frontend 오류를 확인합니다.
-- Redis를 중지했을 때 Health와 로그가 어떻게 달라지는지 확인합니다.
+```powershell
+docker compose -f .\compose.full-stack.yml down
+```
+
+`down -v`는 PostgreSQL 데이터와 Ollama Model을 삭제합니다. 학습 데이터가 필요 없는지
+확인하지 않았다면 실행하지 않습니다.
+
+## 완료 체크
+
+```text
+[ ] 기본 Compose가 Frontend와 Backend만 생성하는 것을 확인했다.
+[ ] host.docker.internal과 localhost의 차이를 설명할 수 있다.
+[ ] Full Stack Compose를 언제 사용하는지 설명할 수 있다.
+[ ] Liveness와 Readiness를 구분할 수 있다.
+[ ] 실제 Provider 오류가 성공으로 표시되지 않음을 확인했다.
+```

@@ -1,61 +1,32 @@
+name: simple-multi-llm-app
+
+# 기본 수업용 구성입니다. 이미 실행 중인 PostgreSQL·Redis·Ollama를 재사용하고
+# 이 프로젝트의 Frontend와 Backend Container만 생성합니다.
 services:
-  redis:
-    image: redis:7-alpine
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
-  database:
-    image: postgres:17-alpine
-    environment:
-      POSTGRES_USER: service_ops
-      POSTGRES_PASSWORD: service_ops
-      POSTGRES_DB: service_ops
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U service_ops -d service_ops"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
-  ollama:
-    profiles: ["ollama"]
-    image: ollama/ollama:latest
-    volumes:
-      - ollama_data:/root/.ollama
-
   backend:
     build: ./backend
     environment:
-      REDIS_URL: redis://redis:6379/0
-      DATABASE_URL: postgresql://service_ops:service_ops@database:5432/service_ops
+      REDIS_URL: ${REDIS_URL:-redis://host.docker.internal:6379/0}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://agent_user:agent_password@host.docker.internal:5433/agent_db}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash}
       OLLAMA_ENABLED: ${OLLAMA_ENABLED:-false}
-      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2}
+      GEMMA_MODEL: ${GEMMA_MODEL:-gemma}
     ports:
       - "8000:8000"
-    depends_on:
-      redis:
-        condition: service_healthy
-      database:
-        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
-      test:
-        - CMD
-        - python
-        - -c
-        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live')"
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready')"]
       interval: 5s
       timeout: 3s
       retries: 10
+      start_period: 10s
+    restart: unless-stopped
 
   frontend:
     build: ./frontend
@@ -66,7 +37,4 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-
-volumes:
-  postgres_data:
-  ollama_data:
+    restart: unless-stopped

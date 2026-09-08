@@ -59,7 +59,7 @@ class PostgresRepository:
     def __init__(self, url: str | None = None) -> None:
         self.url = url or os.getenv(
             "DATABASE_URL",
-            "postgresql://service_ops:service_ops@127.0.0.1:5432/service_ops",
+            "postgresql://agent_user:agent_password@127.0.0.1:5433/agent_db",
         )
 
     def ping(self) -> bool:

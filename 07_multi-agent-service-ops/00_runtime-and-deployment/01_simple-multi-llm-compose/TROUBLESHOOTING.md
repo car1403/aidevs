@@ -1,7 +1,9 @@
 # 장애 실습과 문제 해결
 
-오류를 만들기 전에 정상 화면과 `docker compose ps`를 먼저 기록합니다. 한 번에 한
-서비스만 중단해야 원인과 결과를 연결할 수 있습니다.
+오류를 만들기 전에 정상 화면과 `docker compose ps`를 먼저 기록합니다. 기본 Compose는
+공용 PostgreSQL·Redis·Ollama를 사용하므로 다른 과정에 영향을 줄 수 있는 공용 Container를
+장애 실습 목적으로 중단하지 않습니다. 저장소 중단 실습은 `compose.full-stack.yml`로 만든
+독립 환경에서만 진행합니다.
 
 ## 공통 관찰 명령
 
@@ -14,8 +16,10 @@ docker compose logs --tail=100 frontend
 
 ## 1. Redis 중단
 
+이 실습은 Full Stack 환경에서 실행합니다.
+
 ```powershell
-docker compose stop redis
+docker compose -f .\compose.full-stack.yml stop redis
 ```
 
 예상:
@@ -28,13 +32,15 @@ docker compose stop redis
 복구:
 
 ```powershell
-docker compose start redis
+docker compose -f .\compose.full-stack.yml start redis
 ```
 
 ## 2. PostgreSQL 중단
 
+이 실습은 Full Stack 환경에서 실행합니다.
+
 ```powershell
-docker compose stop database
+docker compose -f .\compose.full-stack.yml stop database
 ```
 
 예상:
@@ -46,7 +52,7 @@ docker compose stop database
 복구:
 
 ```powershell
-docker compose start database
+docker compose -f .\compose.full-stack.yml start database
 ```
 
 ## 3. Backend 중단
@@ -77,12 +83,15 @@ http://backend:8000
 
 ## 5. LLM Provider 설정 오류
 
-Ollama를 선택했다면 `.env`의 `OLLAMA_ENABLED=true`, `--profile ollama` 실행과 Model 다운로드를 모두 확인합니다.
+기본 Compose에서 Ollama를 선택했다면 기존 공용 Ollama와 `.env`의
+`OLLAMA_ENABLED=true`, `OLLAMA_BASE_URL=http://host.docker.internal:11434`를 확인합니다.
+
+Full Stack 방식에서만 `--profile ollama`와 Model 다운로드를 확인합니다.
 
 ```powershell
-docker compose --profile ollama ps
-docker compose --profile ollama exec ollama ollama list
-docker compose logs --tail=100 backend ollama
+docker compose -f .\compose.full-stack.yml --profile ollama ps
+docker compose -f .\compose.full-stack.yml --profile ollama exec ollama ollama list
+docker compose -f .\compose.full-stack.yml logs --tail=100 backend ollama
 ```
 
 증상:
@@ -103,12 +112,12 @@ docker compose logs --tail=100 backend
 
 ## 6. SQL 수정이 반영되지 않음
 
-`init.sql`은 빈 PostgreSQL Volume을 처음 초기화할 때 실행됩니다. 학습 데이터를
+`init.sql`은 Full Stack의 빈 PostgreSQL Volume을 처음 초기화할 때 실행됩니다. 학습 데이터를
 삭제해도 되는지 먼저 확인한 뒤에만 다음 명령으로 Volume을 새로 만듭니다.
 
 ```powershell
-docker compose down -v
-docker compose up --build
+docker compose -f .\compose.full-stack.yml down -v
+docker compose -f .\compose.full-stack.yml up --build
 ```
 
 ## 완료 체크
