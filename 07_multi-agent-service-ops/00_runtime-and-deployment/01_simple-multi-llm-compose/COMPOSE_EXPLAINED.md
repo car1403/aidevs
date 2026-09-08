@@ -16,6 +16,15 @@ frontend Container → backend Container
 `host.docker.internal`은 Container에서 Windows Host 방향으로 접근하는 이름입니다.
 Backend Container에서 `127.0.0.1`은 Backend Container 자기 자신을 뜻합니다.
 
+Frontend가 Backend에 접근할 때 사용하는 환경 변수 이름은 `BACKEND_URL`입니다.
+
+```text
+Host에서 Frontend 직접 실행 → 기본값 http://127.0.0.1:8000
+Docker Compose 실행        → http://backend:8000
+```
+
+이 프로젝트는 `API_BASE_URL`을 사용하지 않습니다.
+
 ## 선택 `compose.full-stack.yml`
 
 공용 Container가 없는 PC에서 전체 환경을 별도로 만듭니다.
@@ -52,6 +61,20 @@ REDIS_URL
 
 Full Stack Compose는 Backend 주소를 내부 Service 이름으로 명시적으로 바꾸므로 같은
 `.env`를 사용해도 Host 주소와 혼동하지 않습니다.
+
+## init.sql 실행 시점
+
+```text
+기본 compose.yml
+└─ 기존 PostgreSQL 재사용 → init_database.py를 최초 한 번 실행
+
+compose.full-stack.yml
+└─ 새 PostgreSQL Volume 생성 → docker-entrypoint-initdb.d가 init.sql 자동 실행
+```
+
+`docker-entrypoint-initdb.d`의 SQL은 PostgreSQL 데이터 디렉터리가 비어 있을 때만 자동
+실행됩니다. 이미 만들어진 공용 Database에 Application Container만 연결하면 자동으로
+실행되지 않습니다.
 
 ## Volume
 

@@ -1,5 +1,9 @@
 # 02 GitHub Actions CI
 
+CI는 **Continuous Integration(지속적 통합)**의 약자입니다. 여러 사람이 변경한 코드를
+저장소에 Push하거나 Pull Request로 올릴 때, Test·설정 검사·Image Build를 자동 실행하여
+변경이 기존 코드와 함께 정상 동작하는지 확인하는 과정입니다.
+
 Multi-LLM Compose 변경을 Push하거나 Pull Request로 보낼 때 다음을 자동 검사합니다.
 
 ```text

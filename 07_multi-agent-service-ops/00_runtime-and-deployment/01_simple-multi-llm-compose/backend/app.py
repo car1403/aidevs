@@ -19,6 +19,7 @@ class ChatRequest(BaseModel):
     session_id: str = Field(min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_-]+$")
     message: str = Field(min_length=1, max_length=2000)
     provider: Literal["openai", "gemini", "ollama"]
+    ollama_model: Literal["gemma", "llama"] = "gemma"
 
 
 @lru_cache
@@ -52,6 +53,7 @@ def health(redis_store: RedisDep, database: DatabaseDep, llm: LLMDep) -> dict:
         "backend": True,
         "redis": False,
         "database": False,
+        "database_schema": False,
         "providers": {name: llm.configured(name) for name in llm.PROVIDERS},
     }
     errors = {}
@@ -60,8 +62,17 @@ def health(redis_store: RedisDep, database: DatabaseDep, llm: LLMDep) -> dict:
             checks[name] = dependency.ping()
         except Exception as error:
             errors[name] = f"{type(error).__name__}: {error}"
+    if checks["database"]:
+        try:
+            checks["database_schema"] = database.schema_ready()
+        except Exception as error:
+            errors["database_schema"] = f"{type(error).__name__}: {error}"
     return {
-        "status": "ok" if checks["redis"] and checks["database"] else "degraded",
+        "status": (
+            "ok"
+            if checks["redis"] and checks["database"] and checks["database_schema"]
+            else "degraded"
+        ),
         "checks": checks,
         "errors": errors,
     }
@@ -114,7 +125,12 @@ def chat(payload: ChatRequest, redis_store: RedisDep, database: DatabaseDep, llm
     try:
         recent = redis_store.load_session(payload.session_id)
         database.add_chat_message(payload.session_id, "user", payload.message)
-        reply = llm.reply(payload.provider, payload.message, recent)
+        reply = llm.reply(
+            payload.provider,
+            payload.message,
+            recent,
+            ollama_model=payload.ollama_model,
+        )
         database.add_chat_message(payload.session_id, "assistant", reply.text)
         redis_store.append_session(payload.session_id, [
             {"role": "user", "content": payload.message},

@@ -37,6 +37,10 @@ if "session_id" not in st.session_state:
 
 with st.sidebar:
     provider = st.selectbox("실제 LLM Provider", ["openai", "gemini", "ollama"])
+    ollama_model = "gemma"
+    if provider == "ollama":
+        ollama_model = st.selectbox("Ollama Model", ["gemma", "llama"])
+        st.caption(f"Ollama에서 {ollama_model} 모델을 사용합니다.")
     st.code(BACKEND_URL)
     st.code(st.session_state.session_id)
     if st.button("새 대화 시작"):
@@ -63,6 +67,7 @@ with chat_tab:
                 "session_id": st.session_state.session_id,
                 "message": prompt,
                 "provider": provider,
+                "ollama_model": ollama_model,
             })
             with st.chat_message("assistant"):
                 st.write(result["answer"])

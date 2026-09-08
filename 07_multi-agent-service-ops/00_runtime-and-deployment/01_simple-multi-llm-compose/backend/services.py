@@ -67,10 +67,20 @@ class PostgresRepository:
             cursor.execute("SELECT 1")
             return cursor.fetchone() == (1,)
 
+    def schema_ready(self) -> bool:
+        """이 Application이 사용하는 Schema와 두 Table이 모두 있는지 확인합니다."""
+        with psycopg.connect(self.url) as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """SELECT
+                       to_regclass('simple_multi_llm.notes') IS NOT NULL
+                       AND to_regclass('simple_multi_llm.chat_messages') IS NOT NULL"""
+            )
+            return cursor.fetchone() == (True,)
+
     def add_note(self, name: str, message: str) -> dict[str, Any]:
         with psycopg.connect(self.url, row_factory=dict_row) as connection, connection.cursor() as cursor:
             cursor.execute(
-                "INSERT INTO notes (name, message) VALUES (%s, %s) RETURNING id, name, message, created_at",
+                "INSERT INTO simple_multi_llm.notes (name, message) VALUES (%s, %s) RETURNING id, name, message, created_at",
                 (name, message),
             )
             return dict(cursor.fetchone())
@@ -78,7 +88,7 @@ class PostgresRepository:
     def list_notes(self, limit: int = 50) -> list[dict[str, Any]]:
         with psycopg.connect(self.url, row_factory=dict_row) as connection, connection.cursor() as cursor:
             cursor.execute(
-                "SELECT id, name, message, created_at FROM notes ORDER BY id DESC LIMIT %s",
+                "SELECT id, name, message, created_at FROM simple_multi_llm.notes ORDER BY id DESC LIMIT %s",
                 (limit,),
             )
             return [dict(row) for row in cursor.fetchall()]
@@ -86,7 +96,7 @@ class PostgresRepository:
     def add_chat_message(self, session_id: str, role: str, content: str) -> dict[str, Any]:
         with psycopg.connect(self.url, row_factory=dict_row) as connection, connection.cursor() as cursor:
             cursor.execute(
-                "INSERT INTO chat_messages (session_id, role, content) VALUES (%s, %s, %s) RETURNING id, session_id, role, content, created_at",
+                "INSERT INTO simple_multi_llm.chat_messages (session_id, role, content) VALUES (%s, %s, %s) RETURNING id, session_id, role, content, created_at",
                 (session_id, role, content),
             )
             return dict(cursor.fetchone())
@@ -94,7 +104,7 @@ class PostgresRepository:
     def list_chat(self, session_id: str, limit: int = 100) -> list[dict[str, Any]]:
         with psycopg.connect(self.url, row_factory=dict_row) as connection, connection.cursor() as cursor:
             cursor.execute(
-                "SELECT id, session_id, role, content, created_at FROM chat_messages WHERE session_id = %s ORDER BY id ASC LIMIT %s",
+                "SELECT id, session_id, role, content, created_at FROM simple_multi_llm.chat_messages WHERE session_id = %s ORDER BY id ASC LIMIT %s",
                 (session_id, limit),
             )
             return [dict(row) for row in cursor.fetchall()]
@@ -114,11 +124,17 @@ class MultiLLMChatService:
             return os.getenv("OLLAMA_ENABLED", "false").lower() in {"1", "true", "yes"}
         return False
 
-    def model(self, provider: str) -> str:
+    def model(self, provider: str, ollama_model: str = "gemma") -> str:
+        if provider == "ollama" and ollama_model not in {"gemma", "llama"}:
+            raise ValueError(f"지원하지 않는 Ollama 모델 선택입니다: {ollama_model}")
         models = {
             "openai": os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
             "gemini": os.getenv("GEMINI_MODEL", "gemini-3.5-flash"),
-            "ollama": os.getenv("OLLAMA_MODEL", "llama3.2"),
+            "ollama": (
+                os.getenv("GEMMA_MODEL", "gemma3:4b")
+                if ollama_model == "gemma"
+                else os.getenv("OLLAMA_MODEL", "llama3.2")
+            ),
         }
         if provider not in models:
             raise ValueError(f"지원하지 않는 Provider입니다: {provider}")
@@ -135,13 +151,19 @@ class MultiLLMChatService:
             f"최근 대화:\n{history or '(첫 대화)'}\n사용자 질문: {message}"
         )
 
-    def reply(self, provider: str, message: str, recent_messages: list[dict[str, str]]) -> LLMReply:
+    def reply(
+        self,
+        provider: str,
+        message: str,
+        recent_messages: list[dict[str, str]],
+        ollama_model: str = "gemma",
+    ) -> LLMReply:
         if provider not in self.PROVIDERS:
             raise ValueError(f"지원하지 않는 Provider입니다: {provider}")
         if not self.configured(provider):
             raise RuntimeError(f"{provider} 설정을 확인하세요.")
         prompt = self._prompt(message, recent_messages)
-        model = self.model(provider)
+        model = self.model(provider, ollama_model)
         if provider == "openai":
             from openai import OpenAI
 
@@ -150,7 +172,8 @@ class MultiLLMChatService:
         elif provider == "gemini":
             from google import genai
 
-            response = genai.Client(api_key=os.environ["GEMINI_API_KEY"]).models.generate_content(
+            gemini_client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+            response = gemini_client.models.generate_content(
                 model=model, contents=prompt
             )
             text = response.text

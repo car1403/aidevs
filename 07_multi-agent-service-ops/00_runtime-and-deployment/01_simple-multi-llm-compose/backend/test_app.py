@@ -22,6 +22,7 @@ class FakeDatabase:
         self.notes, self.messages = [], []
 
     def ping(self): return True
+    def schema_ready(self): return True
     def add_note(self, name, message):
         item = {"id": len(self.notes) + 1, "name": name, "message": message}; self.notes.append(item); return item
     def list_notes(self, limit=50): return list(reversed(self.notes))[:limit]
@@ -33,7 +34,9 @@ class FakeDatabase:
 class FakeLLM:
     PROVIDERS = ("openai", "gemini", "ollama")
     def configured(self, provider): return provider != "ollama"
-    def reply(self, provider, message, recent): return LLMReply(provider, f"{provider}-test", f"실제 계약 테스트: {message}")
+    def reply(self, provider, message, recent, ollama_model="gemma"):
+        model = ollama_model if provider == "ollama" else f"{provider}-test"
+        return LLMReply(provider, model, f"실제 계약 테스트: {message}")
 
 
 fake_redis, fake_database = FakeRedis(), FakeDatabase()

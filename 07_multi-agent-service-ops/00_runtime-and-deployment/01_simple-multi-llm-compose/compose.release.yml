@@ -1,10 +1,11 @@
-name: simple-multi-llm-app
+# 시나리오: 수신자 PC에는 PostgreSQL·Redis·Ollama가 이미 Docker Container로 실행 중이다.
+# 수업 운영자가 Registry에 올린 Backend·Frontend Image만 내려받아 실행한다.
+name: simple-multi-llm-release
 
-# 기본 수업용 구성입니다. 이미 실행 중인 PostgreSQL·Redis·Ollama를 재사용하고
-# 이 프로젝트의 Frontend와 Backend Container만 생성합니다.
 services:
   backend:
-    build: ./backend
+    # .env에서 Registry Image와 버전을 지정한다.
+    image: ${BACKEND_IMAGE:?BACKEND_IMAGE을 .env에 설정하세요}
     environment:
       REDIS_URL: ${REDIS_URL:-redis://host.docker.internal:6379/0}
       DATABASE_URL: ${DATABASE_URL:-postgresql://agent_user:agent_pwd@host.docker.internal:5433/agent_db}
@@ -29,7 +30,8 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: ./frontend
+    # .env에서 Registry Image와 버전을 지정한다.
+    image: ${FRONTEND_IMAGE:?FRONTEND_IMAGE을 .env에 설정하세요}
     environment:
       BACKEND_URL: http://backend:8000
     ports:
