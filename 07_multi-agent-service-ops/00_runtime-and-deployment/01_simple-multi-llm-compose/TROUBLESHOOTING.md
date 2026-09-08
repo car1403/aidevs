@@ -68,11 +68,11 @@ docker compose start backend
 
 ## 4. 잘못된 Container 주소
 
-Frontend의 `BACKEND_URL`을 `http://localhost:8200`으로 바꾸면 Frontend Container는
+Frontend의 `BACKEND_URL`을 `http://localhost:8000`으로 바꾸면 Frontend Container는
 자기 자신에서 Backend를 찾습니다. 올바른 값은 다음과 같습니다.
 
 ```text
-http://backend:8200
+http://backend:8000
 ```
 
 ## 5. LLM Provider 설정 오류

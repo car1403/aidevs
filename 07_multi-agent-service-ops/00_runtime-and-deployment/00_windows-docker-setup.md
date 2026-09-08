@@ -68,11 +68,11 @@ docker run --rm hello-world
 
 ## 4. 과정 Port 확인
 
-이 과정은 Host Port `5434`, `6380`, `8200`, `8503`, 선택적으로 `11435`를 사용합니다.
+이 과정은 Host Port `5433`, `6379`, `8000`, `8010`, `8501`, `11434`를 사용합니다.
 
 ```powershell
 Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
-    Where-Object LocalPort -In 5434, 6380, 8200, 8503, 11435 |
+    Where-Object LocalPort -In 5433, 6379, 8000, 8010, 8501, 11434 |
     Select-Object LocalAddress, LocalPort, OwningProcess
 ```
 

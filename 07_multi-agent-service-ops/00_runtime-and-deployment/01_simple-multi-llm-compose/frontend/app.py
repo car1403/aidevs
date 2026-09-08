@@ -7,7 +7,7 @@ import httpx
 import streamlit as st
 
 
-BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8200")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
 
 
 def api(method: str, path: str, payload: dict | None = None) -> dict:

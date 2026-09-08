@@ -67,6 +67,15 @@ def health(redis_store: RedisDep, database: DatabaseDep, llm: LLMDep) -> dict:
     }
 
 
+@app.get("/health/ready")
+def ready(redis_store: RedisDep, database: DatabaseDep, llm: LLMDep) -> dict:
+    """의존성을 포함해 신규 요청을 받을 준비가 됐는지 확인합니다."""
+    result = health(redis_store, database, llm)
+    if result["status"] != "ok":
+        raise HTTPException(status_code=503, detail=result)
+    return result
+
+
 @app.post("/api/notes", status_code=201)
 def create_note(payload: NoteRequest, redis_store: RedisDep, database: DatabaseDep) -> dict:
     try:

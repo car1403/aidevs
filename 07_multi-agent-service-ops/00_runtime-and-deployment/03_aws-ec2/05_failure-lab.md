@@ -13,7 +13,7 @@ Frontend는 열릴 수 있지만 Health·메모·Chat API는 연결 실패해야
 
 ```bash
 docker compose start backend
-curl http://127.0.0.1:8200/health
+curl http://127.0.0.1:8000/health
 ```
 
 ## Redis 중단
@@ -44,8 +44,8 @@ docker compose start database
 
 ## 서비스 주소 실수
 
-Frontend Container의 올바른 Backend 주소는 `http://backend:8200`입니다.
-`http://localhost:8200`은 Frontend Container 자기 자신을 뜻합니다.
+Frontend Container의 올바른 Backend 주소는 `http://backend:8000`입니다.
+`http://localhost:8000`은 Frontend Container 자기 자신을 뜻합니다.
 
 ## 로그
 

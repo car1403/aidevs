@@ -45,7 +45,7 @@ Backend는 Health Check를 통과해야 하고 Frontend는 실행 상태여야 �
 ## 5. EC2 내부 Health 확인
 
 ```bash
-curl http://127.0.0.1:8200/health
+curl http://127.0.0.1:8000/health
 ```
 
 기대 응답:
@@ -57,7 +57,7 @@ curl http://127.0.0.1:8200/health
 Frontend가 응답하는지 확인합니다.
 
 ```bash
-curl -I http://127.0.0.1:8503
+curl -I http://127.0.0.1:8501
 ```
 
 ## 6. 브라우저 확인
@@ -65,16 +65,16 @@ curl -I http://127.0.0.1:8503
 로컬 브라우저에서 다음 주소를 엽니다.
 
 ```text
-http://<EC2_PUBLIC_IPV4>:8503
+http://<EC2_PUBLIC_IPV4>:8501
 ```
 
 화면에서 메모 저장과 Multi-LLM 여행 Chat 응답을 확인합니다.
 
-Backend 주소 8200은 Security Group에 공개하지 않았으므로 다음 주소는 외부
+Backend 주소 8000은 Security Group에 공개하지 않았으므로 다음 주소는 외부
 브라우저에서 접근되지 않아야 합니다.
 
 ```text
-http://<EC2_PUBLIC_IPV4>:8200
+http://<EC2_PUBLIC_IPV4>:8000
 ```
 
 ## 7. 로그 확인

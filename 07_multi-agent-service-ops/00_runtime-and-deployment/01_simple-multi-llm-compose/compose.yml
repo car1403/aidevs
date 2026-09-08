@@ -41,7 +41,7 @@ services:
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2}
     ports:
-      - "8200:8200"
+      - "8000:8000"
     depends_on:
       redis:
         condition: service_healthy
@@ -52,7 +52,7 @@ services:
         - CMD
         - python
         - -c
-        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8200/health/live')"
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live')"
       interval: 5s
       timeout: 3s
       retries: 10
@@ -60,9 +60,9 @@ services:
   frontend:
     build: ./frontend
     environment:
-      BACKEND_URL: http://backend:8200
+      BACKEND_URL: http://backend:8000
     ports:
-      - "8503:8501"
+      - "8501:8501"
     depends_on:
       backend:
         condition: service_healthy

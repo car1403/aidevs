@@ -51,13 +51,13 @@ C:\Users\<사용자>\.ssh\multi-agent-course.pem
 | Type | Port | Source | 목적 |
 | --- | ---: | --- | --- |
 | SSH | 22 | My IP | 관리자 접속 |
-| Custom TCP | 8503 | My IP | Streamlit 화면 |
+| Custom TCP | 8501 | My IP | Streamlit 화면 |
 
 다음 Rule은 만들지 않습니다.
 
 ```text
 22    0.0.0.0/0
-8200  0.0.0.0/0
+8000  0.0.0.0/0
 ```
 
 IP가 변경되어 SSH 접속이 안 되면 SSH Rule의 Source를 현재 `My IP`로
@@ -83,8 +83,8 @@ Root Volume ID: __________________
 [ ] Status check가 통과
 [ ] Public IPv4가 있음
 [ ] SSH Source가 My IP
-[ ] 8503 Source가 My IP
-[ ] 8200 Inbound Rule이 없음
+[ ] 8501 Source가 My IP
+[ ] 8000 Inbound Rule이 없음
 ```
 
 ## 공식 문서

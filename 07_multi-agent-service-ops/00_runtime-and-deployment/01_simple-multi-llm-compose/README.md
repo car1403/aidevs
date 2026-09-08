@@ -27,17 +27,18 @@ Redis의 `PONG`과 PostgreSQL의 `accepting connections`를 확인한 뒤 애플
 ```powershell
 docker compose up --build -d backend frontend
 docker compose ps
-Invoke-RestMethod http://127.0.0.1:8200/health/live
-Invoke-RestMethod http://127.0.0.1:8200/health
+Invoke-RestMethod http://127.0.0.1:8000/health/live
+Invoke-RestMethod http://127.0.0.1:8000/health
+Invoke-RestMethod http://127.0.0.1:8000/health/ready
 ```
 
-`/health/live`는 Backend Process 자체를, `/health`는 Redis·PostgreSQL·LLM 설정을
-포함한 의존성을 확인합니다. Process가 실행 중이어도 의존성 Health는 실패할 수
-있습니다.
+`/health/live`는 Backend Process 자체를 확인합니다. `/health`는 의존성 상태를 관찰하고,
+`/health/ready`는 Redis·PostgreSQL이 준비되지 않으면 HTTP 503을 반환합니다. Container
+재시작에는 Liveness를, 신규 트래픽 허용에는 Readiness를 사용합니다.
 
-- Streamlit: `http://127.0.0.1:8503`
-- FastAPI: `http://127.0.0.1:8200/docs`
-- Health: `http://127.0.0.1:8200/health`
+- Streamlit: `http://127.0.0.1:8501`
+- FastAPI: `http://127.0.0.1:8000/docs`
+- Health: `http://127.0.0.1:8000/health`
 
 `.env`에는 사용할 실제 Provider 하나 이상을 설정합니다. OpenAI나 Gemini를 사용할 때는 위 명령만 실행합니다.
 

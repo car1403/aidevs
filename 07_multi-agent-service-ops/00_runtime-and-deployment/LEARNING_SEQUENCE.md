@@ -16,16 +16,14 @@
 08
 └─ FastAPI·Worker·Redis·PostgreSQL 기반 서비스
 
-08 이후
-├─ Dockerfile과 Docker Compose
-└─ GitHub Actions CI
+08
+└─ FastAPI·Queue Worker·Redis·PostgreSQL 기반 Observable Service
 
 09
-└─ 실제 Provider·HTTP MCP·평가 통합
-
-09 이후
-├─ AWS EC2 수동 배포
-└─ GitHub Actions AWS 자동 배포 선택
+├─ Dockerfile과 Docker Compose
+├─ Health·Restart·Retry·Fallback
+├─ GitHub Actions CI/CD
+└─ AWS 배포·관측·Rollback
 
 마지막
 └─ AWS 리소스 정리
@@ -70,9 +68,9 @@ Single Agent와 Multi-Agent 구분
 
 이 단계에서는 하나의 Process에서 실행되는 작은 Python 예제를 우선 사용합니다.
 
-## 3. 08 이후: Docker Compose
+## 3. 09 시작: Docker Compose
 
-08에서 다음 서비스 구조가 만들어진 후 Docker Compose를 진행합니다.
+08에서 다음 서비스 구조를 완성한 뒤 09에서 Docker Compose를 진행합니다.
 
 ```text
 Streamlit Frontend
@@ -86,14 +84,14 @@ Streamlit Frontend
 
 ### 학습 순서
 
-1. Backend Dockerfile 작성
-2. Worker Dockerfile 작성
-3. Frontend Dockerfile 작성
-4. Redis와 PostgreSQL Service 추가
-5. `compose.yml`에서 Service 연결
-6. 환경 변수와 Container Service 이름 사용
-7. Health Check 확인
-8. 전체 Image Build와 실행
+1. API·Worker·Frontend의 Process 책임 확인
+2. 하나의 Application Image 작성
+3. 같은 Image에 서로 다른 실행 명령 적용
+4. 기존 공용 Redis·PostgreSQL 연결
+5. 환경 변수와 Container Service 이름 사용
+6. Liveness와 Readiness 확인
+7. 전체 Image Build와 실행
+8. Worker 중단·재시작·수동 확장 관찰
 
 ```powershell
 docker compose config
@@ -109,7 +107,7 @@ docker compose ps
 - Task가 `waiting_approval`까지 진행된다.
 - Trace를 조회할 수 있다.
 
-## 4. Compose 성공 후: GitHub Actions CI
+## 4. 09 중반: GitHub Actions CI와 Release Gate
 
 로컬 Docker Compose가 정상 동작한 다음 CI를 구성합니다.
 
@@ -131,36 +129,36 @@ Git Push
 
 이 단계에서는 AWS 배포를 연결하지 않습니다. CI는 배포 가능한 상태인지 자동으로 확인하는 역할에 집중합니다.
 
-## 5. 09: 실제 Provider와 MCP 통합
+## 5. 09: 통합 배포와 운영
 
-09에서는 08의 서비스 구조에 실제 Provider와 Streamable HTTP MCP Server를 연결합니다.
+09에서는 08의 실제 Provider 기반 Observable Service를 배포 가능한 운영 구조로 확장합니다.
 
 ```text
-Frontend
-→ Backend
-→ Redis Queue
-→ Integrated Worker
-→ Supervisor와 Specialist Agents
-→ HTTP MCP Weather Tool
-→ Handoff
-→ Scenario 평가
-→ 승인 대기
+Frontend → Backend → Redis Queue → Queue Worker
+                                  → 미리 구현된 Agent Workflow
+                                  → PostgreSQL 실행 이력
+
+GitHub Actions → Release Gate → Image Registry → AWS Service
+                                                → Health·Log·Alarm
+                                                → Scale·Rollback
 ```
 
-AWS로 이동하기 전에 Local 환경에서 이 전체 흐름을 먼저 확인합니다.
+Queue Worker는 Agent가 아니라 Redis에서 `run_id`를 가져와 전체 Workflow를 실행하는
+별도 Process입니다. Local Compose에서 이 구조를 확인한 뒤 AWS로 이동합니다.
 
 ### 완료 기준
 
-- 실제 Provider가 구조화된 결과를 반환한다.
-- Supervisor가 필요한 Agent를 선택한다.
-- Weather Agent가 HTTP MCP Tool을 사용한다.
-- Agent 결과가 Handoff를 통해 Itinerary Agent에 전달된다.
-- Scenario 평가 결과와 Trace가 저장된다.
-- 실패한 Provider 또는 Agent가 성공으로 표시되지 않는다.
+- API와 Worker가 독립 Process로 실행된다.
+- Worker가 Queue의 실행 요청을 처리한다.
+- Redis 현재 상태와 PostgreSQL 영구 이력이 구분된다.
+- Liveness와 Readiness를 각각 확인한다.
+- Release Gate 실패 시 배포가 중단된다.
+- 실패가 성공으로 표시되지 않고 Trace에 남는다.
 
-## 6. 09 이후: AWS EC2 수동 배포
+## 6. 09 후반: AWS 수동 배포
 
-첫 AWS 배포는 GitHub Actions로 자동화하지 않고 수동으로 진행합니다.
+첫 AWS 배포는 GitHub Actions로 자동화하기 전에 수동으로 흐름을 확인합니다. 초보
+실습은 EC2와 Compose로 시작하고, 운영형 대응 관계는 ECR·ECS·RDS·ElastiCache로 확장합니다.
 
 ```text
 EC2 생성
@@ -191,7 +189,7 @@ EC2 생성
 - Redis·PostgreSQL을 불필요하게 외부에 공개하지 않는다.
 - 재시작 후 서비스 상태를 확인할 수 있다.
 
-## 7. 선택: GitHub Actions AWS 자동 배포
+## 7. 선택 확장: GitHub Actions AWS 자동 배포
 
 수동 배포가 성공한 뒤에만 자동 배포를 연결합니다.
 

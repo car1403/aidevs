@@ -1,6 +1,8 @@
 # 00 Runtime and Deployment
 
-Multi AI Agent와 Orchestration을 배우기 전, 아주 작은 **Multi-LLM 여행 준비 Chat** 하나를 로컬 Docker와 AWS에서 실행합니다. 이 00 과정은 수업 시작 전, 03 이후 또는 마지막 배포 시점에 진행할 수 있습니다.
+Multi AI Agent와 Orchestration을 배우기 전 실행 환경을 준비하고, 09에서 사용할 배포
+개념을 미리 찾아볼 수 있는 안내서입니다. 첫날에는 Redis·PostgreSQL·Ollama만 준비하고
+Docker Image·AWS·CI/CD는 서비스 구조를 이해한 뒤 09에서 진행합니다.
 
 Multi AI Agent는 넣지 않습니다. 이번 목표는 Browser·Backend·실제 LLM·Redis·PostgreSQL이 어디에서 실행되고 어떻게 연결되는지 이해하는 것입니다.
 
@@ -12,8 +14,8 @@ Multi AI Agent는 넣지 않습니다. 이번 목표는 Browser·Backend·실제
 | 시점 | 필수 범위 | 완료 기준 |
 | --- | --- | --- |
 | 과정 시작 전 | Windows·Docker 확인, `00_local-services` | Redis·PostgreSQL이 `healthy` |
-| 08 시작 전 | `01_simple-multi-llm-compose`, CI | Browser→Backend→저장소 연결 확인 |
-| 09 완료 후 | EC2 수동 배포, 장애 실습, 정리 | Health 확인과 AWS 리소스 정리 완료 |
+| 08 시작 전 | `01_simple-multi-llm-compose` 선택 복습 | Browser→Backend→저장소 연결 확인 |
+| 09 진행 중 | Docker·CI·AWS·장애 실습 | Health·배포·복구와 리소스 정리 완료 |
 
 AWS 계정이 없어도 01~09의 로컬 학습은 가능합니다. Ollama도 선택 사항이며 OpenAI나
 Gemini 중 하나를 사용할 수 있으면 로컬 Model을 내려받지 않아도 됩니다.
@@ -44,10 +46,11 @@ LLM 요청 실패 → Provider Key·Model·Ollama 상태
 | ---: | --- | --- |
 | 00 | `00_local-services` | Redis·PostgreSQL·Ollama 로컬 준비 |
 | 01 | `01_simple-multi-llm-compose` | OpenAI·Gemini·Ollama 선택형 Chat과 네 Container |
-| 02 | `02_github-actions-ci` | 테스트·Compose 검사·Image Build |
-| 03 | `03_aws-ec2` | EC2 한 대에 같은 Compose 수동 배포 |
-| 04 | `04_github-actions-aws-deploy` | 수동 배포를 이해한 뒤 선택 자동 배포 |
+| 02 | `02_github-actions-ci` | 09 CI/CD를 위한 사전 참고 자료 |
+| 03 | `03_aws-ec2` | 09 AWS 배포의 기초가 되는 EC2 수동 실습 |
+| 04 | `04_github-actions-aws-deploy` | 09 이후 선택 가능한 EC2 자동 배포 |
 | 05 | `05_local-or-managed-cloud.md` | 로컬·AWS·관리형 Cloud 경로 비교 |
+| 06 | `06_to-integrated-operations.md` | 00 Runtime에서 09 통합 운영으로 연결 |
 
 ## 공통 구조
 
@@ -66,8 +69,8 @@ Provider 오류를 Mock 성공으로 숨기지 않습니다. 최소 한 개의 �
 
 | 환경 | 목적 | Redis·PostgreSQL | Ollama |
 | --- | --- | --- | --- |
-| `00_local-services` | 이후 01~09 Python·Multi AI Agent 개발 공용 | Host `6380`·`5434` | Host `11435` |
-| `01_simple-multi-llm-compose` | Compose·CI·AWS를 배우는 독립 서비스 | Compose 내부 `6379`·`5432` | 선택 Profile 내부 `11434` |
+| `00_local-services` | 01~09와 Mini Project 개발 공용 | Host `6379`·`5433` | Host `11434` |
+| `01_simple-multi-llm-compose` | Container 연결을 복습하는 독립 서비스 | Compose 내부 `6379`·`5432` | 선택 Profile 내부 `11434` |
 
 두 환경을 동시에 실행할 필요가 없습니다. 00 공용 환경은 과정 개발용이고, 01은 배포할 애플리케이션과 의존성을 하나의 Compose로 묶는 실습입니다.
 
@@ -80,4 +83,5 @@ Provider 오류를 Mock 성공으로 숨기지 않습니다. 최소 한 개의 �
 
 ## 다음 단계
 
-00은 실행 기반을 준비합니다. 01부터 `Multi AI Agent`의 역할 분리와 `Orchestration`을 학습합니다.
+00은 실행 기반을 준비합니다. 01부터 역할 분리와 Orchestration을 학습하고, 08에서
+관측 가능한 서비스를 만든 뒤 09에서 Docker·AWS·CI/CD·Auto Healing을 통합합니다.

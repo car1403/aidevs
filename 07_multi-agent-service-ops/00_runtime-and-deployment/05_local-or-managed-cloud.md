@@ -14,6 +14,18 @@
 | `.env` | 각 플랫폼의 Secret·환경 변수 설정 |
 | EC2와 Compose 직접 운영 | 플랫폼이 Runtime과 배포 일부 관리 |
 
+09에서 다루는 AWS 운영형 경로는 다음과 대응합니다.
+
+| Local Compose | AWS 운영형 구성 |
+| --- | --- |
+| Application Image | ECR |
+| FastAPI API | ECS Service + ALB |
+| Queue Worker | 별도 ECS Service |
+| PostgreSQL | RDS PostgreSQL |
+| Redis | ElastiCache for Redis |
+| `.env` Secret | Secrets Manager |
+| 구조화 Log | CloudWatch Logs |
+
 Supabase는 각 Project에 PostgreSQL Database를 제공하고, Upstash는 Redis 호환
 Database 접속 정보를 제공합니다. 애플리케이션의 Repository 계약을 유지하면 URL과
 TLS 설정을 바꾸는 방식으로 이전할 수 있습니다.

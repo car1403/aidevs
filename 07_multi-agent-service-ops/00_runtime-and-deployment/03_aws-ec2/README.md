@@ -15,9 +15,13 @@ EC2 한 대
 사용하는 AWS 리소스는 EC2, Root EBS, Security Group, Key Pair뿐입니다. ECS, ECR,
 RDS, ElastiCache, Load Balancer, 자동 배포는 사용하지 않습니다.
 
+이 EC2 실습은 Container와 Network를 직접 확인하기 위한 초보자용 첫 단계입니다. 완료 후
+09에서는 같은 책임을 ECR·ECS·RDS·ElastiCache·CloudWatch에 대응시키며, EC2 Compose를
+유일한 운영 정답으로 설명하지 않습니다.
+
 초보자 기본 배포는 OpenAI 또는 Gemini를 사용합니다. Ollama Profile은 Model Disk와 Memory가 추가로 필요하므로 EC2 Instance 사양과 비용을 별도로 검토하는 선택 실습입니다. 작은 실습 Instance에서 Ollama를 기본으로 실행하지 않습니다.
 
-Backend·Redis·PostgreSQL 포트는 인터넷에 공개하지 않습니다. Browser는 8503의
+Backend·Redis·PostgreSQL 포트는 인터넷에 공개하지 않습니다. Browser는 8501의
 Frontend만 접근합니다. LLM API Key는 EC2의 `.env`에만 저장하며 Git에 올리지 않습니다.
 
 ## 진행 순서

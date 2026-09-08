@@ -3,12 +3,12 @@
 ## 학습 아키텍처
 
 ```text
-Internet → TCP 8503 → EC2 Security Group
+Internet → TCP 8501 → EC2 Security Group
                          │
                          ▼
 EC2 Amazon Linux 2023
-├─ frontend :8501 → Host :8503
-├─ backend  :8200 → 선택한 실제 LLM API HTTPS
+├─ frontend :8501 → Host :8501
+├─ backend  :8000 → 선택한 실제 LLM API HTTPS
 ├─ redis    :6379, 외부 비공개
 └─ database :5432, 외부 비공개
               └─ postgres_data Volume
@@ -23,7 +23,7 @@ EC2 Amazon Linux 2023
 | --- | --- | --- |
 | EC2 | 네 Container 실행 | Terminate |
 | Root EBS | OS·Image·Docker Volume | Delete on termination 확인 |
-| Security Group | 22·8503 접근 제어 | 다른 곳에서 미사용 시 삭제 |
+| Security Group | 22·8501 접근 제어 | 다른 곳에서 미사용 시 삭제 |
 | Key Pair | SSH 접속 | 교육 정책에 따라 보관·삭제 |
 
 무료 사용 가능 여부와 비용은 계정·Region·시점에 따라 달라질 수 있으므로 AWS Console의

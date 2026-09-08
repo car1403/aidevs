@@ -2,15 +2,17 @@
 
 ## 역할
 
-이 Compose는 이후 01~09 과정의 독립 Python 예제와 Multi AI Agent Service 개발에 공통으로 사용하는 저장소·Ollama 환경입니다. `01_simple-multi-llm-compose`를 실행할 때는 그 폴더가 자체 Redis·PostgreSQL과 선택 Ollama를 제공하므로 이 공용 환경을 함께 실행할 필요가 없습니다.
+이 Compose는 이후 01~09 과정과 Mini Project에서 공통으로 사용하는 PostgreSQL·Redis·
+Ollama 환경입니다. 과정마다 저장소 Container를 새로 만들지 않고 Schema와 Redis Key
+Prefix를 분리합니다.
 
 | 서비스 | 주소 | 용도 |
 | --- | --- | --- |
-| Ollama | `http://127.0.0.1:11435` | 로컬 Llama·Gemma |
-| PostgreSQL | `127.0.0.1:5434` | Task·Trace 이력 |
-| Redis | `127.0.0.1:6380` | Queue·상태·TTL |
+| Ollama | `http://127.0.0.1:11434` | 로컬 Llama·Gemma |
+| PostgreSQL | `127.0.0.1:5433` | Task·Trace·평가 이력 |
+| Redis | `127.0.0.1:6379` | Queue·진행 상태·TTL |
 
-05 과정과 동시에 실행해도 포트가 충돌하지 않도록 별도 호스트 포트를 사용합니다.
+이 주소는 01~09와 Mini Project의 `.env.example`에서 사용하는 과정 공통 기준입니다.
 
 ## 1. 실행 위치 확인
 
@@ -34,6 +36,11 @@ docker compose config --quiet
 `docker compose config --quiet`가 메시지 없이 끝나면 YAML과 환경 변수 해석에 성공한
 것입니다. 오류가 나타나면 `up` 전에 누락 변수와 들여쓰기를 수정합니다.
 
+이전 설정인 `postgres/postgres/multi_agent`로 이미 Volume을 만든 경우 `.env`만 바꿔도
+기존 PostgreSQL 사용자와 Database는 자동으로 변경되지 않습니다. 학습 데이터가 필요하면
+먼저 Backup하고, 초기화가 가능한 새 실습 환경에서만 Volume을 제거한 뒤 다시 생성합니다.
+기존 Volume을 확인하지 않고 `down -v`를 실행하지 않습니다.
+
 ## 3. 저장소부터 실행
 
 ```powershell
@@ -53,13 +60,13 @@ docker compose logs --tail=100 postgres
 
 ```powershell
 docker compose exec redis redis-cli ping
-docker compose exec postgres pg_isready -U postgres -d multi_agent
+docker compose exec postgres pg_isready -U agent_user -d agent_db
 ```
 
 Redis는 `PONG`, PostgreSQL은 `accepting connections`를 반환해야 합니다.
 
 ```text
-Host Python → 127.0.0.1:6380, 127.0.0.1:5434
+Host Python → 127.0.0.1:6379, 127.0.0.1:5433
 Compose Service → redis:6379, postgres:5432
 ```
 
@@ -76,7 +83,8 @@ docker compose exec ollama ollama list
 
 OpenAI 또는 Gemini만 사용한다면 Ollama를 실행하거나 Model을 받을 필요가 없습니다.
 
-컨테이너 내부 서비스끼리는 기본 포트 `11434`, `5432`, `6379`로 연결합니다.
+Host Python은 Ollama `127.0.0.1:11434`를 사용하고, Compose 내부 서비스는
+`ollama:11434`, `postgres:5432`, `redis:6379`로 연결합니다.
 
 ## 6. 종료와 다시 시작
 
