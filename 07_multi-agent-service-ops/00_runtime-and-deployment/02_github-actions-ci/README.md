@@ -47,12 +47,20 @@ CI는 변경한 코드가 합쳐질 수 있는 상태인지 자동 검사합니�
 
 ```powershell
 cd C:\aidevs\07_multi-agent-service-ops\00_runtime-and-deployment\01_simple-multi-llm-compose
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
 python -m pip install -r backend\requirements.txt
 python -m pip install pytest
 python -m pytest backend\test_app.py -q
 docker compose config --quiet
 docker compose build
 ```
+
+`.venv`는 이 실습의 Python 패키지를 다른 프로젝트와 분리하는 가상 환경입니다. `pytest`와
+Backend 패키지는 가상 환경에 설치합니다. 반면 `docker compose`는 Docker Desktop의 Docker
+Daemon에 명령을 보내므로 가상 환경에 설치되는 프로그램이 아닙니다. 가상 환경을 활성화한
+터미널에서 그대로 실행해도 되고, `deactivate`한 뒤 실행해도 결과는 같습니다.
 
 위 명령을 모두 통과시킨 뒤 Push합니다. 로컬에서 실패하는 Test를 CI가 고쳐주지는
 않습니다.
