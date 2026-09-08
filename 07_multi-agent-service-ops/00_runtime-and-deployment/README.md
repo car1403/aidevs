@@ -49,7 +49,8 @@ LLM 요청 실패 → Provider Key·Model·Ollama 상태
 | 02 | `02_github-actions-ci` | 09 CI/CD를 위한 사전 참고 자료 |
 | 03 | `03_aws-ec2` | 09 AWS 배포의 기초가 되는 EC2 수동 실습 |
 | 04 | `04_github-actions-aws-deploy` | 09 이후 선택 가능한 EC2 자동 배포 |
-| 05 | `05_local-or-managed-cloud.md` | 로컬·AWS·관리형 Cloud 경로 비교 |
+| 05 | `05_weather-mcp-deployment-project` | 실제 Weather MCP를 포함한 최소 CI/CD·AWS 배포 프로젝트 |
+| 참고 | `05_local-or-managed-cloud.md` | 로컬·AWS·관리형 Cloud 경로 비교 |
 | 06 | `06_to-integrated-operations.md` | 00 Runtime에서 09 통합 운영으로 연결 |
 
 ## 공통 구조

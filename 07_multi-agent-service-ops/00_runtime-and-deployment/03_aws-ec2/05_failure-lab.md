@@ -1,45 +1,46 @@
 # 05 장애 실습
 
-한 번에 한 Container만 중단하고 `docker compose ps`와 로그로 영향 범위를 확인합니다.
+한 번에 한 Container만 중단하고 `docker compose -f compose.full-stack.yml ps`와 로그로
+영향 범위를 확인합니다.
 
 ## Backend 중단
 
 ```bash
-docker compose stop backend
-docker compose ps
+docker compose -f compose.full-stack.yml stop backend
+docker compose -f compose.full-stack.yml ps
 ```
 
 Frontend는 열릴 수 있지만 Health·메모·Chat API는 연결 실패해야 합니다. 복구합니다.
 
 ```bash
-docker compose start backend
-curl http://127.0.0.1:8000/health
+docker compose -f compose.full-stack.yml start backend
+curl --fail http://127.0.0.1:8000/health/ready
 ```
 
 ## Redis 중단
 
 ```bash
-docker compose stop redis
+docker compose -f compose.full-stack.yml stop redis
 ```
 
 Redis 통계와 현재 Session 오류를 확인합니다. PostgreSQL Container와 기존 영구 이력은
 별도로 남아 있는지 비교한 뒤 복구합니다.
 
 ```bash
-docker compose start redis
+docker compose -f compose.full-stack.yml start redis
 ```
 
 ## PostgreSQL 중단
 
 ```bash
-docker compose stop database
+docker compose -f compose.full-stack.yml stop database
 ```
 
 메모와 Chat 영구 이력 오류를 확인합니다. 복구 후 Volume의 기존 메모가 남았는지
 확인합니다.
 
 ```bash
-docker compose start database
+docker compose -f compose.full-stack.yml start database
 ```
 
 ## 서비스 주소 실수
@@ -50,10 +51,10 @@ Frontend Container의 올바른 Backend 주소는 `http://backend:8000`입니다
 ## 로그
 
 ```bash
-docker compose logs --tail=100 frontend
-docker compose logs --tail=100 backend
-docker compose logs --tail=100 redis
-docker compose logs --tail=100 database
+docker compose -f compose.full-stack.yml logs --tail=100 frontend
+docker compose -f compose.full-stack.yml logs --tail=100 backend
+docker compose -f compose.full-stack.yml logs --tail=100 redis
+docker compose -f compose.full-stack.yml logs --tail=100 database
 ```
 
 ```text

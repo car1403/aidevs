@@ -7,12 +7,12 @@ pwd
 ls
 ```
 
-현재 폴더에 `backend`, `frontend`, `database`, `compose.yml`, `.env`가 있어야 합니다.
+현재 폴더에 `backend`, `frontend`, `database`, `compose.full-stack.yml`, `.env`가 있어야 합니다.
 
 ## 2. Compose 검사
 
 ```bash
-docker compose config
+docker compose -f compose.full-stack.yml config --quiet
 ```
 
 오류가 있으면 Build 전에 경로와 YAML을 수정합니다.
@@ -20,7 +20,7 @@ docker compose config
 ## 3. Image Build와 백그라운드 실행
 
 ```bash
-docker compose up --build -d
+docker compose -f compose.full-stack.yml up --build -d
 ```
 
 `-d`는 SSH 터미널을 계속 점유하지 않고 백그라운드로 실행합니다.
@@ -28,7 +28,7 @@ docker compose up --build -d
 ## 4. Container 상태
 
 ```bash
-docker compose ps
+docker compose -f compose.full-stack.yml ps
 ```
 
 기대 서비스:
@@ -45,13 +45,13 @@ Backend는 Health Check를 통과해야 하고 Frontend는 실행 상태여야 �
 ## 5. EC2 내부 Health 확인
 
 ```bash
-curl http://127.0.0.1:8000/health
+curl --fail http://127.0.0.1:8000/health/ready
 ```
 
 기대 응답:
 
 ```json
-{"status":"ok","checks":{"backend":true,"redis":true,"database":true,"gemini_configured":true}}
+{"status":"ok","checks":{"backend":true,"redis":true,"database":true,"database_schema":true,"providers":{...}}}
 ```
 
 Frontend가 응답하는지 확인합니다.
@@ -82,26 +82,26 @@ http://<EC2_PUBLIC_IPV4>:8000
 전체 로그:
 
 ```bash
-docker compose logs
+docker compose -f compose.full-stack.yml logs
 ```
 
 최근 Backend 로그:
 
 ```bash
-docker compose logs --tail=50 backend
+docker compose -f compose.full-stack.yml logs --tail=50 backend
 ```
 
 최근 Frontend 로그:
 
 ```bash
-docker compose logs --tail=50 frontend
+docker compose -f compose.full-stack.yml logs --tail=50 frontend
 ```
 
 Redis와 PostgreSQL 로그:
 
 ```bash
-docker compose logs --tail=50 redis
-docker compose logs --tail=50 database
+docker compose -f compose.full-stack.yml logs --tail=50 redis
+docker compose -f compose.full-stack.yml logs --tail=50 database
 ```
 
 실시간 로그를 중단할 때는 Container를 중단하지 말고 `Ctrl+C`로 로그 보기만
@@ -116,7 +116,7 @@ EC2를 중지·시작하면 Public IPv4가 바뀔 수 있습니다. Elastic IP�
 
 ```bash
 cd ~/simple-compose
-docker compose up -d
+docker compose -f compose.full-stack.yml up -d
 ```
 
 

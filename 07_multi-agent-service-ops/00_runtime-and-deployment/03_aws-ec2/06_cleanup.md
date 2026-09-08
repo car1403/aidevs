@@ -6,8 +6,8 @@
 
 ```bash
 cd ~/simple-compose
-docker compose down
-docker compose ps
+docker compose -f compose.full-stack.yml down
+docker compose -f compose.full-stack.yml ps
 ```
 
 `postgres_data` Volume에는 실습 메모와 Chat 이력이 남아 있습니다. EC2 Terminate 전에
@@ -28,7 +28,7 @@ docker images
 
 - Frontend 정상 화면
 - Backend Health 결과
-- `docker compose ps`
+- `docker compose -f compose.full-stack.yml ps`
 - 장애 전후 로그 일부
 - 배운 점
 

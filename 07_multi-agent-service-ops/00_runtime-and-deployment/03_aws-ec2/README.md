@@ -24,6 +24,11 @@ RDS, ElastiCache, Load Balancer, 자동 배포는 사용하지 않습니다.
 Backend·Redis·PostgreSQL 포트는 인터넷에 공개하지 않습니다. Browser는 8501의
 Frontend만 접근합니다. LLM API Key는 EC2의 `.env`에만 저장하며 Git에 올리지 않습니다.
 
+EC2는 새 서버이므로 로컬 수업 PC처럼 공용 PostgreSQL·Redis·Ollama Container가 이미
+실행되어 있지 않습니다. 따라서 이 단원에서는 `compose.yml`이 아니라
+`compose.full-stack.yml`로 Frontend·Backend·Redis·PostgreSQL을 함께 실행합니다.
+Ollama는 기본 실행에서 제외하고 OpenAI 또는 Gemini API를 사용합니다.
+
 ## 진행 순서
 
 1. [아키텍처와 비용 범위](./01_architecture-and-cost.md)

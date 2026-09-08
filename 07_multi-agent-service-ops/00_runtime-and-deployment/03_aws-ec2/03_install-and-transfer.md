@@ -96,6 +96,7 @@ backend
 frontend
 database
 compose.yml
+compose.full-stack.yml
 README.md
 ```
 
@@ -119,6 +120,10 @@ OLLAMA_MODEL=llama3.2
 ```
 
 `.env`를 Git에 추가하거나 `cat .env` 결과를 화면 공유하지 않습니다.
+
+이 EC2 실습은 새 서버에서 Redis와 PostgreSQL도 함께 만들므로 이후 명령은
+`compose.full-stack.yml`을 사용합니다. `compose.yml`은 기존 공용 Container가 있는 수업
+PC 전용 파일입니다.
 
 ## 공식 문서
 

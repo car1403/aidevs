@@ -43,6 +43,71 @@ CI는 변경한 코드가 합쳐질 수 있는 상태인지 자동 검사합니�
 각 Step은 로컬에서 실행한 `pytest`, `docker compose config`, `docker compose build`를
 깨끗한 Runner에서 다시 실행하는 과정입니다.
 
+### Runner, Job, Step을 구분하세요
+
+GitHub Actions는 Push한 개발자 PC나 수강생 PC에서 직접 실행되지 않습니다. GitHub가 준비한
+새 Linux 가상 머신인 **Runner**에서 실행됩니다. 그래서 내 PC의 `.env`, 실행 중인 Docker
+Container, Ollama Model은 CI에 전달되지 않습니다.
+
+```text
+GitHub 이벤트(Push 또는 Pull Request)
+→ GitHub Runner(ubuntu-latest)를 새로 준비
+→ Job: test-and-build 시작
+→ Step: Checkout → Python 설정 → 패키지 설치 → Test → Compose 검사 → Image Build
+→ 모든 Step 성공: CI 성공 / 하나라도 실패: CI 실패
+```
+
+| YAML 항목 | 이 실습의 값 | 의미 |
+| --- | --- | --- |
+| `runs-on` | `ubuntu-latest` | 매 실행마다 준비되는 Linux Runner |
+| `working-directory` | `01_simple-multi-llm-compose` | 이후 `run` 명령이 실행되는 기준 폴더 |
+| `uses: actions/checkout@v4` | Checkout Step | 현재 Commit의 소스 코드를 Runner에 내려받음 |
+| `uses: actions/setup-python@v5` | Python Step | Python 3.12 설치·선택 |
+| `run` | Test·Compose·Build Step | Runner 터미널에서 실제 명령 실행 |
+
+`test-and-build` Job의 Step은 위에서 아래 순서대로 실행됩니다. 예를 들어 Backend Test가
+실패하면 Compose 검사와 Image Build는 실행되지 않습니다. 따라서 실패 화면에서는 첫 번째
+빨간 Step부터 해결합니다.
+
+### 이 CI가 확인하는 범위와 확인하지 않는 범위
+
+| 항목 | CI에서 하는 일 | CI에서 하지 않는 일 |
+| --- | --- | --- |
+| Backend Test | Fake Client로 API 계약·입력 검증·예외 처리를 확인 | OpenAI·Gemini·Ollama에 실제 요청을 보내지 않음 |
+| Compose | `docker compose config --quiet`로 YAML·환경 변수 참조 확인 | `docker compose up`으로 DB·Redis를 실제 실행하지 않음 |
+| Docker Image | Dockerfile Build 성공 여부 확인 | Registry에 `push`하거나 수업 서버를 변경하지 않음 |
+
+즉 이 단원의 CI는 “코드와 배포 설정이 기본적으로 깨지지 않았는지” 빠르게 확인하는
+단계입니다. 실제 PostgreSQL·Redis·Ollama까지 연결한 화면 테스트는 수강생 로컬 환경 또는
+별도의 통합 테스트 환경에서 `docker compose up`으로 확인합니다.
+
+## 언제 CI가 실행되는가?
+
+`07-runtime-ci.yml`의 `on:`은 Workflow를 시작하는 이벤트(Trigger)를 정의합니다. 이
+Workflow는 `main`뿐 아니라 개발자 개인 브랜치에 Push할 때도 실행됩니다. 단,
+`07_multi-agent-service-ops/00_runtime-and-deployment/**` 또는 Workflow 파일 자체가
+변경된 경우에만 `paths:` 조건을 통과합니다.
+
+| 설정 | 실행 시점 | 실행되지 않는 경우 |
+| --- | --- | --- |
+| `push` | 개인 브랜치·`main`에 Commit을 `git push`할 때 | 지정한 경로와 관계없는 파일만 변경한 Push |
+| `pull_request` | 개인 브랜치에서 `main` 등 대상 브랜치로 Pull Request를 생성하거나, Pull Request에 새 Commit을 Push할 때 | 수강생 PC에서 단순히 `git pull`할 때 |
+| `workflow_dispatch` | GitHub Actions 화면에서 **Run workflow**를 눌러 수동 실행할 때 | 버튼을 누르지 않은 경우 |
+
+여기서 `pull_request`는 GitHub의 **병합 요청**입니다. 로컬 PC에서 원격 변경을 내려받는
+`git pull` 명령과는 다른 개념이며, `git pull`만으로 GitHub Actions가 실행되지는 않습니다.
+
+협업 흐름은 보통 다음과 같습니다.
+
+```text
+개발자 개인 브랜치에 Push
+→ CI 실행
+→ Pull Request 생성 또는 갱신
+→ CI 재실행
+→ 통과한 변경을 main에 병합
+→ 이후 CD가 배포 환경에 반영
+```
+
 ## 로컬 확인
 
 ```powershell
