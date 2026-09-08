@@ -36,26 +36,47 @@ WORKER_AGENTS = {
 }
 
 
+def select_next_worker_agent(results: dict[str, object]) -> str:
+    """현재 State를 보고 다음 Worker 또는 종료를 선택합니다.
+
+    입문 단계에서는 선택 규칙을 Python으로 명시합니다. 03 단원에서는 같은 결정을
+    구조화 출력 계약을 가진 실제 LLM Supervisor로 확장합니다.
+    """
+    if "analyst_agent" not in results:
+        return "analyst_agent"
+    if "developer_agent" not in results:
+        return "developer_agent"
+    if "reviewer_agent" not in results:
+        return "reviewer_agent"
+    return "finish"
+
+
 def supervisor_agent(max_steps: int = 5) -> dict[str, object]:
-    plan = ["analyst_agent", "developer_agent", "reviewer_agent"]
     results: dict[str, object] = {}
     trace: list[str] = []
 
-    for step, worker_id in enumerate(plan, start=1):
-        if step > max_steps:
-            return {"status": "failed", "reason": "max_steps", "results": results, "trace": trace}
+    for _ in range(max_steps):
+        worker_id = select_next_worker_agent(results)
+        if worker_id == "finish":
+            trace.append("supervisor:completed")
+            return {"status": "completed", "reason": "all_workers_completed", "results": results, "trace": trace}
+
         trace.append(f"supervisor:selected:{worker_id}")
         results[worker_id] = WORKER_AGENTS[worker_id](results)
         if results[worker_id]["error"]:
             return {"status": "failed", "reason": "worker_failed", "results": results, "trace": trace}
         trace.append(f"worker:completed:{worker_id}")
 
-    trace.append("supervisor:completed")
-    return {"status": "completed", "results": results, "trace": trace}
+    if select_next_worker_agent(results) == "finish":
+        trace.append("supervisor:completed")
+        return {"status": "completed", "reason": "all_workers_completed", "results": results, "trace": trace}
+    return {"status": "failed", "reason": "max_steps", "results": results, "trace": trace}
 
 
 if __name__ == "__main__":
     completed = supervisor_agent(max_steps=3)
     print("정상:", completed)
     print("정상 완료:", completed["status"] == "completed")
-    print("max_steps가 2라면 세 번째 Worker 전에 max_steps로 종료됩니다.")
+    limited = supervisor_agent(max_steps=2)
+    print("최대 단계 제한:", limited)
+    print("max_steps가 2이면 세 번째 Worker 전에 종료:", limited["reason"] == "max_steps")

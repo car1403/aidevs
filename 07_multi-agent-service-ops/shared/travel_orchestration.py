@@ -7,7 +7,14 @@ from pydantic import BaseModel, Field, model_validator
 from shared.travel_contracts import AgentId, SpecialistResult
 
 
-RunStatus = Literal["planned", "running", "waiting_input", "completed", "failed"]
+RunStatus = Literal[
+    "planned",
+    "running",
+    "waiting_input",
+    "completed",
+    "partial_failure",
+    "failed",
+]
 
 
 class PlanStep(BaseModel):

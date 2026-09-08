@@ -99,6 +99,9 @@ ITINERARY_AGENT_PROVIDER=gemma
 
 ## 04~05 Orchestration과 Handoff 실행
 
+01~05 학습 예제와 미니 프로젝트에서 Server를 실행할 때 Backend `8000`, MCP `8010`을
+공통 기본값으로 사용합니다. 같은 포트의 프로젝트는 한 번에 하나만 실행합니다.
+
 ```powershell
 python .\04_orchestration\01_execution_plan.py
 python .\04_orchestration\02_sequential_workflow.py
@@ -112,21 +115,27 @@ python .\04_orchestration\10_optional_langgraph\01_same_plan_graph.py
 python .\05_handoff-and-context\01_minimum_context.py
 python .\05_handoff-and-context\02_handoff_contract.py
 python .\05_handoff-and-context\03_handoff_guard.py
-python .\05_handoff-and-context\04_real_agent_handoff.py
+python .\05_handoff-and-context\04_ownership_transition.py
+python .\05_handoff-and-context\05_rejection_and_failure.py
+python .\05_handoff-and-context\06_real_agent_handoff.py
 ```
 
 04의 `02`, `03`, `04`, `06`, `07`은 실제 LLM을 호출합니다. `01`, `05`는 API Key 없이
-실행 계획과 부분 실패 정책을 확인할 수 있습니다. 현재 05의 `04_real_agent_handoff.py`도
-실제 LLM을 호출합니다. LangGraph는 필수가 아니라 동일한 Orchestration 설계를 Graph로
+실행 계획과 부분 실패 정책을 확인할 수 있습니다. 05의 `06_real_agent_handoff.py`는
+Open-Meteo와 실제 Gemini·Gemma를 호출합니다. LangGraph는 필수가 아니라 동일한 Orchestration 설계를 Graph로
 옮기는 선택 예제입니다.
 
-## 06~07 Safety·Failure·Evaluation·Tracing 실행
+## 06~07 Security·Guardrails·Evaluation·Tracing 실행
 
 ```powershell
-python .\06_multi-agent-safety\01_agent_tool_permissions.py
-python .\06_multi-agent-safety\02_approval_boundary.py
-python .\06_multi-agent-safety\03_idempotent_write.py
-python .\06_multi-agent-safety\04_untrusted_agent_request.py
+python .\06_multi-agent-safety\01_prompt_injection_defense.py
+python .\06_multi-agent-safety\02_input_validation.py
+python .\06_multi-agent-safety\03_policy_response_guard.py
+python .\06_multi-agent-safety\04_agent_tool_permissions.py
+python .\06_multi-agent-safety\05_approval_boundary.py
+python .\06_multi-agent-safety\06_idempotent_write.py
+python .\06_multi-agent-safety\07_role_context_access_control.py
+python .\06_multi-agent-safety\08_integrated_guardrails.py
 
 python .\07_failure-evaluation-and-tracing\01_failure_policy.py
 python .\07_failure-evaluation-and-tracing\02_bounded_retry.py
@@ -135,7 +144,7 @@ python .\07_failure-evaluation-and-tracing\04_structured_trace.py
 python .\07_failure-evaluation-and-tracing\05_scenario_evaluation.py
 ```
 
-이 단계는 권한과 복구 정책을 결정적으로 검증하므로 API Key가 필요하지 않습니다. 실제 Redis 멱등성 상태와 PostgreSQL Trace·평가 이력은 `08_multi-ai-agent-service`에서 연결합니다.
+06은 입력·응답 Policy, 권한, 승인과 멱등성을 결정적으로 검증하므로 API Key가 필요하지 않습니다. 07에서는 평가·Retry·Trace를 학습합니다. 실제 Redis 멱등성 상태와 PostgreSQL Trace·평가 이력은 운영 서비스 단계에서 연결합니다.
 
 ## 08 실제 Multi AI Agent Service 실행
 

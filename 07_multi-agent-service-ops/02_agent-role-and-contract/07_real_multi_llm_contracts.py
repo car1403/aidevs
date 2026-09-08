@@ -22,8 +22,8 @@ from shared.travel_llm import provider_for_agent, run_with_metadata
 REQUEST = "부산 2박 3일, 대중교통 이용, 총예산 60만 원, 해산물 알레르기"
 
 AGENT_JOBS = [
-    ("weather_agent", WeatherResult, "날씨 위험과 준비 사항을 작성하고 source_confirmed를 표시하세요."),
-    ("place_agent", PlaceResult, "알레르기와 대중교통 조건에 맞는 장소 후보와 선택 근거를 작성하세요."),
+    ("weather_agent", WeatherResult, "실시간 날씨 Tool을 사용하지 않았습니다. 날씨는 미확인이라고 설명하고 source_confirmed는 반드시 false로 표시하세요."),
+    ("place_agent", PlaceResult, "외부 장소 Tool을 사용하지 않았습니다. 장소는 확인이 필요한 후보로 제안하고 selection_reason에 실제 운영 전 확인 필요를 명시하세요."),
     ("budget_agent", BudgetResult, "60만 원을 교통·숙박·식비·예비비로 나누고 합계를 정확히 맞추세요."),
     ("safety_agent", SafetyResult, "해산물 알레르기 위험과 확인 행동을 작성하세요."),
 ]

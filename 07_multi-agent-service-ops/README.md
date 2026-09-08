@@ -29,10 +29,10 @@ Travel Supervisor
 | 03 | `03_supervisor-and-routing` | OpenAI·Gemini·Ollama Supervisor Routing |
 | 04 | `04_orchestration` | Multi AI Agent 순차·병렬·Join·State·종료, 선택 LangGraph |
 | 05 | `05_handoff-and-context` | 구조화 Handoff와 최소 Context |
-| 06 | `06_multi-agent-safety` | Agent별 권한·승인·멱등성 |
-| 07 | `07_failure-evaluation-and-tracing` | 실패 복구·Scenario·Trace·Regression |
-| 08 | `08_multi-ai-agent-service` | FastAPI·Worker·Redis·PostgreSQL·Frontend |
-| 09 | `09_integrated-travel-multi-ai-agent` | 실제 Provider·MCP·승인·평가 통합 |
+| 06 | `06_multi-agent-safety` | AI Security와 Guardrails: 입력·응답 Policy, Tool 권한, 승인, Context 격리 |
+| 07 | `07_failure-evaluation-and-tracing` | Evaluation·Feedback·Retry·Tracing |
+| 08 | `08_multi-ai-agent-service` | 관측 가능한 Multi-Agent Service: 상태·로그·대시보드·이력 |
+| 09 | `09_integrated-travel-multi-ai-agent` | Docker·AWS·CI/CD·Auto Healing 통합 배포와 운영 |
 
 ## 실행 원칙
 

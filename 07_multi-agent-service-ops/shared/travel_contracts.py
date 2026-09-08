@@ -67,6 +67,14 @@ class HandoffDecision(BaseModel):
     reason: str
     handoff_context: dict[str, object] = Field(default_factory=dict)
 
+    @model_validator(mode="after")
+    def handoff_fields_must_match_decision(self) -> "HandoffDecision":
+        if self.handoff_required and self.target_agent is None:
+            raise ValueError("Handoff가 필요하면 target_agent가 있어야 합니다.")
+        if not self.handoff_required and (self.target_agent is not None or self.handoff_context):
+            raise ValueError("Handoff가 필요하지 않으면 대상과 Context가 비어 있어야 합니다.")
+        return self
+
 
 class EvaluationResult(BaseModel):
     agent_id: Literal["evaluator_agent"] = "evaluator_agent"

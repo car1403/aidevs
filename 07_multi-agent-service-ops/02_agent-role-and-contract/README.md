@@ -147,7 +147,10 @@ Agent JSON 결과
 ```
 
 Pydantic 검증 성공은 결과가 사실이라는 의미가 아닙니다. 외부 데이터의 사실성,
-최신성, 출처 확인은 Tool과 별도의 평가 과정이 필요하며 05 단원에서 확장합니다.
+최신성, 출처 확인에는 Tool이 필요합니다. 이 폴더의 07 예제는 Tool을 사용하지 않으므로
+Weather Agent가 `source_confirmed=False`를 반환하도록 명시하고, Place Agent의 후보도
+실제 운영 전에 확인해야 한다고 표시합니다. 실제 날씨와 DB 근거는 아래 미니
+프로젝트에서 연결합니다.
 
 ## 정보 부족과 실행 실패
 
@@ -173,6 +176,27 @@ Prompt를 함께 설계합니다.
 
 비교 목적은 모델의 문장 품질 순위를 정하는 것이 아닙니다. 서로 다른 Provider의 결과도
 같은 방식으로 역할과 계약을 검증할 수 있다는 점을 확인합니다.
+
+## 02 미니 프로젝트로 확장
+
+이 폴더의 코드는 계약 하나씩을 확인하는 최소 강의 예제입니다. 이후
+`mini_multi_agent_02_role_task_contract`에서는 같은 개념을 실제 서비스 구조로
+확장합니다.
+
+```text
+최소 강의 예제                         02 미니 프로젝트
+Agent 함수와 Prompt                    agents/*_agent.py의 AgentProfile
+shared.travel_llm                      agents/runtime.py + providers/
+Pydantic Model 직접 검증               output_contract가 포함된 Agent Registry
+Tool 없는 계약 확인                    별도 MCP Server
+미확인 날씨                            Open-Meteo 실제 날씨
+고정 예산 예제                         PostgreSQL 장소·비용 기준
+함수 실행 후 전체 출력                 Redis Trace + 1초 Polling Progress
+```
+
+수업에서는 먼저 01~06으로 Role·Task·Contract를 이해하고, 07~08에서 실제 LLM도 같은
+계약을 지키는지 확인합니다. 미니 프로젝트에서는 MCP Tool이 근거 데이터를 제공하고
+Pydantic이 결과 계약을 검증하는 전체 경계를 관찰합니다.
 
 ## 검증된 결과 전달
 

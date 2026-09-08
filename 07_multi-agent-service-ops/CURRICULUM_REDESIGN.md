@@ -44,7 +44,7 @@
 | 03 | `03_supervisor-and-routing` | 누가 어떤 Agent를 선택하는가? | OpenAI·Gemini·Ollama Router |
 | 04 | `04_orchestration` | 여러 AI Agent의 순차·병렬·Join·반복·종료를 어떻게 통제하는가? | Python Orchestrator, 선택 LangGraph |
 | 05 | `05_handoff-and-context` | Agent 사이에 무엇만 전달해야 하는가? | Handoff 계약과 Context Filter |
-| 06 | `06_multi-agent-safety` | 다른 Agent의 요청과 권한을 어떻게 제한하는가? | Allowlist, 승인, 멱등성 |
+| 06 | `06_multi-agent-safety` | 입력부터 Agent·Tool·응답까지 어떻게 안전 경계를 만드는가? | Prompt Injection, 입력·응답 Policy, Context 격리, Allowlist, 승인, 멱등성, Audit |
 | 07 | `07_failure-evaluation-and-tracing` | 어느 Agent에서 왜 실패했는지 어떻게 검증하는가? | Retry, Fallback, Scenario, Trace |
 | 08 | `08_multi-ai-agent-service` | Multi AI Agent를 실제 비동기 서비스로 어떻게 연결하는가? | FastAPI, Worker, Redis, PostgreSQL, UI |
 | 09 | `09_integrated-travel-multi-ai-agent` | 전체 여행 Multi AI Agent 서비스를 어떻게 통합하고 회귀 검증하는가? | 실제 LLM·MCP·승인·평가 통합 |

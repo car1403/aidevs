@@ -53,7 +53,7 @@ Provider나 계약 오류를 고정된 성공 결과로 바꾸지 않습니다.
 | `04` | 현재 State에 따라 다음 행동은 어떻게 달라지는가? | GPT Supervisor | 1회 |
 | `05` | 반복 선택과 종료는 누가 통제하는가? | GPT·Gemini·Gemma | 최대 5회 |
 | `06` | 어떤 업무에 Router와 Supervisor가 적합한가? | 없음 | 0회 |
-| `07` | 네 LLM Team을 어떻게 일관되게 통제하는가? | GPT·Gemini·Llama·Gemma | 최대 7회 |
+| `07` | 네 LLM과 반복 Worker 설정을 어떻게 통제하는가? | GPT·Gemini·Llama·Gemma | 최대 7회 |
 
 ## Router와 Supervisor 비교
 
@@ -150,7 +150,9 @@ GPT Supervisor
 
 ## 네 LLM Supervisor Team
 
-07은 같은 구조를 네 LLM Team으로 확장합니다.
+07은 같은 구조를 네 LLM Team으로 확장하고, 반복되는 Worker 선언을 YAML로 옮깁니다.
+앞선 Lab은 흐름을 쉽게 읽도록 Python으로 직접 정의하고, 마지막 Lab에서 운영 규모가
+커질 때의 설정 분리를 경험합니다.
 
 | 역할 | 논리 Provider | 실제 Model |
 | --- | --- | --- |
@@ -168,6 +170,17 @@ GPT Supervisor
 → Gemma Reviewer
 → GPT Supervisor Finish
 ```
+
+```text
+worker_definitions.yaml
+        ↓ load_worker_registry()
+Python Supervisor Loop → 선택된 Worker의 Provider·Goal·Instructions 사용
+```
+
+YAML에는 Worker의 이름, 목표, 지시문, Provider와 출력 계약처럼 반복되는 설정만
+둡니다. Worker 순서, 상태 전이, 최대 호출 수, 오류 처리와 종료 조건은 실행 정책이므로
+`07_multi_llm_supervisor_team.py`의 Python 코드에 남겨 둡니다. YAML 수정만으로 보안
+정책이나 실행 순서가 바뀌게 만들지 않는 것이 핵심입니다.
 
 정상 흐름은 최대 7회 호출합니다. Llama와 Gemma는 같은 `aidevs-ollama` Container를
 사용하므로 동시에 실행하지 않고 순차적으로 호출합니다.
@@ -190,6 +203,7 @@ GPT Supervisor
 - LLM이 계약을 통과해도 업무 의존 순서는 Python이 검증합니다.
 - 최대 호출 수와 명시적인 종료 이유가 없는 Supervisor Loop를 만들지 않습니다.
 - 여러 Provider를 사용해도 동일한 State와 Trace 규칙을 유지합니다.
+- 반복 Worker 선언은 YAML로 관리해도 Workflow 통제는 Python에 유지합니다.
 
 ## 완료 기준
 
@@ -199,6 +213,7 @@ GPT Supervisor
 - SupervisorDecision과 Supervisor State를 설명할 수 있습니다.
 - 허용 순서, 중복 실행, 최대 호출과 Worker 실패를 Python으로 통제할 수 있습니다.
 - GPT·Gemini·Llama·Gemma Team의 실행 Trace와 종료 이유를 읽을 수 있습니다.
+- Python 실행 정책과 YAML Worker 설정의 책임을 구분할 수 있습니다.
 
 ## 직접 확인하기
 
@@ -207,3 +222,5 @@ GPT Supervisor
 - `04_supervisor_decision.py`에서 모든 Worker가 완료된 State를 전달해 `finish`를 확인하세요.
 - `05_supervisor_worker_loop.py`의 최대 호출을 4로 줄이고 종료 이유를 확인하세요.
 - `07_multi_llm_supervisor_team.py`에서 Worker 순서를 바꿀 때 깨지는 Context 의존성을 확인하세요.
+- `worker_definitions.yaml`에서 Analyst의 Provider를 바꾸고 Python Workflow를 수정하지
+  않아도 적용되는지 확인하세요.

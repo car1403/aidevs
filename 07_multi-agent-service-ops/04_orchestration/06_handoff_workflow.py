@@ -66,11 +66,18 @@ if __name__ == "__main__":
     elif not decision["result"]["handoff_required"]:
         print("Support Agent가 계속 책임을 담당합니다.")
     else:
+        if decision["result"]["target_agent"] != "refund_agent":
+            raise ValueError("Support Agent가 허용되지 않은 Handoff 대상을 선택했습니다.")
+        allowed_context_keys = {"order_id", "issue"}
+        proposed_context = decision["result"]["handoff_context"]
+        safe_context = {key: value for key, value in proposed_context.items() if key in allowed_context_keys}
+        safe_context.setdefault("order_id", "ORDER-102")
+        safe_context.setdefault("issue", "배송이 일주일 지연됨")
         handoff = SupportHandoff(
             task_id="support-001",
             trace_id="trace-001",
             responsibility="배송 지연 주문의 환불 가능 조건과 필요한 정보를 안내한다.",
-            context={"order_id": "ORDER-102", "issue": "배송이 일주일 지연됨"},
+            context=safe_context,
             user_id="user-101",
         )
         handoff_guard_agent(handoff, expected_user_id="user-101")

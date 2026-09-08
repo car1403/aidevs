@@ -1,50 +1,82 @@
-# 06 Multi Agent Safety
+# 06 AI Security and Guardrails
 
-앞 과정에서 입력 검증과 사람 승인을 배웠습니다. Multi AI Agent에서는 여기에 한 가지가 더 필요합니다. **다른 Agent가 요청했다는 이유만으로 그 요청을 신뢰하면 안 됩니다.**
+앞 과정에서 여러 Agent가 역할을 나누고 Context와 결과를 전달했습니다. 이제 Agent가 허용된 데이터와 Tool만 사용하고 안전한 응답만 내보내도록 만듭니다.
 
-## 네 개의 안전 경계
+이 단계는 초보자가 각 보안 경계를 눈으로 확인하도록 작은 결정적 예제로 구성합니다. 실제 LLM은 같은 입력에도 다른 문장을 만들 수 있으므로 핵심 보안 판단에는 사용하지 않습니다. **LLM은 행동을 제안하고 Python Guard가 실행 허용 여부를 결정합니다.**
+
+## 전체 학습 시나리오
 
 ```text
-Agent가 Tool 요청
-→ 사용자 범위 확인
-→ Agent별 Tool allowlist 확인
-→ 변경 작업이면 승인과 idempotency key 확인
-→ 실제 Tool 실행
+사용자 요청
+  → Prompt Injection 1차 검사
+  → Pydantic 입력 계약 검사
+  → Agent별 최소 Context 전달
+  → Agent별 Tool 권한 검사
+  → 변경 작업의 사용자 승인 검사
+  → 멱등성 적용 후 실행
+  → 최종 응답 Policy 검사
+  → 모든 결정 Audit Log 기록
 ```
 
-| 경계 | 막는 문제 |
+문자열 차단 규칙 하나로 모든 공격을 막을 수는 없습니다. 하나의 완벽한 필터를 만드는 것이 아니라 여러 신뢰 경계에 독립된 방어선을 배치하는 것이 핵심입니다.
+
+## 교육 항목과 Lab
+
+| 교육 항목 | Lab | 확인할 결과 |
+| --- | --- | --- |
+| Prompt Injection 방어 | `01_prompt_injection_defense.py` | 정상 요청 허용, 의심 요청 차단 |
+| 입력 검증과 필터링 | `02_input_validation.py` | 형식·범위 오류 출력 |
+| Policy 기반 응답 검증 | `03_policy_response_guard.py` | 허위 실행 주장·민감 정보 차단 |
+| Agent와 Tool 권한 | `04_agent_tool_permissions.py` | Weather Agent의 저장 요청 차단 |
+| 위험 작업 승인 | `05_approval_boundary.py` | 현재 요청과 일치하는 승인만 허용 |
+| Retry 중복 방지 | `06_idempotent_write.py` | 두 요청, 실제 저장 1회 |
+| Multi-Agent 접근 제어 | `07_role_context_access_control.py` | 역할별 최소 Context와 사용자 격리 |
+| 통합 정책과 감사 추적 | `08_integrated_guardrails.py` | 단계별 Audit Event 출력 |
+
+각 Python 파일 상단에는 등장 Agent, 정상·공격 요청, 기대 결과, 학습 포인트를 포함한 상세 시나리오가 있습니다. 수업에서는 먼저 주석을 읽고 결과를 예상한 다음 코드를 실행합니다.
+
+## Python과 YAML의 책임
+
+`security_policies.yaml`에는 운영 중 바꿀 가능성이 있는 문구, 길이, Context 허용 필드를 둡니다. `security_registry.py`가 정책을 읽고 각 Lab의 Python 코드가 최종 결정을 실행합니다.
+
+| YAML에 두는 것 | Python에 두는 것 |
 | --- | --- |
-| 사용자 범위 | 다른 사용자의 Task나 승인을 재사용 |
-| Agent별 권한 | Weather Agent가 일정 저장·결제 같은 Tool 호출 |
-| 사람 승인 | 외부 상태가 승인 전에 변경됨 |
-| 멱등성 | 재시도 때문에 같은 저장·예약이 두 번 실행됨 |
+| 차단 문구와 최대 길이 | Pydantic 계약과 범위 검사 |
+| 응답 Policy 항목 | Tool 실행 전 권한 강제 |
+| Agent별 Context 필드 | 승인 일치와 멱등성 로직 |
 
-LLM은 Tool 호출을 제안할 뿐입니다. 실제 허용 여부는 Python 정책이 결정합니다. 실제 예약과 결제는 이번 과정에서 실행하지 않고, 승인된 일정 저장까지만 예로 듭니다.
+YAML을 수정할 수 있다고 실행 권한이 자동으로 생기지는 않습니다. 위험한 행동의 최종 허용 조건은 Python과 서버가 보장해야 합니다.
 
-## 예제
+## 실행
 
-| 파일 | 핵심 |
-| --- | --- |
-| `01_agent_tool_permissions.py` | Agent별 최소 권한 |
-| `02_approval_boundary.py` | 정확히 일치하는 사용자 승인 |
-| `03_idempotent_write.py` | 중복 변경 차단 |
-| `04_untrusted_agent_request.py` | Agent 간 요청도 다시 검증 |
+과정 루트에서 순서대로 실행합니다. API Key나 외부 서비스는 필요하지 않습니다.
 
 ```powershell
-python .\06_multi-agent-safety\01_agent_tool_permissions.py
-python .\06_multi-agent-safety\02_approval_boundary.py
-python .\06_multi-agent-safety\03_idempotent_write.py
-python .\06_multi-agent-safety\04_untrusted_agent_request.py
+cd C:\aidevs\07_multi-agent-service-ops
+python .\06_multi-agent-safety\01_prompt_injection_defense.py
+python .\06_multi-agent-safety\02_input_validation.py
+python .\06_multi-agent-safety\03_policy_response_guard.py
+python .\06_multi-agent-safety\04_agent_tool_permissions.py
+python .\06_multi-agent-safety\05_approval_boundary.py
+python .\06_multi-agent-safety\06_idempotent_write.py
+python .\06_multi-agent-safety\07_role_context_access_control.py
+python .\06_multi-agent-safety\08_integrated_guardrails.py
 ```
 
-이 예제들은 정책을 이해하기 위한 결정적 코드라 API Key가 필요하지 않습니다. `03`의 메모리 Registry는 `08`에서 실제 Redis 기반 멱등성 저장으로 교체합니다.
+`06_idempotent_write.py`의 메모리 Registry는 개념 학습용입니다. 운영 과정에서는 Redis로 교체합니다.
 
-## 승인과 검증의 순서
+## 수업 중 확인할 질문
 
-승인이 있다고 모든 행동을 허용하지 않습니다. 먼저 사용자·Agent 권한·입력 형식을 확인하고, 그 뒤 현재 요청과 정확히 일치하는 승인을 확인합니다. 잘못된 Tool을 사람이 승인했더라도 Agent allowlist를 우회할 수 없습니다.
+1. Prompt Injection 문구 검사만으로 충분하지 않은 이유는 무엇인가요?
+2. 숫자 범위를 LLM이 아니라 Python이 검사해야 하는 이유는 무엇인가요?
+3. Weather Agent가 일정 저장 Tool을 호출하면 어디에서 차단되나요?
+4. 승인과 idempotency key는 각각 어떤 문제를 해결하나요?
+5. 모든 Agent에게 전체 Context를 전달하면 어떤 문제가 생길 수 있나요?
+6. 차단 결정도 Audit Log에 남겨야 하는 이유는 무엇인가요?
 
-## 직접 확인하기
+## 완료 기준
 
-1. 읽기 Tool과 변경 Tool의 승인 정책이 달라야 하는 이유를 설명해 보세요.
-2. idempotency key를 사용자별로 분리하지 않으면 어떤 문제가 생길까요?
-3. Supervisor가 만든 Tool 요청도 Guard를 통과해야 하는 이유를 적어 보세요.
+- 8개 Lab의 허용·차단 이유를 설명할 수 있습니다.
+- Prompt Injection, 입력 검증, Tool 권한, 승인, 멱등성, 응답 검증의 차이를 구분합니다.
+- YAML 정책과 Python 강제 로직의 책임 차이를 설명할 수 있습니다.
+- Multi-Agent 내부 요청도 신뢰하지 않고 재검증해야 함을 이해합니다.

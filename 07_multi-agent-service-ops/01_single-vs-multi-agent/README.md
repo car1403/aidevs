@@ -150,6 +150,28 @@ docker exec aidevs-ollama ollama ps
 `01`에서 Provider 오류가 나면 먼저 `.env`를 확인합니다. 개념 학습을 계속하려면
 `03`, `04`를 먼저 실행할 수 있지만 실제 호출이 성공한 것처럼 간주하지 않습니다.
 
+## 강의 예제와 미니 프로젝트의 구조 차이
+
+이 폴더의 파일은 Pattern 하나를 한 화면에서 읽고 실행하는 최소 강의 예제입니다.
+따라서 `weather_agent()`처럼 함수 이름으로 Agent 역할을 드러내고, 같은 파일 안에서
+작은 Orchestrator와 출력 확인 코드를 함께 보여 줍니다.
+
+미니 프로젝트 `mini_multi_agent_01_patterns`에서는 다음 단계로 구조를 확장합니다.
+
+```text
+최소 강의 예제                         미니 프로젝트
+weather_agent() 함수                  agents/weather_agent.py의 AgentProfile
+run_learning_agent()                  agents/runtime.py
+AGENTS 또는 WORKER_AGENTS             agents/registry.py
+orchestrator_agent() 함수             orchestration/engine.py
+외부 Tool 없음                        MCP Client와 별도 MCP Server
+```
+
+두 방식은 서로 경쟁하는 구현이 아닙니다. 강의에서는 Pattern의 핵심 흐름을 먼저 확인하고,
+미니 프로젝트에서는 Agent 정의·실행·협업·Tool을 분리하여 실제 애플리케이션 구조로
+발전시킵니다. 01 강의 예제를 처음부터 여러 디렉터리로 나누지 않는 이유는 초보자가
+Pattern보다 파일 탐색에 더 많은 시간을 쓰지 않게 하기 위해서입니다.
+
 ## 다른 업무에도 적용하기
 
 여행은 전체 과정을 연결하는 주제이고, `03`과 `05`에서는 같은 기준을 다른 업무에

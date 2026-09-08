@@ -10,20 +10,17 @@
     일관되게 통제할 수 있을까요?
 
 확인할 내용:
-    Python이 허용 순서·중복 실행·최대 7회 호출을 통제하고, 실제 네 LLM의 결과와 오류를
-    Trace에 보존합니다. Llama와 Gemma는 같은 Ollama에서 순차 실행합니다.
+    반복되는 Worker 설정은 YAML에서 읽지만 허용 순서·중복 실행·최대 7회 호출은
+    Python이 통제합니다. 실제 네 LLM의 결과와 오류를 Trace에 보존합니다.
 """
 
-from shared.travel_contracts import SupervisorDecision
-from shared.travel_llm import provider_for_agent, run_learning_agent, run_with_metadata
+from shared.travel_contracts import LearningAgentResult, SupervisorDecision
+from shared.travel_llm import run_with_metadata
+from worker_registry import load_worker_registry
 
 
 WORKER_PLAN = ["analyst_agent", "developer_agent", "reviewer_agent"]
-WORKER_GOALS = {
-    "analyst_agent": "입력 검증 요구사항, 예외와 위험을 분석한다.",
-    "developer_agent": "검증 순서와 구현 방법을 구체적으로 작성한다.",
-    "reviewer_agent": "구현 방법의 보안 누락과 우회 가능성을 검토한다.",
-}
+WORKERS = load_worker_registry()
 
 
 def supervisor_agent(request: str, state: dict[str, object], expected_next: str) -> dict:
@@ -33,13 +30,25 @@ def supervisor_agent(request: str, state: dict[str, object], expected_next: str)
 현재 허용된 다음 행동: {expected_next}
 사용자 요청: {request}
 SupervisorDecision 계약으로 반환하고 agent_id는 supervisor_agent로 작성하세요."""
-    return run_with_metadata(provider_for_agent("supervisor_agent"), prompt, SupervisorDecision)
+    return run_with_metadata("openai", prompt, SupervisorDecision)
 
 
 def selected_worker_agent(agent_id: str, request: str, outputs: dict[str, object]) -> dict:
-    if agent_id not in WORKER_GOALS:
+    if agent_id not in WORKERS:
         raise ValueError(f"허용되지 않은 Worker입니다: {agent_id}")
-    return run_learning_agent(agent_id, WORKER_GOALS[agent_id], request, outputs)
+    worker = WORKERS[agent_id]
+    prompt = f"""당신은 {agent_id}입니다.
+이름: {worker['name']}
+Goal: {worker['goal']}
+Instructions: {worker['instructions']}
+사용자 요청: {request}
+이전 Agent Context: {outputs}
+LearningAgentResult 계약으로 반환하고 agent_id는 반드시 {agent_id}로 작성하세요."""
+    result = run_with_metadata(worker["provider"], prompt, LearningAgentResult)
+    if result["result"] and result["result"]["agent_id"] != agent_id:
+        result["error"] = f"Agent 역할 불일치: expected={agent_id}, actual={result['result']['agent_id']}"
+        result["result"] = None
+    return result
 
 
 def multi_llm_team_agent(request: str, max_llm_calls: int = 7) -> dict[str, object]:
