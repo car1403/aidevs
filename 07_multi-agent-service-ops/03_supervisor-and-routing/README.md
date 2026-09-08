@@ -94,7 +94,7 @@ Pattern 이름보다 업무의 의존성과 State 필요 여부를 먼저 확인
 | 선택 Worker | Provider | Model |
 | --- | --- | --- |
 | Delivery Agent | Gemini | `gemini-3.5-flash` |
-| Refund Agent | Gemma | `gemma` |
+| Refund Agent | Gemma | `gemma3:4b` |
 | Technical Support Agent | Llama | `llama3.2` |
 
 ## Routing 계약
@@ -159,7 +159,7 @@ GPT Supervisor
 | Supervisor Agent | `openai` | `gpt-4.1-mini` |
 | Analyst Agent | `gemini` | `gemini-3.5-flash` |
 | Developer Agent | `ollama` | `llama3.2` |
-| Reviewer Agent | `gemma` | `gemma` |
+| Reviewer Agent | `gemma` | `gemma3:4b` |
 
 ```text
 GPT Supervisor

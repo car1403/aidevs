@@ -1,4 +1,4 @@
-# AWS EC2 자동 배포 준비
+# Stateful Weather AWS EC2 자동 배포 준비
 
 ## 1. EC2 준비
 
@@ -8,8 +8,8 @@ Amazon Linux 2023 EC2에 Docker와 Docker Compose Plugin을 설치합니다. Sec
 EC2에 배포 폴더와 Secret 환경 파일을 최초 한 번 준비합니다.
 
 ```bash
-mkdir -p ~/weather-mcp-deployment
-cd ~/weather-mcp-deployment
+mkdir -p ~/weather-stateful
+cd ~/weather-stateful
 nano .env
 chmod 600 .env
 ```
@@ -19,9 +19,24 @@ OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4.1-mini
 GEMINI_API_KEY=
 GEMINI_MODEL=gemini-3.5-flash
+POSTGRES_USER=agent_user
+POSTGRES_PASSWORD=agent_pwd
+POSTGRES_DB=agent_db
+WEATHER_CACHE_TTL_SECONDS=600
 ```
 
 Workflow는 이 `.env`를 GitHub에서 복사하거나 로그로 출력하지 않습니다.
+
+프로젝트 파일을 최초 한 번 전송한 뒤 PostgreSQL·Redis를 실행합니다.
+
+```bash
+cd ~/weather-stateful
+docker compose -f compose.infrastructure.yml up -d
+docker compose -f compose.infrastructure.yml ps
+```
+
+이후 GitHub Actions는 `compose.application.yml`만 재배포합니다. 인프라 Compose와 Volume을
+배포 Workflow에서 내리지 않습니다.
 
 ## 2. GitHub production Environment
 
@@ -51,19 +66,19 @@ Bastion 또는 보안 정책에 맞는 self-hosted Runner를 사용합니다.
 → main 병합
 → 같은 CI 재실행·성공
 → production 승인
-→ EC2 Source 복사·Compose 실행
+→ EC2 Source 복사·Application Compose만 실행
 → /health/ready 성공
 ```
 
 ## 4. EC2 확인과 복구
 
 ```bash
-cd ~/weather-mcp-deployment
-docker compose ps
-docker compose logs --tail=100 weather-mcp backend frontend
+cd ~/weather-stateful
+docker compose -f compose.infrastructure.yml ps
+docker compose -f compose.application.yml ps
+docker compose -f compose.application.yml logs --tail=100 weather-mcp backend frontend
 curl --fail http://127.0.0.1:8000/health/ready
 ```
 
 배포 후 문제가 있으면 GitHub에서 마지막 정상 Commit으로 되돌린 새 Commit을 만든 뒤 같은
 승인 절차로 다시 배포합니다. 이 입문 예제는 Blue/Green이나 자동 Rollback을 구현하지 않습니다.
-

@@ -5,14 +5,15 @@
 """
 
 import os
+import time
 import requests
 import streamlit as st
 
 BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
 st.set_page_config(page_title="Weather MCP Agent", page_icon="🌦️", layout="wide")
 st.sidebar.title("학습 메뉴")
-page = st.sidebar.radio("이동", ["Weather Agent", "구조 이해", "Health Check"])
-st.title("Weather MCP Deployment Project")
+page = st.sidebar.radio("이동", ["Weather Agent", "실행 이력", "구조 이해", "Health Check"])
+st.title("Stateful Weather MCP Deployment")
 
 if page == "Weather Agent":
     city = st.text_input("도시", "서울")
@@ -22,17 +23,48 @@ if page == "Weather Agent":
         try:
             response = requests.post(f"{BACKEND_URL}/api/weather", json={"city": city, "day": "tomorrow" if day_label == "내일" else "today", "provider": provider}, timeout=90)
             response.raise_for_status()
-            result = response.json()
+            started = response.json()
+            run_id = started["run_id"]
+            progress_box = st.empty()
+            for _ in range(90):
+                progress_response = requests.get(f"{BACKEND_URL}/api/runs/{run_id}/progress", timeout=5)
+                progress_response.raise_for_status()
+                progress = progress_response.json()
+                progress_box.progress(progress["progress"], text=progress["message"])
+                if progress["stage"] in {"completed", "failed"}:
+                    break
+                time.sleep(1)
+            if progress["stage"] == "failed":
+                raise RuntimeError(progress["message"])
+            if progress["stage"] != "completed":
+                raise RuntimeError("90초 안에 실행이 완료되지 않았습니다.")
+            result = {"run_id": run_id, **progress["result"]}
             st.success(result["answer"])
-            st.caption(f"{result['provider']} · {result['model']} · MCP Tool: {result['tool']}")
+            cache_text = "Redis Cache 사용" if result["cache_hit"] else "Weather MCP 실제 호출"
+            st.caption(f"Run ID: {result['run_id']} · {result['provider']} · {result['model']} · {cache_text}")
             with st.expander("실제 Open-Meteo Tool Result", expanded=True):
                 st.json(result["tool_result"])
-        except requests.RequestException as error:
-            detail = error.response.text if error.response is not None else str(error)
+        except (requests.RequestException, RuntimeError) as error:
+            response = getattr(error, "response", None)
+            detail = response.text if response is not None else str(error)
             st.error(f"Backend 요청 실패: {detail}")
+elif page == "실행 이력":
+    try:
+        response = requests.get(f"{BACKEND_URL}/api/runs", timeout=10)
+        response.raise_for_status()
+        runs = response.json()["runs"]
+        st.caption("PostgreSQL에 영구 저장된 최근 실행입니다.")
+        if not runs:
+            st.info("아직 저장된 실행이 없습니다.")
+        for item in runs:
+            with st.expander(f"{item['city']} · {item['requested_day']} · {item['provider']} · {item['created_at']}"):
+                st.write(item["answer"])
+                st.json(item["tool_result"])
+    except requests.RequestException as error:
+        st.error(f"이력 조회 실패: {error}")
 elif page == "구조 이해":
-    st.code("Browser → Frontend → Backend Agent → Weather MCP → Open-Meteo\n                                  └→ OpenAI 또는 Gemini")
-    st.info("MCP 8010은 Docker 내부에서만 사용하며 Host에는 공개하지 않습니다.")
+    st.code("Browser → Frontend → Backend Agent → Weather MCP → Open-Meteo\n                         ├→ Redis 진행 상태·날씨 Cache\n                         ├→ PostgreSQL 영구 실행 이력\n                         └→ OpenAI 또는 Gemini")
+    st.info("인프라는 계속 유지하고 Application 세 Container만 CI/CD로 다시 배포합니다.")
 else:
     try:
         response = requests.get(f"{BACKEND_URL}/health/ready", timeout=5)

@@ -26,8 +26,13 @@ GEMINI_API_KEY=
 GEMINI_MODEL=gemini-3.5-flash
 OLLAMA_BASE_URL=http://127.0.0.1:11434
 OLLAMA_MODEL=llama3.2
-GEMMA_MODEL=gemma
+GEMMA_MODEL=gemma3:4b
 ```
+
+코드와 YAML에서 사용하는 Provider 식별자 `gemma`는 그대로 유지합니다. `gemma`는 어떤
+Provider 경로를 사용할지 나타내는 논리 이름이고, 실제 Ollama 실행 모델은
+`GEMMA_MODEL=gemma3:4b`가 결정합니다. 따라서 Agent Registry의 `provider: gemma`를
+`provider: gemma3:4b`로 바꾸지 않습니다.
 
 Docker Ollama에는 두 로컬 Model을 준비합니다.
 
@@ -35,7 +40,7 @@ Docker Ollama에는 두 로컬 Model을 준비합니다.
 cd .\00_runtime-and-deployment\00_local-services
 docker compose up -d ollama
 docker compose exec ollama ollama pull llama3.2
-docker compose exec ollama ollama pull gemma
+docker compose exec ollama ollama pull gemma3:4b
 docker compose exec ollama ollama list
 cd ..\..\..
 ```

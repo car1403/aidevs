@@ -41,7 +41,7 @@ def provider_model(provider: str) -> str:
         "openai": os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
         "gemini": os.getenv("GEMINI_MODEL", "gemini-3.5-flash"),
         "ollama": os.getenv("OLLAMA_MODEL", "llama3.2"),
-        "gemma": os.getenv("GEMMA_MODEL", "gemma"),
+        "gemma": os.getenv("GEMMA_MODEL", "gemma3:4b"),
     }
     if provider not in models:
         raise ValueError(f"지원하지 않는 Provider입니다: {provider}")

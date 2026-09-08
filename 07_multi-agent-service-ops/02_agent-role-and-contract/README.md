@@ -46,7 +46,7 @@ GEMINI_API_KEY=본인의_API_KEY
 GEMINI_MODEL=gemini-3.5-flash
 OLLAMA_BASE_URL=http://127.0.0.1:11434
 OLLAMA_MODEL=llama3.2
-GEMMA_MODEL=gemma
+GEMMA_MODEL=gemma3:4b
 ```
 
 Llama와 Gemma는 실행 중인 공용 Docker Container `aidevs-ollama`를 사용합니다.
@@ -172,7 +172,7 @@ Prompt를 함께 설계합니다.
 | Weather Agent | `gemini` | `gemini-3.5-flash` | `WeatherResult` |
 | Place Agent | `ollama` | `llama3.2` | `PlaceResult` |
 | Budget Agent | `openai` | `gpt-4.1-mini` | `BudgetResult` |
-| Safety Agent | `gemma` | `gemma` | `SafetyResult` |
+| Safety Agent | `gemma` | `gemma3:4b` | `SafetyResult` |
 
 비교 목적은 모델의 문장 품질 순위를 정하는 것이 아닙니다. 서로 다른 Provider의 결과도
 같은 방식으로 역할과 계약을 검증할 수 있다는 점을 확인합니다.

@@ -43,7 +43,7 @@ GEMINI_API_KEY=본인의_API_KEY
 GEMINI_MODEL=gemini-3.5-flash
 OLLAMA_BASE_URL=http://127.0.0.1:11434
 OLLAMA_MODEL=llama3.2
-GEMMA_MODEL=gemma
+GEMMA_MODEL=gemma3:4b
 ```
 
 이 과정은 이미 실행 중인 공용 Docker Container `aidevs-ollama`를 사용합니다.
@@ -54,13 +54,13 @@ docker exec aidevs-ollama ollama list
 Invoke-RestMethod http://127.0.0.1:11434/api/tags
 ```
 
-목록에 `llama3.2:latest`와 `gemma:latest`가 표시되어야 합니다. 01 과정에서 별도의
+목록에 `llama3.2:latest`와 `gemma3:4b`가 표시되어야 합니다. 01 과정에서 별도의
 Ollama Container를 만들지 않습니다. Model이 없다면 실행 중인 공용 Container 안에
 추가합니다.
 
 ```powershell
 docker exec aidevs-ollama ollama pull llama3.2
-docker exec aidevs-ollama ollama pull gemma
+docker exec aidevs-ollama ollama pull gemma3:4b
 ```
 
 | Agent | 논리 Provider | 실제 Model |
@@ -68,7 +68,7 @@ docker exec aidevs-ollama ollama pull gemma
 | Budget/Writer Agent | `openai` | GPT (`gpt-4.1-mini`) |
 | Weather/Evaluator Agent | `gemini` | Gemini (`gemini-3.5-flash`) |
 | Place/Developer Agent | `ollama` | Llama (`llama3.2`) |
-| Safety/Reviewer Agent | `gemma` | Gemma (`gemma`) |
+| Safety/Reviewer Agent | `gemma` | Gemma (`gemma3:4b`) |
 
 > `00_runtime-and-deployment/00_local-services/docker-compose.yml`의 Ollama는 독립적인
 > 실습 환경이며 Host Port `11435`를 사용합니다. 현재 01 실습은 이미 실행 중인

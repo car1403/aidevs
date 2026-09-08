@@ -212,7 +212,7 @@ GPT Budget     ─┘
 | Weather Agent | Gemini | `gemini-3.5-flash` |
 | Place Agent | Ollama | `llama3.2` |
 | Budget Agent | OpenAI | `gpt-4.1-mini` |
-| Itinerary Agent | Gemma | `gemma` |
+| Itinerary Agent | Gemma | `gemma3:4b` |
 
 Weather와 Budget은 필수이고 Place는 선택 결과입니다. Llama가 포함된 병렬 그룹이
 모두 끝난 후 Gemma를 실행하므로 공용 Ollama에서 두 로컬 Model을 동시에 실행하지
