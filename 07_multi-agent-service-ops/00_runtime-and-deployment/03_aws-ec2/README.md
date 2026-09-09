@@ -38,6 +38,11 @@ Ollama는 기본 실행에서 제외하고 OpenAI 또는 Gemini API를 사용합
 5. [장애 실습](./05_failure-lab.md)
 6. [리소스 정리](./06_cleanup.md)
 
+이 폴더의 명령은 `01_simple-multi-llm-compose`를 기준으로 설명하는 공통 EC2 입문
+절차입니다. `05_weather-mcp-deployment-project`를 배포할 때는 EC2·VPC·SSH·Docker의 공통
+개념은 이 순서를 따르고, 실제 프로젝트 경로·Compose 파일·환경 변수·GitHub Actions는
+`05_weather-mcp-deployment-project/README.md`의 6단계 이후를 따릅니다.
+
 ## 수업 전 체크
 
 ```text

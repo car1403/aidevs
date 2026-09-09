@@ -3,13 +3,23 @@ name: 07 Weather MCP CI CD
 on:
   push:
     paths:
-      - "07_multi-agent-service-ops/00_runtime-and-deployment/05_weather-mcp-deployment-project/**"
-      - ".github/workflows/07-weather-mcp-cicd.yml"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/05_weather-mcp-deployment-project/backend/**"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/05_weather-mcp-deployment-project/frontend/**"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/05_weather-mcp-deployment-project/mcp_server/**"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/05_weather-mcp-deployment-project/compose.yml"
   pull_request:
     paths:
-      - "07_multi-agent-service-ops/00_runtime-and-deployment/05_weather-mcp-deployment-project/**"
-      - ".github/workflows/07-weather-mcp-cicd.yml"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/05_weather-mcp-deployment-project/backend/**"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/05_weather-mcp-deployment-project/frontend/**"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/05_weather-mcp-deployment-project/mcp_server/**"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/05_weather-mcp-deployment-project/compose.yml"
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Deploy 05 application to AWS EC2"
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -44,7 +54,9 @@ jobs:
         run: docker compose build
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && inputs.deploy)
     needs: test-and-build
     runs-on: ubuntu-latest
     environment: production

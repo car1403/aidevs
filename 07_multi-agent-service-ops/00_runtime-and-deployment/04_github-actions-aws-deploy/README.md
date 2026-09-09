@@ -56,6 +56,32 @@ AWS_SSH_KNOWN_HOSTS
 지문이 바뀌면 원인을 확인한 뒤에만 Secret을 갱신합니다. LLM API Key는 GitHub Workflow 로그에
 출력하지 않고 EC2의 권한 제한된 `.env`에서 관리합니다.
 
+### AWS_SSH_KNOWN_HOSTS 생성
+
+이 단계는 앞의 EC2 실습에서 로컬 PC로 SSH 접속에 성공하여 Host Key가 이미
+`$env:USERPROFILE\.ssh\known_hosts`에 저장됐다는 전제로 진행합니다. 서버에 다시 접속하거나
+서버의 `.ssh`를 수정하지 않고 로컬 파일을 조회합니다. `SHA256:...` Fingerprint만
+Secret에 입력하는 것이 아닙니다.
+
+```powershell
+$knownHost = ssh-keygen -F <PUBLIC_IPV4_OR_DNS> `
+  -f "$env:USERPROFILE\.ssh\known_hosts" |
+  Select-String "ssh-ed25519" |
+  ForEach-Object { $_.Line }
+
+$knownHost
+$knownHost | Set-Clipboard
+```
+
+출력된 `<EC2 주소> ssh-ed25519 <긴 공개 Host Key>` 한 줄 전체를 GitHub
+`production → Environment secrets`의 `AWS_SSH_KNOWN_HOSTS` 값으로 붙여 넣습니다. `# Host
+... found` 주석은 제외합니다. Windows `ssh-keyscan`에서 `unsupported KEX method`가 나면
+위처럼 이미 저장된 `known_hosts`를 조회합니다. EC2 Public IP가 바뀌면 `AWS_HOST`와 함께
+갱신합니다.
+
+조회 결과가 없다면 주소 변경 또는 최초 접속을 하지 않은 예외이므로, 이때만 EC2 주소와
+Fingerprint를 확인하고 SSH로 한 번 접속한 뒤 다시 조회합니다.
+
 ## 배포 안전 조건
 
 1. CI 테스트와 Image Build가 먼저 통과합니다.

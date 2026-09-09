@@ -46,8 +46,11 @@ PostgreSQL·Redis·MCP는 외부에 공개하지 않습니다. CI는 실제 저�
 1. Backend·MCP·Frontend 구현
 2. 로컬 Compose와 Health Check
 3. CI: Test·Compose 검사·Image Build
-4. EC2 수동 배포
-5. production 승인형 GitHub Actions 배포
+4. 05에서 사용한 EC2와 Docker 실행 환경 재사용
+5. 05 Application을 직접 확인한 뒤 중지
+6. EC2 자원과 06 전용 `.env` 준비
+7. production 승인형 GitHub Actions로 Infrastructure와 Application 자동 배포
+8. Application 재배포 후 PostgreSQL·Redis 상태 보존 검증
 
 ## 프로젝트 구조
 
@@ -286,19 +289,29 @@ Workflow는 Git 저장소 루트의 다음 위치에 있어야 GitHub가 인식�
 .github/workflows/07-weather-stateful-cicd.yml
 ```
 
-다음 Trigger는 06 프로젝트 또는 Workflow 파일이 변경될 때만 실행되도록 제한합니다.
+다음 Trigger는 README 같은 문서 변경을 제외하고 06 Application·Infrastructure 파일이
+변경될 때 자동 실행되도록 제한합니다. Workflow 파일 자체를 수정한 직후에는 Actions의
+`Run workflow`로 검사합니다.
 
 ```yaml
 on:
   push:
     paths:
-      - "07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/**"
-      - ".github/workflows/07-weather-stateful-cicd.yml"
+      - ".../06_weather-mcp-stateful-deployment/backend/**"
+      - ".../06_weather-mcp-stateful-deployment/frontend/**"
+      - ".../06_weather-mcp-stateful-deployment/mcp_server/**"
+      - ".../06_weather-mcp-stateful-deployment/database/**"
+      - ".../06_weather-mcp-stateful-deployment/compose.infrastructure.yml"
+      - ".../06_weather-mcp-stateful-deployment/compose.application.yml"
   pull_request:
     paths:
       - "07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/**"
       - ".github/workflows/07-weather-stateful-cicd.yml"
   workflow_dispatch:
+    inputs:
+      deploy:
+        type: boolean
+        default: false
 ```
 
 | 이벤트 | Test·Build CI | AWS Application 배포 |
@@ -306,14 +319,17 @@ on:
 | 개인 Branch Push | 실행 | 실행하지 않음 |
 | Pull Request 생성·갱신 | 실행 | 실행하지 않음 |
 | `main` Push·병합 | 실행 | CI 성공 후 실행 가능 |
-| Actions의 `Run workflow` | 실행 | 현재 조건에서는 실행하지 않음 |
+| Actions의 `Run workflow`, `deploy=false` | 실행 | 실행하지 않음 |
+| Actions의 `Run workflow`, `deploy=true` | 실행 | CI 성공 후 실행 |
 | 로컬 `git pull` | 실행하지 않음 | 실행하지 않음 |
 
 Deploy Job의 핵심 조건은 다음과 같습니다.
 
 ```yaml
-deploy-application:
-  if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+deploy-stateful-service:
+  if: >-
+    (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+    (github.event_name == 'workflow_dispatch' && inputs.deploy)
   needs: test-and-build
   environment: production
 ```
@@ -321,7 +337,8 @@ deploy-application:
 - `if`: `main` Branch의 Push에서만 배포합니다.
 - `needs`: Test·Build가 실패하면 배포하지 않습니다.
 - `environment`: `production` 승인 규칙과 Secret을 사용합니다.
-- Job 이름처럼 Infrastructure가 아니라 Application만 배포합니다.
+- 첫 실행에서는 PostgreSQL·Redis를 만들고, 이후에는 기존 Container와 Volume을 재사용한 뒤
+  Application만 다시 Build·재생성합니다.
 
 ### 개인 Branch에서 CI 실행
 
@@ -345,96 +362,177 @@ GitHub 저장소의 `Actions` 탭에서 **07 Stateful Weather CI CD**를 선택�
 | Validate Compose | YAML 들여쓰기, 환경 변수, 외부 Network 선언 |
 | Build application images | Dockerfile의 Base Image·COPY 경로 |
 
-## 7단계: AWS EC2 최초 준비
+## 7단계: 05 EC2를 06 실행 환경으로 전환
 
-### 7-1. EC2와 Security Group
+이 문서는 05를 완료한 수강생이 같은 EC2에서 바로 06을 진행하는 경로를 기본으로 합니다.
+새 EC2를 만들지 않으므로 VPC, Security Group, Key Pair, Ubuntu, Docker와 GitHub
+`production` Environment를 재사용합니다. 06만 독립적으로 진행하는 수강생을 위한 새 EC2
+절차도 7-5절에 같은 내용으로 다시 제공합니다.
 
-1. AWS Console에서 수업용 Region을 선택합니다.
-2. Amazon Linux 2023 x86_64 EC2를 생성합니다.
-3. 이름을 `weather-stateful`로 지정합니다.
-4. 수업에서 정한 Instance Type과 Storage를 선택합니다.
-5. Key Pair를 안전한 로컬 폴더에 저장합니다.
-6. Public IPv4와 Public DNS를 기록합니다.
+### 이번 강의 환경 검증 기록
+
+다음 내용은 실제 강의 준비 과정에서 확인한 진행 흐름입니다. Public IP, Instance ID, Key와
+API Key 같은 개인·계정 값은 문서에 기록하지 않습니다.
+
+```text
+[x] Seoul Region(ap-northeast-2)에서 default VPC 생성
+[x] Ubuntu Server 24.04 LTS EC2 생성
+[x] SSH 22와 Streamlit 8501을 관리자 My IP/32로 제한
+[x] Windows PEM 파일 권한 수정 후 SSH 접속
+[x] Docker Engine·Compose·Git·curl 설치
+[x] hello-world Container 실행 확인
+[x] 05 GitHub Actions 배포와 세 Container Health 확인
+[x] 05 Container와 전용 Network 중지
+[x] 05 Source와 .env는 복구용으로 보존
+[x] EC2 자원 확인 명령과 판단 기준 검증
+[ ] 05 생성 단계부터 사용한 t3.small(약 2 GiB) 여부 확인
+[ ] Public IP 변경 시 SSH와 GitHub Environment Secret 갱신
+[ ] 06 전용 .env 전송
+[ ] 06 GitHub Actions 첫 자동 배포
+[ ] Application 재배포 후 PostgreSQL·Redis 상태 보존 확인
+```
+
+### 7-1. 05 완료 상태 확인
+
+로컬 PowerShell에서 실제 PEM 경로와 EC2 Public IP로 접속합니다. Ubuntu를 사용했다면
+사용자는 `ubuntu`입니다.
+
+```powershell
+$keyPath = "C:\mini\weather-mcp-key.pem"
+$server = "ubuntu@<PUBLIC_IPV4_OR_DNS>"
+ssh -i $keyPath $server
+```
+
+EC2에서 05 Container 상태를 직접 확인합니다.
+
+```bash
+cd ~/weather-mcp-deployment
+docker compose ps
+curl --fail http://127.0.0.1:8000/health/ready
+```
+
+Frontend, Backend, Weather MCP가 실행 중이고 Readiness가 성공하는 것을 확인한 뒤
+중지합니다. 확인 없이 바로 삭제하면 05 배포가 실제로 성공했는지 학습자가 알 수 없습니다.
+
+### 7-2. 05 Application 중지
+
+EC2에서 다음 명령을 직접 입력합니다.
+
+```bash
+cd ~/weather-mcp-deployment
+docker compose down --remove-orphans
+```
+
+정상 출력에서는 Frontend, Backend, Weather MCP Container와 05 전용 Network가 순서대로
+중지·제거됩니다. 실행 중인 Container가 없는지 확인합니다.
+
+```bash
+docker ps
+```
+
+이 명령은 EC2, Ubuntu, Docker Image, Source와 `.env`를 삭제하지 않습니다. 05 Source는
+비교와 복구를 위해 다음 위치에 그대로 둡니다.
+
+```text
+/home/ubuntu/weather-mcp-deployment
+```
+
+05와 06은 Host Port `8000`, `8501`을 같이 사용하므로 동시에 실행하지 않습니다.
+
+### 7-3. EC2 자원 확인
+
+06은 PostgreSQL·Redis·Weather MCP·Backend·Frontend의 다섯 Container를 실행합니다.
+배포 전에 메모리, Disk와 Docker 사용량을 확인합니다.
+
+```bash
+free -h
+df -h /
+docker system df
+```
+
+| 확인 결과 | 판단 |
+| --- | --- |
+| Memory 약 `2 GiB` | 05부터 선택한 `t3.small`, 기본 실습 진행 |
+| Memory 약 `4 GiB` | 선택형 `t3.medium`, 반복 Build에 더 여유 있음 |
+| Memory 약 `1 GiB` | 05 생성 시 `t3.micro`를 잘못 선택했는지 확인 필요 |
+| Root Disk 여유 `8 GiB` 이상 | 기본 실습 진행 가능 |
+| Root Disk 여유 부족 | 불필요한 Build Cache 확인 또는 EBS 확장 |
+
+정상적인 기본 경로에서는 05 생성 단계부터 `t3.small`을 사용하므로 여기서 Instance Type을
+변경하지 않습니다. 약 1 GiB만 표시된다면 05 생성 시 `t3.micro`를 잘못 선택한 예외입니다.
+이때만 AWS Console에서 Instance를 `Stop`한 뒤 `Actions → Instance settings → Change
+instance type`으로 이동하여 `t3.small`로 변경합니다. 반복 Build와 수업 중 안정성을 더
+우선하면 선택형으로 `t3.medium`을 사용할 수 있습니다.
+
+Instance를 Stop·Start하면 Elastic IP가 없는 Public IPv4는 바뀔 수 있습니다. 다시 시작한
+후 다음 항목을 모두 갱신합니다.
+
+```text
+로컬 SSH 접속 주소
+GitHub production의 AWS_HOST
+AWS_SSH_KNOWN_HOSTS
+Browser의 http://<PUBLIC_IP>:8501 주소
+```
+
+Security Group과 EBS는 같은 Instance에 계속 연결됩니다.
+
+### 7-4. 기존 EC2의 Docker 확인
+
+05에서 설치한 Docker를 다시 설치하지 않고 정상 동작만 확인합니다.
+
+```bash
+docker version
+docker compose version
+docker run --rm hello-world
+```
+
+`Hello from Docker!`가 출력되면 06을 위한 실행 환경이 준비된 것입니다.
+
+### 7-5. 대안: 06을 새 EC2에서 독립 실행
+
+05를 진행하지 않은 수강생은 서울 Region `ap-northeast-2`에서 Ubuntu Server 24.04 LTS
+x86_64, `t3.small`, Root EBS `16 GiB gp3`로 새 EC2를 만듭니다. 현재 Region에
+default VPC가 없다면 VPC Console의 `Create default VPC`를 먼저 실행합니다.
 
 | Port | Source | 목적 |
 | ---: | --- | --- |
-| `22` | 승인된 관리자·배포 경로 | SSH |
-| `8501` | 수강생 또는 운영자 IP | Streamlit Frontend |
+| `22` | `My IP/32` | 관리자 SSH |
+| `8501` | `My IP/32` | Streamlit Frontend |
 
-Backend `8000`, MCP `8010`, PostgreSQL `5432`, Redis `6379`는 인터넷에 공개하지 않습니다.
-Private Key를 Git, 메신저, README 또는 EC2에 업로드하지 않습니다.
-
-현재 Workflow는 GitHub-hosted Runner가 EC2에 직접 SSH할 수 있다는 전제입니다. Security
-Group이 내 PC IP만 허용하면 Runner는 접속할 수 없습니다. 실무에서는 self-hosted Runner,
-VPN/Bastion, AWS Systems Manager 또는 조직에서 승인한 Runner 접근 정책을 사용합니다. 이를
-해결하려고 SSH `22`를 계속 `0.0.0.0/0`으로 열어 두지 않습니다.
-
-### 7-2. Docker와 Compose 설치
-
-로컬 PowerShell에서 실제 Key와 DNS로 변경해 접속합니다.
-
-```powershell
-ssh -i "C:\Users\<사용자>\.ssh\weather-stateful.pem" ec2-user@<PUBLIC_DNS>
-```
-
-EC2에서 실행합니다.
+Backend `8000`, MCP `8010`, PostgreSQL `5432`, Redis `6379`는 공개하지 않습니다. Public
+IPv4를 Enable하고 EFS 같은 추가 File system은 만들지 않습니다. Ubuntu 접속 후 다음을
+실행합니다.
 
 ```bash
-sudo yum update -y
-sudo yum install -y docker git
-sudo service docker start
-sudo systemctl enable docker
-sudo usermod -a -G docker ec2-user
+sudo apt update
+sudo apt install -y docker.io docker-compose-v2 git curl
+sudo systemctl enable --now docker
+sudo usermod -aG docker ubuntu
 exit
 ```
 
-SSH로 다시 접속한 후 확인합니다.
+재접속 후 `docker run --rm hello-world`까지 확인합니다. Windows에서 PEM 권한 오류가 나면
+상속을 제거하고 현재 사용자에게만 읽기 권한을 부여합니다. 이 독립 경로도 이후 단계에서는
+기존 EC2 재사용 경로와 합쳐집니다.
 
-```bash
-docker info
-docker compose version
-```
+### 7-6. 06 전용 환경 파일 준비
 
-Compose Plugin이 없다면 다음을 시도합니다.
-
-```bash
-sudo yum install -y docker-compose-plugin
-docker compose version
-```
-
-패키지를 찾지 못하면 임의 Script 대신 Docker 공식 설치 절차와 강사가 지정한 버전을
-사용합니다.
-
-### 7-3. 최초 Source 전송
-
-Infrastructure는 자동 CD 전에 수동으로 한 번 실행해야 하므로 최초에는 프로젝트 전체를
-EC2에 전송합니다. 로컬 PowerShell에서 실행합니다.
+로컬의 06 프로젝트 `.env`를 EC2에 한 파일만 전송합니다. 프로젝트 전체 Source와 `.venv`는
+전송하지 않습니다. Source는 GitHub Actions가 Checkout하여 전송합니다.
 
 ```powershell
-scp -i "C:\Users\<사용자>\.ssh\weather-stateful.pem" -r `
-  "C:\aidevs\07_multi-agent-service-ops\00_runtime-and-deployment\06_weather-mcp-stateful-deployment" `
-  ec2-user@<PUBLIC_DNS>:~/weather-stateful
+$keyPath = "C:\mini\weather-mcp-key.pem"
+$server = "ubuntu@<PUBLIC_IPV4_OR_DNS>"
+$localEnv = "C:\aidevs\07_multi-agent-service-ops\00_runtime-and-deployment\06_weather-mcp-stateful-deployment\.env"
+
+Test-Path $localEnv
+ssh -i $keyPath $server "mkdir -p ~/weather-stateful"
+scp -i $keyPath $localEnv "${server}:~/weather-stateful/.env"
+ssh -i $keyPath $server "chmod 600 ~/weather-stateful/.env && ls -l ~/weather-stateful/.env"
 ```
 
-EC2에서 파일을 확인합니다.
-
-```bash
-cd ~/weather-stateful
-ls
-```
-
-`backend`, `frontend`, `mcp_server`, `database`, 두 Compose 파일이 보여야 합니다.
-
-### 7-4. EC2 환경 파일
-
-EC2에서 최초 한 번 생성합니다.
-
-```bash
-cd ~/weather-stateful
-cp .env.example .env
-nano .env
-chmod 600 .env
-```
+`Test-Path` 결과가 `True`인지 확인하고, EC2에서는 `.env` 권한이 `-rw-------`인지 확인합니다.
+API Key와 Password 값을 화면이나 Actions Log에 출력하지 않습니다.
 
 ```ini
 OPENAI_API_KEY=<실제 OpenAI API Key>
@@ -511,6 +609,10 @@ GitHub 저장소에서 다음 순서로 설정합니다.
 4. Deployment Branch를 `main`으로 제한합니다.
 5. 다음 Environment Secret 네 개를 등록합니다.
 
+05에서 사용한 같은 EC2와 같은 `production` Environment를 재사용한다면 아래 네 Secret도
+그대로 재사용합니다. 06을 위해 중복 등록하지 않습니다. 이 절은 06을 새 EC2에서 독립적으로
+시작하거나 Public IP가 바뀐 경우를 위해 전체 절차를 다시 설명합니다.
+
 | Secret | 값 |
 | --- | --- |
 | `AWS_HOST` | EC2 Public DNS 또는 Public IPv4 |
@@ -519,11 +621,63 @@ GitHub 저장소에서 다음 순서로 설정합니다.
 | `AWS_SSH_KNOWN_HOSTS` | Fingerprint를 검증한 EC2 known_hosts 한 줄 |
 
 Private Key는 시작·끝 줄과 줄바꿈을 포함하여 저장하고 따옴표를 추가하지 않습니다.
-known_hosts 값은 EC2 Host Key Fingerprint를 관리자가 확인한 뒤 로컬 결과와 대조합니다.
+known_hosts 값은 앞 단계에서 EC2 SSH 접속에 성공하면서 로컬 PC에 이미 저장된 Host Key를
+사용합니다.
+
+### AWS_SSH_KNOWN_HOSTS 만드는 방법
+
+`AWS_SSH_KNOWN_HOSTS`에는 처음 SSH 접속 때 보이는 `SHA256:...` Fingerprint만 넣는
+것이 아닙니다. SSH `known_hosts` 파일이 사용하는 다음 세 부분의 한 줄 전체를 넣습니다.
+
+```text
+<EC2 주소> ssh-ed25519 <긴 서버 공개 Host Key>
+```
+
+예시의 `...`를 직접 입력하지 않습니다. 실제 명령이 출력한 긴 문자열 전체가 필요합니다.
+이미 최초 SSH 접속을 완료했으므로 서버에 다시 접속하거나 서버의 `.ssh`를 수정하지 않고
+로컬 PowerShell에서 바로 조회합니다.
 
 ```powershell
-ssh-keyscan -H <PUBLIC_DNS>
+ssh-keygen -F <PUBLIC_IPV4_OR_DNS> `
+  -f "$env:USERPROFILE\.ssh\known_hosts"
 ```
+
+출력 중 `ssh-ed25519`가 있는 한 줄만 선택해 Clipboard로 복사합니다.
+
+```powershell
+$knownHost = ssh-keygen -F <PUBLIC_IPV4_OR_DNS> `
+  -f "$env:USERPROFILE\.ssh\known_hosts" |
+  Select-String "ssh-ed25519" |
+  ForEach-Object { $_.Line }
+
+$knownHost
+$knownHost | Set-Clipboard
+```
+
+GitHub의 `Settings → Environments → production → Environment secrets → Add environment
+secret`에서 다음처럼 등록합니다.
+
+```text
+Name: AWS_SSH_KNOWN_HOSTS
+Secret: Clipboard에 복사한 한 줄 전체
+```
+
+다음 값들은 등록하지 않습니다.
+
+```text
+SHA256:...                 # Fingerprint만 있는 값
+# Host ... found: line 1   # ssh-keygen의 설명 주석
+StrictHostKeyChecking=no   # Host 검증을 끄는 설정
+```
+
+Windows의 `ssh-keyscan`에서 `unsupported KEX method`가 발생해도 첫 수동 접속으로
+저장된 `known_hosts`를 `ssh-keygen -F`로 조회하면 됩니다. EC2를 재생성하거나 Elastic
+IP 없이 Stop·Start하여 Public IP가 바뀌면 `AWS_HOST`와 `AWS_SSH_KNOWN_HOSTS`를 모두
+새 주소 기준으로 갱신합니다.
+
+조회 결과가 없다면 이 PC에서 해당 주소로 접속한 기록이 없거나 Public IP가 바뀐
+예외입니다. 이때만 새 주소와 Fingerprint를 확인하며 SSH로 한 번 접속한 다음 다시
+조회합니다. 같은 EC2·같은 주소를 05에서 사용했다면 기존 Secret을 그대로 사용합니다.
 
 검증 없이 Host Key 검사를 끄거나 `StrictHostKeyChecking=no`를 사용하지 않습니다.
 

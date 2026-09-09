@@ -91,7 +91,13 @@ exit
 
 ```bash
 docker info
+docker compose version
+docker run --rm hello-world
 ```
+
+`Hello from Docker!`가 출력되면 일반 사용자가 Docker Engine에 연결하여 Image를 받고
+Container를 실행할 수 있다는 뜻입니다. `--rm` 때문에 실행이 끝난 Container는 자동으로
+삭제되지만 Image는 남을 수 있습니다.
 
 권한 오류가 계속되면 Docker 서비스 상태를 확인하고, 필요하면 교육 담당자의
 안내에 따라 인스턴스를 재부팅합니다.
@@ -139,6 +145,11 @@ Private Repository 인증 Token을 명령이나 Git URL에 직접 넣지 않습�
 ## 5. 코드 전송 방법 B: SCP
 
 저장소 공개가 불가능하면 Simple Compose 폴더만 전송합니다.
+
+프로젝트 폴더 안에 `.venv`, `.env`, `__pycache__`, `.pytest_cache`가 있다면 폴더 전체를
+`scp -r`로 보내지 않습니다. `.venv`는 작은 파일이 매우 많아 전송이 오래 걸리고 `.env`에는
+Secret이 들어 있습니다. 배포에 필요한 Source·Dockerfile·Compose 파일만 선택하여
+전송하거나 프로젝트별 README의 선택 복사 명령을 사용합니다.
 
 로컬 PowerShell:
 

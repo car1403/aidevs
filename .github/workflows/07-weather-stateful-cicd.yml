@@ -3,13 +3,27 @@ name: 07 Stateful Weather CI CD
 on:
   push:
     paths:
-      - "07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/**"
-      - ".github/workflows/07-weather-stateful-cicd.yml"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/backend/**"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/frontend/**"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/mcp_server/**"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/database/**"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/compose.infrastructure.yml"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/compose.application.yml"
   pull_request:
     paths:
-      - "07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/**"
-      - ".github/workflows/07-weather-stateful-cicd.yml"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/backend/**"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/frontend/**"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/mcp_server/**"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/database/**"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/compose.infrastructure.yml"
+      - "07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/compose.application.yml"
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Deploy 06 infrastructure and application to AWS EC2"
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -42,8 +56,10 @@ jobs:
       - name: Build application images only
         run: docker compose -f compose.application.yml build
 
-  deploy-application:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  deploy-stateful-service:
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && inputs.deploy)
     needs: test-and-build
     runs-on: ubuntu-latest
     environment: production
@@ -66,9 +82,9 @@ jobs:
         run: |
           ssh "$AWS_USER@$AWS_HOST" 'mkdir -p ~/weather-stateful'
           scp -r 07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/. "$AWS_USER@$AWS_HOST:~/weather-stateful/"
-      - name: Deploy application without restarting infrastructure
+      - name: Bootstrap infrastructure and deploy application
         env:
           AWS_HOST: ${{ secrets.AWS_HOST }}
           AWS_USER: ${{ secrets.AWS_USER }}
         run: |
-          ssh "$AWS_USER@$AWS_HOST" 'cd ~/weather-stateful && test -f .env && docker compose -f compose.application.yml config --quiet && docker compose -f compose.application.yml up -d --build --force-recreate weather-mcp backend frontend && curl --fail --retry 12 --retry-delay 5 http://127.0.0.1:8000/health/ready'
+          ssh "$AWS_USER@$AWS_HOST" 'cd ~/weather-stateful && test -f .env && docker compose -f compose.infrastructure.yml config --quiet && docker compose -f compose.application.yml config --quiet && docker compose -f compose.infrastructure.yml up -d --wait --wait-timeout 120 && docker compose -f compose.application.yml up -d --build --force-recreate weather-mcp backend frontend && curl --fail --retry 18 --retry-delay 5 http://127.0.0.1:8000/health/ready'

@@ -52,6 +52,35 @@ Repository `Settings → Environments → New environment`에서 `production`을
 | `AWS_SSH_PRIVATE_KEY` | 배포용 Private Key 전체 |
 | `AWS_SSH_KNOWN_HOSTS` | 관리자가 지문을 확인한 EC2 known_hosts 항목 |
 
+### AWS_SSH_KNOWN_HOSTS 생성
+
+앞 단계에서 로컬 PC의 SSH 접속이 이미 성공했으므로 Host Key도 Windows 사용자의
+`known_hosts`에 저장되어 있습니다. 서버에 다시 접속하거나 서버의 `.ssh`를 수정하지 않고
+로컬 PowerShell에서 `ssh-ed25519` 한 줄 전체를 Clipboard에 복사합니다. Fingerprint
+`SHA256:...`만 Secret에 넣지 않습니다.
+
+```powershell
+$knownHost = ssh-keygen -F <PUBLIC_IPV4_OR_DNS> `
+  -f "$env:USERPROFILE\.ssh\known_hosts" |
+  Select-String "ssh-ed25519" |
+  ForEach-Object { $_.Line }
+
+$knownHost
+$knownHost | Set-Clipboard
+```
+
+출력 형식은 다음과 같으며 `...`가 아니라 실제 긴 값 전체를 등록합니다.
+
+```text
+<PUBLIC_IPV4_OR_DNS> ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA...
+```
+
+GitHub `production` Environment에 `Name: AWS_SSH_KNOWN_HOSTS`, `Secret: 복사한 한 줄
+전체`로 저장합니다. EC2 Public IP가 바뀌면 `AWS_HOST`와 이 Secret을 함께 갱신합니다.
+05와 같은 EC2·주소·`production` Environment를 재사용하면 기존 Secret을 그대로 사용하고
+06용으로 다시 등록하지 않습니다. 조회 결과가 없는 예외에만 주소와 Fingerprint를 확인하며
+SSH로 한 번 접속한 뒤 다시 조회합니다.
+
 GitHub-hosted Runner에서 EC2 SSH로 접근 가능한 네트워크 정책이 별도로 필요합니다. 이를
 해결하기 위해 22번 Port를 `0.0.0.0/0`으로 열지 않습니다. 실제 운영에서는 SSM, VPN,
 Bastion 또는 보안 정책에 맞는 self-hosted Runner를 사용합니다.

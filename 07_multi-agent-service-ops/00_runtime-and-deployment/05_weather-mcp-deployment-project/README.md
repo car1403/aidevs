@@ -301,22 +301,30 @@ GitHub는 기본적으로 이 위치의 `.yml` 또는 `.yaml`만 Workflow로 인
 | 개인 브랜치 Push | 실행 | 실행하지 않음 |
 | Pull Request 생성·갱신 | 실행 | 실행하지 않음 |
 | `main` Branch Push·병합 | 실행 | CI 성공 후 실행 가능 |
-| Actions의 `Run workflow` | CI 실행 | 현재 조건에서는 실행하지 않음 |
+| Actions의 `Run workflow`, `deploy=false` | CI 실행 | 실행하지 않음 |
+| Actions의 `Run workflow`, `deploy=true` | CI 실행 | CI 성공 후 실행 |
 | 로컬 `git pull` | 실행하지 않음 | 실행하지 않음 |
 
-`paths` 조건 때문에 다음 프로젝트 또는 Workflow 파일이 변경되었을 때만 실행됩니다.
+`paths` 조건은 README 같은 문서 변경을 제외하고 다음 Application 파일이 변경될 때만 자동
+실행됩니다. Workflow 파일 자체를 수정한 직후에는 Actions의 `Run workflow`로 검사합니다.
 
 ```yaml
 on:
   push:
     paths:
-      - "07_multi-agent-service-ops/00_runtime-and-deployment/05_weather-mcp-deployment-project/**"
-      - ".github/workflows/07-weather-mcp-cicd.yml"
+      - ".../05_weather-mcp-deployment-project/backend/**"
+      - ".../05_weather-mcp-deployment-project/frontend/**"
+      - ".../05_weather-mcp-deployment-project/mcp_server/**"
+      - ".../05_weather-mcp-deployment-project/compose.yml"
   pull_request:
     paths:
       - "07_multi-agent-service-ops/00_runtime-and-deployment/05_weather-mcp-deployment-project/**"
       - ".github/workflows/07-weather-mcp-cicd.yml"
   workflow_dispatch:
+    inputs:
+      deploy:
+        type: boolean
+        default: false
 ```
 
 배포 Job의 다음 조건은 `main` Push에서만 배포하도록 제한합니다. Pull Request는 코드 검증만
@@ -367,7 +375,8 @@ AWS Console에서 다음 기준으로 생성합니다. AWS 화면과 제공 Inst
 2. 이름을 `weather-mcp-deployment`로 입력합니다.
 3. Amazon Linux 2023 x86_64 AMI를 선택합니다. 사용할 수 없다면 Ubuntu Server 24.04 LTS
    x86_64를 선택합니다.
-4. 초보자 수업의 권장값으로 Instance Type `t3.small`, Root EBS `16 GiB gp3`를 선택합니다.
+4. 05와 06에서 계속 사용할 공통 사양으로 Instance Type `t3.small`, Root EBS
+   `16 GiB gp3`를 선택합니다.
 5. 새 Key Pair를 만들거나 지정된 Key Pair를 선택합니다.
 6. Public IPv4가 할당되는 Network인지 확인합니다.
 7. 생성 후 Instance ID, Public IPv4, Public DNS를 기록합니다.
@@ -380,26 +389,27 @@ AMI는 `ami-06259b63260eddc13`과 같은 ID를 직접 입력하거나 다른 Reg
 선택합니다.
 
 이 프로젝트는 Ollama·PostgreSQL·Redis를 설치하지 않지만 세 Application Container를
-EC2에서 직접 Build합니다. `t3.micro`도 실행될 수 있으나 1 GiB 메모리에서는 Build 도중
-메모리가 부족할 수 있습니다. 계정의 비용 한도나 강사가 지정한 사양이 있다면 그 값을
-우선하고, 실습하지 않을 때는 Instance를 중지합니다.
+EC2에서 직접 Build하고 06에서는 PostgreSQL·Redis까지 추가합니다. 따라서 05만 실행되는
+것을 기준으로 `t3.micro`를 선택하지 않고 처음부터 `t3.small`을 사용합니다. 계정의 비용
+한도나 강사가 지정한 사양이 있다면 그 값을 우선하고, 실습하지 않을 때는 Instance를
+중지합니다.
 
 상세한 Console 화면 순서는 `03_aws-ec2/02_create-ec2.md`를 따르되 다음 값만 이 프로젝트
 기준으로 사용합니다.
 
 | 항목 | 입력값 |
 | --- | --- |
-| Region | 수업에서 선택한 Region(예: Sydney `ap-southeast-2`) |
+| Region | 수업에서 선택한 Region(이 실습 예: Seoul `ap-northeast-2`) |
 | Name | `weather-mcp-deployment` |
 | AMI | Amazon Linux 2023 x86_64 또는 Ubuntu Server 24.04 LTS x86_64 |
-| Instance Type | `t3.small` 권장 |
+| Instance Type | `t3.small` 고정 실습값 |
 | Root EBS | `16 GiB gp3` |
 | Public IPv4 | Enable |
 | Inbound | SSH `22` My IP, Streamlit `8501` My IP |
 
-EC2 생성 후 곧바로 GitHub Actions CD를 실행하지 않습니다. 먼저 SSH로 접속하여 Docker를
-설치하고, 프로젝트를 한 번 수동으로 배포하여 Compose·환경 변수·Health Check가 정상인지
-확인합니다. 수동 배포 성공 후 GitHub `production` Environment와 Secret을 설정합니다.
+EC2 생성 후 먼저 SSH로 접속하여 Docker를 설치하고 EC2 전용 `.env`를 준비합니다. Source를
+수동 전송하여 Compose를 확인하는 단계는 선택 사항입니다. 이번 과정처럼 CI까지 이미
+검증했다면 수동 Source 전송을 생략하고 GitHub Actions가 처음 배포하게 할 수 있습니다.
 
 `Advanced details`는 IAM Instance Profile `None`, Shutdown behavior `Stop`, Detailed
 CloudWatch monitoring `Disable`, Metadata version `V2 only`, User data는 빈 값으로 둡니다.
@@ -426,7 +436,7 @@ Private Subnet, NAT Gateway를 만들지 않습니다. NAT Gateway는 비용이 
 배포의 학습 목표에도 필요하지 않습니다.
 
 Security Group의 `My IP`는 현재 Public IP를 자동 입력하고, `Custom`은 IP/CIDR을 직접
-입력합니다. 예를 들어 `121.170.161.1/32`는 해당 Public IP 하나를 허용한다는 뜻이지
+입력합니다. 예를 들어 `203.0.113.10/32`는 해당 Public IP 하나를 허용한다는 뜻이지
 노트북 장치 자체를 식별한다는 뜻은 아닙니다. SSH `22`와 Streamlit `8501` 모두 `My IP`를
 선택하고, 네트워크 변경 후 접속되지 않으면 현재 IP로 두 Rule을 갱신합니다.
 
@@ -682,24 +692,18 @@ GitHub 저장소에서 다음 순서로 설정합니다.
 Private Key는 `-----BEGIN ... PRIVATE KEY-----`부터 `-----END ... PRIVATE KEY-----`까지
 줄바꿈을 포함해 등록합니다. 값 앞뒤에 따옴표를 추가하지 않습니다.
 
-`AWS_SSH_KNOWN_HOSTS`는 단순히 접속 경고를 무시하기 위한 값이 아닙니다. 먼저 EC2 Console
-또는 관리자가 제공한 Host Key Fingerprint를 확인한 뒤, 로컬에서 다음 결과와 대조합니다.
-
-```powershell
-ssh-keyscan -H <PUBLIC_DNS>
-```
-
-검증한 해당 한 줄을 Secret에 저장합니다. Workflow는 이 값을 `~/.ssh/known_hosts`에 넣어
-접속 대상이 예상한 EC2인지 확인합니다.
-
-Windows의 오래된 OpenSSH Client에서 `unsupported KEX method`가 발생하면 첫 수동 SSH
-접속 때 이미 검증하여 저장한 `known_hosts`를 조회합니다.
+이 단계는 앞에서 로컬 PC로 EC2 SSH 접속에 성공하여 Host Key가 이미 Windows
+`known_hosts`에 저장됐다는 전제로 진행합니다. 서버에 다시 접속하거나 EC2의 `.ssh`를
+수정하지 않습니다. `AWS_SSH_KNOWN_HOSTS`는 단순히 접속 경고를 무시하기 위한 값이 아니며,
+이미 검증해 저장한 로컬 항목을 다음 명령으로 조회합니다.
 
 ```powershell
 ssh-keygen -F <PUBLIC_IPV4_OR_DNS> -f "$env:USERPROFILE\.ssh\known_hosts"
 ```
 
-출력 중 `<PUBLIC_IPV4_OR_DNS> ssh-ed25519 ...` 한 줄 전체를
+출력이 없다면 주소가 바뀌었거나 이 PC에서 아직 해당 서버에 접속하지 않은 예외입니다.
+이때만 EC2 주소와 Fingerprint를 다시 확인한 뒤 한 번 SSH 접속합니다. 출력이 있다면 그중
+`<PUBLIC_IPV4_OR_DNS> ssh-ed25519 ...` 한 줄 전체를
 `AWS_SSH_KNOWN_HOSTS`에 등록합니다. `# Host ... found` 주석과 Private Key는 포함하지
 않습니다. EC2를 다시 만들면 Host Key도 달라지므로 새 Fingerprint를 검증하고 Secret을
 갱신합니다.
@@ -720,11 +724,49 @@ $knownHost | Set-Clipboard
 출력은 `서버 주소`, `Key 알고리즘`, `서버 공개 Host Key`의 세 부분으로 구성됩니다.
 
 ```text
-3.34.91.3 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA...
+<PUBLIC_IPV4_OR_DNS> ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA...
 ```
 
 이 한 줄을 GitHub의 `AWS_SSH_KNOWN_HOSTS` 값에 붙여 넣습니다. 끝의 `...`는 설명을 위한
 축약이므로 실제 등록값에는 PowerShell이 출력한 긴 문자열 전체가 들어가야 합니다.
+
+05에서 같은 EC2와 같은 `production` Environment를 계속 사용한다면 이 Secret은 다시 만들지
+않습니다. 새 EC2를 만들었거나 Public IP·DNS가 바뀐 경우에만 `AWS_HOST`와
+`AWS_SSH_KNOWN_HOSTS`를 함께 갱신합니다.
+
+### 7-1. 현재 SSH CD 구조의 Network 한계
+
+현재 Workflow는 GitHub-hosted Runner가 EC2 Public IP의 SSH `22`로 직접 접속하는 교육용
+단순 구조입니다. 관리자 PC의 `My IP/32`만 허용한 Security Group에서는 출발 IP가 다른
+GitHub Runner가 접속할 수 없습니다. GitHub-hosted Runner의 IP도 실행마다 달라질 수 있어
+특정 `/32`를 영구 등록하는 방식은 안정적이지 않습니다.
+
+첫 CD 흐름을 한 번 확인할 때만 다음 순서로 진행할 수 있습니다.
+
+```text
+SSH 22 Source를 일시적으로 Anywhere-IPv4(0.0.0.0/0)로 변경
+→ main Push와 CD 실행
+→ 배포·Health·화면 확인
+→ 즉시 SSH 22 Source를 My IP/32로 복구
+```
+
+이 방식은 반복 운영용 자동 배포가 아닙니다. 현재 Workflow를 그대로 반복 실행하려면 매번
+Security Group을 열고 닫아야 하므로 자동화의 목적과 맞지 않습니다. `0.0.0.0/0` 상태를
+상시 유지하지 않습니다.
+
+반복 가능한 운영형 배포는 뒤 단계에서 다음 구조로 확장합니다.
+
+```text
+GitHub Actions
+→ GitHub OIDC로 AWS 임시 권한 획득
+→ Application Image를 Registry에 Push
+→ AWS Systems Manager로 EC2 배포 명령 실행
+→ EC2가 Image Pull 및 Compose 재실행
+```
+
+운영형 구조에서는 GitHub에 EC2 Private Key를 보관하거나 외부에 SSH `22`를 공개할 필요가
+없습니다. 대안으로 EC2 Self-hosted Runner도 사용할 수 있지만 Runner 보안과 운영 책임이
+추가되므로 별도 심화 주제로 다룹니다.
 
 ## 8단계: main 병합과 자동 배포
 

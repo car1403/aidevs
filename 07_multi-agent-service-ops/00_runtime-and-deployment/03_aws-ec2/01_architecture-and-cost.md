@@ -30,14 +30,17 @@ EC2 Amazon Linux 2023
 현재 표시를 확인합니다. 특정 Instance Type을 항상 무료라고 문서에 고정하지 않습니다.
 
 ```text
-AMI           최신 Amazon Linux 2023 x86_64
-Instance Type Console에서 확인한 교육용 최소 x86_64
-Storage       기본 Root EBS
+AMI           Amazon Linux 2023 또는 Ubuntu Server 24.04 LTS x86_64
+Instance Type t3.small
+Storage       16 GiB gp3 Root EBS
 Public IP     Frontend 실습을 위해 활성화
 Elastic IP    만들지 않음
 ```
 
-Image Build 중 메모리가 부족하면 강사가 승인한 한 단계 큰 Instance Type을 사용합니다.
+05부터 06까지 같은 EC2를 재사용하므로 처음부터 `t3.small`을 선택합니다. `t3.micro`는 05의
+세 Application Container만 실행될 수 있더라도 06에서 PostgreSQL·Redis까지 추가하고 Image를
+Build할 때 메모리가 부족할 가능성이 큽니다. 안정적인 수업 진행이 더 중요하면 강사의 승인
+후 `t3.medium`을 선택합니다.
 
 ## 공식 문서
 
