@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parent
 load_dotenv(ROOT / ".env")
 database_url = os.getenv(
     "DATABASE_URL",
-    "postgresql://agent_user:agent_password@127.0.0.1:5433/agent_db",
+    "postgresql://agent_user:agent_pwd@127.0.0.1:5433/agent_db",
 )
 sql = (ROOT / "schema.sql").read_text(encoding="utf-8")
 

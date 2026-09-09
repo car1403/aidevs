@@ -267,8 +267,8 @@ cd C:\aidevs\07_multi-agent-service-ops\00_runtime-and-deployment\00_local-servi
 ```
 
 Script의 PostgreSQL 교육용 비밀번호와 기본 `DATABASE_URL`은 `agent_pwd`로 통일되어 있습니다.
-단, 과거의 `agent_password`로 생성된 `aidevs-pgvector-data` Volume을 재사용하면 최초 생성
-시의 비밀번호가 그대로 유지됩니다. 환경 변수 변경만으로 기존 Database 비밀번호가 바뀌지는
+단, 다른 비밀번호로 생성된 기존 `aidevs-pgvector-data` Volume을 재사용하면 최초 생성 시의
+비밀번호가 그대로 유지됩니다. 환경 변수 변경만으로 기존 Database 비밀번호가 바뀌지는
 않습니다.
 
 수업 종료 시 Container만 중지합니다.

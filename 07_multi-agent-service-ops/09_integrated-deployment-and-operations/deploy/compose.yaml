@@ -16,7 +16,7 @@ services:
     command: uvicorn backend:app --app-dir 08_multi-ai-agent-service --host 0.0.0.0 --port 8000
     environment:
       REDIS_URL: redis://host.docker.internal:6379/0
-      DATABASE_URL: postgresql://agent_user:agent_password@host.docker.internal:5433/agent_db
+      DATABASE_URL: postgresql://agent_user:agent_pwd@host.docker.internal:5433/agent_db
     ports:
       - "8000:8000"
     healthcheck:
@@ -31,7 +31,7 @@ services:
     command: python 09_integrated-deployment-and-operations/worker.py
     environment:
       REDIS_URL: redis://host.docker.internal:6379/0
-      DATABASE_URL: postgresql://agent_user:agent_password@host.docker.internal:5433/agent_db
+      DATABASE_URL: postgresql://agent_user:agent_pwd@host.docker.internal:5433/agent_db
       TRAVEL_MCP_URL: http://mcp:8010/mcp
 
   frontend:

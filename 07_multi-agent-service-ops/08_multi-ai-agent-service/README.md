@@ -91,7 +91,7 @@ GEMINI_MODEL=gemini-3.5-flash
 OLLAMA_BASE_URL=http://127.0.0.1:11434
 OLLAMA_MODEL=llama3.2
 REDIS_URL=redis://127.0.0.1:6379/0
-DATABASE_URL=postgresql://agent_user:agent_password@127.0.0.1:5433/agent_db
+DATABASE_URL=postgresql://agent_user:agent_pwd@127.0.0.1:5433/agent_db
 ```
 
 Schema를 최초 한 번 준비합니다.

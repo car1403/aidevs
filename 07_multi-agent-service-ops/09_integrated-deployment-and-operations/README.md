@@ -58,7 +58,7 @@ Copy-Item .env.example .env
 API_BASE_URL=http://127.0.0.1:8000
 TRAVEL_MCP_URL=http://127.0.0.1:8010/mcp
 REDIS_URL=redis://127.0.0.1:6379/0
-DATABASE_URL=postgresql://agent_user:agent_password@127.0.0.1:5433/agent_db
+DATABASE_URL=postgresql://agent_user:agent_pwd@127.0.0.1:5433/agent_db
 GEMINI_MODEL=gemini-3.5-flash
 ```
 

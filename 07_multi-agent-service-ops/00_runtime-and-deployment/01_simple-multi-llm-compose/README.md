@@ -38,7 +38,7 @@ Backend도 Container이므로 Host의 공용 서비스에는 `127.0.0.1`이 아�
 `host.docker.internal`로 접근합니다.
 
 ```ini
-DATABASE_URL=postgresql://agent_user:agent_password@host.docker.internal:5433/agent_db
+DATABASE_URL=postgresql://agent_user:agent_pwd@host.docker.internal:5433/agent_db
 REDIS_URL=redis://host.docker.internal:6379/0
 OLLAMA_BASE_URL=http://host.docker.internal:11434
 ```

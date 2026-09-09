@@ -67,7 +67,7 @@ class PostgresHistory:
     def __init__(self) -> None:
         self.url = os.getenv(
             "DATABASE_URL",
-            "postgresql://agent_user:agent_password@127.0.0.1:5433/agent_db",
+            "postgresql://agent_user:agent_pwd@127.0.0.1:5433/agent_db",
         )
 
     def ping(self) -> bool:

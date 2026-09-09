@@ -1,12 +1,117 @@
 # 07 Multi AI Agent Orchestration
 
-> 과정 재구성 상태: **00~09 과정과 전체 검증 완료**
+> 이전 과정의 Single AI Agent를 여러 전문 AI Agent의 협업 구조로 확장하고, 최종적으로
+> Docker·GitHub Actions·AWS를 이용해 배포하고 운영하는 초보자 과정입니다.
 
-`05_llm-agent-orchestration`에서 배운 Single AI Agent·Tool·MCP·RAG·Memory·승인·평가를 **Multi AI Agent와 Orchestration**으로 확장하는 초보자 과정입니다. 핵심은 여러 AI Agent를 만드는 것보다 역할·계약·Handoff·실패·권한·전체 종료를 Orchestration하는 것입니다. 전체 이전표와 세부 원칙은 [`CURRICULUM_REDESIGN.md`](./CURRICULUM_REDESIGN.md)에 있습니다.
+## 이전 과정에서 이번 과정으로
 
-기존 01~03은 새 구조로 통합·이동했습니다. 나머지 과정도 단계별로 정리한 뒤 `C:\mini_multi_agent_st`를 이전 내용을 누적하지 않는 구조로 재구성합니다.
+이전 `05_llm-agent-orchestration` 과정에서는 하나의 AI Agent가 LLM, Tool, MCP, RAG,
+Memory, Human Approval을 이용해 업무를 처리하는 방법을 학습했습니다.
 
-## DevOps란 무엇인가
+이번 과정에서는 하나의 AI Agent가 담당하던 책임을 여러 전문 AI Agent로 분리하고, 이들의
+선택·순서·결과 전달·검증·실패·재시도·전체 종료를 통제하는 **Multi AI Agent
+Orchestration**을 학습합니다.
+
+```text
+이전 과정                              이번 과정
+
+사용자                                 사용자
+  ↓                                      ↓
+Single AI Agent                        Orchestrator
+  ├─ LLM                                 ├─ Weather Agent
+  ├─ Tool                                ├─ Place Agent
+  ├─ MCP                                 ├─ Budget Agent
+  ├─ RAG                                 ├─ Validation Agent
+  └─ Memory                              └─ Join → 최종 결과
+```
+
+Multi-Agent는 Single Agent보다 무조건 좋은 구조가 아닙니다. 독립 Goal, 전문 지식, Context
+격리, Tool 권한, 평가 기준, 병렬 실행, Handoff 같은 분리 근거가 있을 때만 여러 Agent를
+선택합니다.
+
+## 과정의 핵심 질문
+
+1. 어떤 책임을 별도의 AI Agent로 분리해야 하는가?
+2. Agent별 Goal·Context·Tool 권한·입출력 계약은 무엇인가?
+3. 요청과 중간 상태에 따라 어떤 Agent를 선택할 것인가?
+4. 독립 작업을 언제 병렬 실행하고 결과를 누가 Join할 것인가?
+5. 업무 책임을 다른 Agent에게 어떻게 Handoff할 것인가?
+6. 결과를 누가 평가하고 몇 번까지 수정·재시도할 것인가?
+7. Prompt Injection과 위험 Tool 실행을 어떻게 제한할 것인가?
+8. 상태·Log·Trace·실행 이력을 어떻게 관찰할 것인가?
+9. 검증된 서비스를 Docker와 GitHub Actions로 AWS에 어떻게 배포할 것인가?
+10. 장애를 감지하고 Retry·Fallback·Restart로 어떻게 복구할 것인가?
+
+## Anthropic 자료로 배우는 기본 Pattern
+
+이 과정은 Anthropic 공식 글
+[Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)에서
+소개하는 단순하고 조합 가능한 Workflow Pattern을 학습 출발점으로 사용합니다.
+
+| Anthropic 공식 명칭 | 이번 과정의 표현 | 핵심 구조 | 실사용 예 |
+| --- | --- | --- | --- |
+| Prompt chaining | Sequential | A → B → C | 조사 → 작성 → 검토 |
+| Routing | Router | Router → Worker 하나 | 배송·환불·기술지원 분류 |
+| Parallelization | Parallel + Join | A·B·C → Join | 날씨·장소·예산 → 여행 일정 |
+| Orchestrator-workers | Supervisor–Worker | Supervisor ↔ Workers | 중간 결과에 따라 다음 역할 선택 |
+| Evaluator-optimizer | Evaluator–Reviser | 생성 → 평가 → 수정 | 정책 기준을 통과할 때까지 제한적으로 개선 |
+
+Anthropic은 미리 정의된 코드 경로로 LLM과 Tool을 조정하는 시스템을 Workflow로, LLM이
+실행 과정과 Tool 사용을 동적으로 결정하는 시스템을 Agent로 구분합니다. 또한 단순한
+구조에서 시작하고 필요한 경우에만 복잡성을 추가할 것을 권장합니다.
+
+본 과정은 위 기본 Pattern에 실제 Multi-Agent Service에 필요한 다음 내용을 추가합니다.
+
+- Independent Agents와 Orchestration의 차이
+- 역할·입출력·권한을 명시하는 Agent Contract
+- 책임과 최소 Context를 이전하는 Handoff
+- Primary Provider 오류를 기록하는 Failover
+- Guardrail·Tool 권한·Role 기반 접근 통제
+- Evaluation·Feedback·Retry·Trace
+- Redis Queue·Worker·Progress·PostgreSQL 실행 이력
+- Health Check·Monitoring·Auto Healing
+
+Pattern 이름부터 선택하지 않습니다. 업무 의존성, 책임, Context, 권한, 실패와 종료 조건을
+먼저 그린 뒤 가장 단순한 Pattern을 선택합니다.
+
+## 공통 여행 서비스
+
+```text
+Travel Supervisor
+├─ Weather Agent
+├─ Place Agent
+├─ Budget Agent
+├─ Itinerary Agent
+└─ Validation Agent
+```
+
+공통 요청은 부산 2박 3일 여행 계획입니다. 실제 LLM과 실제 날씨·저장소·HTTP MCP 연결을 사용하지만 실제 예약과 결제는 수행하지 않습니다.
+
+## 로컬 실습에서 AWS 운영으로
+
+이전 과정에서는 PostgreSQL/pgvector, Redis, Ollama를 Docker Container로 설치하여 로컬
+AI Agent 환경을 구성했습니다.
+
+이번 과정의 최종 목표는 로컬 Python 예제를 실행하는 데서 끝나지 않습니다. Frontend,
+Backend API, MCP Server, Redis Queue, Worker, Multi-Agent Orchestrator와 상태 저장소를
+서비스로 구성하고 AWS에 배포하여 상태와 장애를 관찰합니다.
+
+```text
+로컬 개발
+→ Python Test
+→ Docker Image Build
+→ GitHub Actions CI
+→ Pull Request
+→ main 병합
+→ 배포 승인
+→ AWS 배포
+→ Health Check
+→ Log·Metric·Trace
+→ 장애 복구
+→ 다음 개선
+```
+
+## DevOps와 CI/CD를 배우는 이유
 
 DevOps는 **Development(개발)**와 **Operations(운영)**를 합친 말입니다.
 
@@ -118,20 +223,24 @@ SRE의 기초 개념으로도 이어집니다.
 > DevOps는 개발한 코드를 자동으로 검증·배포하고 운영 결과를 다시 개발에 연결하여, 서비스를
 > 빠르고 안전하게 개선하는 협업 방식입니다.
 
-## 공통 여행 서비스
+## 전체 환경 준비
 
-```text
-Travel Supervisor
-├─ Weather Agent
-├─ Place Agent
-├─ Budget Agent
-├─ Itinerary Agent
-└─ Validation Agent
+이 과정은 Python 가상환경, OpenAI·Gemini, Ollama의 Llama·Gemma, PostgreSQL/pgvector,
+Redis, MCP 공통 환경을 사용합니다.
+
+최초 설치부터 `.env`, 모델 다운로드, Port, 서비스 검증까지의 상세 절차는
+[SETUP.md](./SETUP.md)를 위에서 아래로 진행합니다.
+
+```powershell
+cd C:\aidevs\07_multi-agent-service-ops
+.\.venv\Scripts\Activate.ps1
+docker start aidevs-pgvector aidevs-redis aidevs-ollama
+docker exec aidevs-pgvector pg_isready -U agent_user -d agent_db
+docker exec aidevs-redis redis-cli PING
+docker exec aidevs-ollama ollama list
 ```
 
-공통 요청은 부산 2박 3일 여행 계획입니다. 실제 LLM과 실제 날씨·저장소·HTTP MCP 연결을 사용하지만 실제 예약과 결제는 수행하지 않습니다.
-
-## 최종 학습 흐름
+## 01~09 학습 흐름
 
 | 단계 | 폴더 | 핵심 내용 |
 | ---: | --- | --- |
@@ -146,18 +255,7 @@ Travel Supervisor
 | 08 | `08_multi-ai-agent-service` | 관측 가능한 Multi-Agent Service: 상태·로그·대시보드·이력 |
 | 09 | `09_integrated-deployment-and-operations` | Docker·AWS·CI/CD·Auto Healing 통합 배포와 운영 |
 
-## 실행 원칙
-
-- 기본 실행은 OpenAI·Gemini·Ollama 중 설정한 실제 Provider를 사용합니다.
-- 실제 Provider 실패를 Mock 성공으로 숨기지 않습니다.
-- 자동 테스트에서만 Fake Client를 사용합니다.
-- 실제 Redis·PostgreSQL·HTTP MCP 연결을 단계적으로 사용합니다.
-- 날짜·금액·권한·반복 제한과 승인은 Python과 저장소가 보장합니다.
-- `20_assignments`는 만들지 않습니다.
-- `10_labs`는 여러 Process 통합에 꼭 필요할 때만 만듭니다.
-- LangGraph는 Python Orchestrator와 비교하는 선택 예제입니다.
-
-## Server 사용 원칙
+## 서비스 확장 흐름
 
 처음에는 한 Process의 작은 예제로 배우고, 08에서 필요한 책임만 Server로 분리합니다.
 
@@ -172,16 +270,43 @@ Frontend
 
 Workflow는 Orchestration 내부의 결정적인 순서·검증·Join을 표현하는 보조 개념입니다. Workflow Server는 이를 별도 서비스로 분리할 이유가 있을 때만 사용합니다.
 
-## 현재와 다음 단계
+## 공통 실행 원칙
+
+- 기본 실행은 OpenAI·Gemini·Ollama 중 설정한 실제 Provider를 사용합니다.
+- 실제 Provider 실패를 Mock 성공으로 숨기지 않습니다.
+- 자동 테스트에서만 Fake Client를 사용합니다.
+- 실제 Redis·PostgreSQL·HTTP MCP 연결을 단계적으로 사용합니다.
+- 날짜·금액·권한·반복 제한과 승인은 Python과 저장소가 보장합니다.
+- `20_assignments`는 만들지 않습니다.
+- `10_labs`는 여러 Process 통합에 꼭 필요할 때만 만듭니다.
+- LangGraph는 Python Orchestrator와 비교하는 선택 예제입니다.
+
+## 최종 도착점
 
 ```text
-1 과정 지도와 기존 파일 이전표 확정       완료
-2 00 Runtime·Compose·Actions·AWS          완료
-3 01~03 Multi AI Agent 기초·멀티 LLM      완료
-4 04~05 Orchestration·Handoff              완료
-5 06~07 Safety·Failure·Evaluation           완료
-6 08 실제 Multi-Agent Service               완료
-7 09 통합 여행 서비스                       완료
-8 과정 전체 검증                            완료
-9 mini_multi_agent_st 비누적 구조 재구성    다음 단계
+Browser
+→ Frontend
+→ Backend API
+→ Redis Queue
+→ Worker
+→ Multi AI Agent Orchestrator
+   ├─ Supervisor·Router
+   ├─ Specialist Agents
+   ├─ Evaluator·Guardrail
+   └─ Handoff·Join
+→ HTTP MCP Servers
+→ Redis 현재 상태·PostgreSQL 실행 이력
+→ Docker Compose·GitHub Actions·AWS
+→ Monitoring·Auto Healing
 ```
+
+## 완료 기준
+
+- 이전 Single AI Agent 과정과 이번 Multi-Agent 과정의 차이를 설명할 수 있습니다.
+- Anthropic의 기본 Workflow Pattern과 과정에서 추가한 운영 Pattern을 구분할 수 있습니다.
+- Agent 역할·계약·Context·Tool 권한과 Pattern 선택 근거를 설명할 수 있습니다.
+- `SETUP.md`를 따라 Python·Multi-LLM·Docker 공통 환경을 준비할 수 있습니다.
+- 결과 평가·Guardrail·Retry·Failover·Trace를 적용할 수 있습니다.
+- Queue·Worker·상태 저장소를 가진 서비스를 구성할 수 있습니다.
+- CI와 CD를 구분하고 GitHub Actions 결과를 읽을 수 있습니다.
+- AWS에 배포하고 Health·Log·Trace와 장애 복구 상태를 확인할 수 있습니다.
