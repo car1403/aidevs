@@ -16,6 +16,165 @@ Multi AI Agent Orchestration
 └─ 위 Agent의 선택·순서·결과 전달·실패·전체 종료까지 통제
 ```
 
+## 이 단원에서 먼저 답해야 할 질문
+
+이 단원은 Agent를 많이 만드는 방법부터 시작하지 않습니다. 다음 질문에 답하면서 하나의
+Agent를 유지할지, 여러 Agent로 분리할지, Orchestrator까지 둘지를 결정합니다.
+
+1. 하나의 Goal과 Prompt로 책임을 명확하게 설명할 수 있는가?
+2. 모든 작업이 같은 Context와 Tool 권한을 사용해도 안전한가?
+3. 작업마다 필요한 전문 지식과 평가 기준이 다른가?
+4. 일부 작업을 독립적으로 실행하거나 병렬화할 수 있는가?
+5. 업무 책임을 다른 Agent에게 명시적으로 넘겨야 하는가?
+6. 중간 결과에 따라 다음 Agent가 달라지는가?
+7. 여러 결과를 누가 검증하고 하나의 답으로 합칠 것인가?
+8. 실패·재시도·반복·전체 종료를 누가 통제할 것인가?
+
+앞의 질문 대부분이 필요 없다면 Single Agent가 더 적합할 수 있습니다. Multi-Agent는 Single
+Agent보다 발전된 정답이 아니라, 책임 경계가 실제로 필요할 때 선택하는 구조입니다.
+
+## Single Agent란 무엇인가
+
+Single Agent는 하나의 판단 주체가 사용자 요청을 이해하고, 필요한 Tool을 선택하고, Context를
+관리하며, 최종 답변을 만드는 구조입니다.
+
+```text
+사용자 요청
+   ↓
+Travel Agent
+   ├─ Weather Tool
+   ├─ Place Tool
+   ├─ Budget Tool
+   └─ 최종 여행 계획
+```
+
+### 장점
+
+- 호출 흐름이 짧고 구현이 단순합니다.
+- LLM 호출 수와 운영 비용이 상대적으로 작습니다.
+- Context를 다른 Agent에게 전달하는 계약이 필요하지 않습니다.
+- 오류가 발생했을 때 확인할 실행 지점이 적습니다.
+- 작은 기능은 Prompt 하나를 수정해 빠르게 실험할 수 있습니다.
+
+### 한계
+
+- 역할과 규칙이 늘어나면 System Prompt가 지나치게 커집니다.
+- 날씨 조회 Agent가 결제 Tool까지 보는 것처럼 권한이 과도해질 수 있습니다.
+- 작성과 검증을 같은 판단 주체가 수행하면 독립적인 평가가 어렵습니다.
+- 하나의 Context에 불필요한 개인정보와 업무 데이터가 섞일 수 있습니다.
+- 한 영역의 실패가 전체 요청 실패로 이어질 수 있습니다.
+
+Single Agent의 Prompt가 길다는 이유만으로 즉시 분리하지는 않습니다. 먼저 Tool 함수 분리,
+Prompt 정리, 결정적인 Python Workflow로 해결할 수 있는지 확인합니다.
+
+## Multi-Agent란 무엇인가
+
+Multi-Agent 구조에서는 독립된 Goal, Instructions, Context, Tool 권한, 평가 기준을 가진 여러
+Agent가 각자의 결과를 만듭니다.
+
+```text
+Weather Agent → 날씨 근거
+Place Agent   → 장소 후보
+Budget Agent  → 예상 비용
+Safety Agent  → 위험 검토
+```
+
+Agent가 여러 개 있다고 자동으로 협업이 되는 것은 아닙니다. 위 네 결과를 각각 출력하고
+프로그램이 끝난다면 이는 여러 독립 Agent의 실행입니다. 실행 순서, 결과 전달, Join, 실패,
+종료를 통제하는 Orchestrator가 있어야 Multi-Agent Orchestration이라고 부를 수 있습니다.
+
+```text
+여러 독립 Agent                   Multi-Agent Orchestration
+
+요청 → Weather Agent → 결과       요청 → Orchestrator
+요청 → Place Agent   → 결과                ├→ Weather Agent
+요청 → Budget Agent  → 결과                ├→ Place Agent
+                                              ├→ Budget Agent
+전체 결과·종료를 관리하는 주체 없음          └→ Join Agent → 최종 결과
+```
+
+## Single Agent와 Multi-Agent 비교
+
+| 비교 기준 | Single Agent | Multi-Agent |
+| --- | --- | --- |
+| 판단 주체 | 하나 | 역할별로 여러 개 |
+| Goal | 하나의 넓은 Goal | Agent별 좁고 독립적인 Goal |
+| Prompt | 커질 수 있지만 한곳에서 관리 | 짧아지지만 Agent별 관리 필요 |
+| Context | 한 Agent가 전체 Context 사용 | 필요한 Context만 역할별 전달 가능 |
+| Tool 권한 | 한 Agent에 권한이 모이기 쉬움 | Agent별 Allowlist 적용 가능 |
+| 평가 | 생성자와 평가자가 같을 수 있음 | Evaluator 역할을 독립시킬 수 있음 |
+| 병렬 실행 | 내부 Tool 수준에서 별도 설계 | 독립 Agent 결과를 병렬화하기 쉬움 |
+| 호출 비용 | 일반적으로 작음 | Agent·조정·Join 호출만큼 증가 |
+| 지연 시간 | 흐름이 짧음 | 순차 단계와 Join 때문에 늘 수 있음 |
+| 실패 지점 | 비교적 적음 | Agent·Provider·Handoff·Join마다 증가 |
+| 추적 | 한 흐름 | Agent별 Trace와 전체 Correlation 필요 |
+| 적합한 상황 | 작고 응집된 업무 | 책임·권한·평가 기준이 실제로 분리된 업무 |
+
+## Agent를 분리할 수 있는 근거
+
+다음 항목 중 하나가 있다고 반드시 분리하는 것은 아니지만, 두 가지 이상이 명확하면
+Multi-Agent 후보로 검토합니다.
+
+| 분리 근거 | 예시 |
+| --- | --- |
+| 독립 Goal | 날씨 조사와 예산 검증의 완료 기준이 다름 |
+| 전문 지식 | 법률 검토와 콘텐츠 작성에 서로 다른 지침 필요 |
+| Context 격리 | 날씨 Agent에 결제 정보가 필요하지 않음 |
+| Tool 권한 격리 | 조회 Agent와 환불 실행 Agent의 권한이 다름 |
+| 독립 평가 | 작성 Agent와 보안 Reviewer를 분리해야 함 |
+| 병렬 가능 | 날씨·장소·예산 조사가 서로 의존하지 않음 |
+| 책임 이전 | 배송 상담에서 환불 담당자에게 업무를 넘김 |
+| 장애 격리 | 장소 검색 실패와 예산 계산 성공을 분리해 처리 |
+
+반대로 단순 계산, 형식 변환, 키워드 분류처럼 결과가 결정적인 작업은 새 Agent보다 Python
+함수나 Tool이 더 적합합니다. 모든 함수를 Agent라고 부르면 책임 경계가 오히려 흐려집니다.
+
+## Orchestrator가 담당해야 하는 것
+
+AI Agent는 전문 판단과 결과 생성을 담당하고, 결정적으로 통제해야 하는 항목은 Python
+Orchestrator가 담당합니다.
+
+| AI Agent가 잘하는 일 | Python Orchestrator가 보장할 일 |
+| --- | --- |
+| 자연어 분류·요약·초안 작성 | 허용 Agent와 Tool 목록 |
+| 비정형 결과 해석 | 실행 순서와 필수 입력 |
+| 전문 역할의 의견 생성 | 최대 단계·최대 반복·Timeout |
+| 평가 이유와 수정 제안 | Schema 검증·권한·종료 조건 |
+
+LLM에게 “적절히 반복하다 끝내라”라고만 지시하면 무한 반복이나 예측하기 어려운 실행이 생길
+수 있습니다. 최대 반복 횟수, 허용 Handoff 대상, 필수 Join 결과, 실패 시 종료 이유는 코드와
+계약으로 제한합니다.
+
+## 이번 단원에서 미리 보는 Pattern
+
+| Pattern | 핵심 질문 | 최소 구조 | 사용하지 않아도 되는 경우 | 구체적인 예 |
+| --- | --- | --- | --- | --- |
+| Independent Agents | Agent가 여러 개면 협업인가? | A, B, C를 각각 실행 | 하나의 결과만 필요할 때 | Weather·Place·Budget Agent가 각각 조사 결과만 출력하고 전체 여행 계획은 만들지 않음 |
+| Sequential | 앞 결과가 다음 입력인가? | A → B → C | 작업이 서로 독립적일 때 | Research Agent의 자료를 Writer Agent가 글로 작성하고 Reviewer Agent가 검토함 |
+| Parallel + Join | 독립 결과를 모두 합쳐야 하는가? | A·B·C → Join | 일부 결과만 선택하면 될 때 | Weather·Place·Budget Agent가 독립적으로 조사하고 Itinerary Agent가 하나의 여행 일정으로 합침 |
+| Router | 요청마다 담당 하나가 다른가? | Router → A 또는 B | 항상 같은 Agent를 실행할 때 | 고객 질문을 분류하여 배송·환불·기술지원 Agent 중 하나만 선택함 |
+| Supervisor–Worker | 중간 결과로 다음 역할이 바뀌는가? | Supervisor ↔ Workers | 경로가 고정되어 있을 때 | 코드 분석 결과에 따라 Developer Agent를 호출하고, 수정 후 Reviewer Agent를 추가 호출함 |
+| Handoff | 업무 책임 자체가 이동하는가? | A → 책임·Context → B | 결과만 잠깐 요청할 때 | Support Agent가 주문번호와 상담 이유를 전달하며 환불 업무 책임을 Refund Agent에게 넘김 |
+| Evaluator–Reviser | 생성과 검증을 반복해야 하는가? | 작성 → 평가 → 수정 | 결정적 규칙으로 한 번 검사 가능할 때 | Writer Agent의 안내문을 Evaluator Agent가 평가하고 실패하면 Reviser Agent가 최대 5회 수정함 |
+| Provider Failover | 같은 계약으로 Provider를 바꿀 수 있는가? | Primary 실패 → Secondary | 실패 시 즉시 중단해야 할 때 | Gemma가 Timeout 또는 오류를 반환하면 실패 기록을 남기고 같은 요청을 GPT로 다시 실행함 |
+
+하나의 서비스는 Pattern 하나만 사용하는 것이 아닙니다. 예를 들어 Router가 요청 종류를
+선택하고, 선택된 여행 Workflow 안에서는 Weather·Place Agent를 Parallel로 실행한 뒤 Join할
+수 있습니다. 중요한 것은 복잡한 Pattern을 많이 쓰는 것이 아니라 각 구간의 의존성과 책임에
+맞는 가장 단순한 Pattern을 선택하는 것입니다.
+
+## Pattern을 잘못 선택한 신호
+
+- Agent마다 Prompt 이름만 다르고 Goal·Context·Tool이 사실상 같습니다.
+- 모든 Agent가 전체 대화와 모든 Tool을 공유합니다.
+- Router가 업무까지 수행하여 Worker와 책임이 겹칩니다.
+- Parallel이라고 설명하지만 앞 Agent의 결과를 다음 Agent가 필요로 합니다.
+- Join 없이 Agent 결과 목록을 그대로 사용자에게 전달합니다.
+- Supervisor가 최대 단계 없이 Worker를 계속 호출합니다.
+- Handoff 대상과 전달 Context가 문자열 설명에만 있고 계약이 없습니다.
+- Evaluator가 통과 기준 없이 취향에 따라 반복합니다.
+- Failover가 첫 오류를 숨겨 정상 Provider처럼 표시합니다.
+
 ## 실행
 
 모든 명령은 과정 루트 `C:\aidevs\07_multi-agent-service-ops`에서 실행합니다. 처음
@@ -188,8 +347,8 @@ Pattern보다 파일 탐색에 더 많은 시간을 쓰지 않게 하기 위해�
 
 ## Orchestration Pattern 지도
 
-`01~02`에서는 Single과 여러 독립 LLM Agent를 비교하고, `03~05`에서는 호출 없이
-분리 기준을 정리합니다. `06~12`에서는 실제 LLM Agent로 패턴을 실행하고 `13`에서는
+`01~02`에서는 Single과 여러 독립 AI Agent를 비교하고, `03~05`에서는 호출 없이
+분리 기준을 정리합니다. `06~12`에서는 실제 AI Agent로 패턴을 실행하고 `13`에서는
 Failover를 확인합니다. Python Orchestrator가 허용 Agent·필수 결과·최대 반복·종료를
 통제하며, LLM은 전문 결과 생성·분류·검토·수정을 담당합니다.
 
@@ -235,7 +394,7 @@ Supervisor → Worker 선택 → 결과 확인 → 다음 Worker 또는 종료
 한 번의 Routing으로 끝나지 않고 중간 결과에 따라 다음 작업을 정할 때 사용합니다.
 최대 단계와 완료 조건을 Python이 보장해야 하며 Supervisor에게 무제한 반복 권한을
 주지 않습니다. 이 입문 예제의 Supervisor는 Python으로 순서를 통제하고 Worker만 실제
-LLM을 사용합니다. 결과를 보고 다음 역할을 동적으로 선택하는 LLM Supervisor는 03
+LLM을 사용합니다. 결과를 보고 다음 역할을 동적으로 선택하는 LLM 기반 Supervisor는 03
 단원에서 확장합니다.
 
 ### 5. Handoff
@@ -313,3 +472,93 @@ Pattern 이름부터 선택하지 않습니다. 의존성, 책임, Context, 권�
 
 - 네 Specialist의 Goal을 하나로 합쳤을 때 Prompt와 결과가 어떻게 복잡해지는지 비교하세요.
 - Place Agent와 Budget Agent가 서로 다른 Context 권한을 가져야 하는 사례를 적어 보세요.
+
+## 마지막 단계: Mini Multi-Agent 01로 확장
+
+13개의 강의 파일을 실행한 뒤 `C:\mini_multi_agent_st\mini_multi_agent_01_patterns`에서 같은
+개념을 하나의 Web Application으로 연결합니다. 강의 파일을 버리고 새로 만드는 것이 아니라,
+각 파일에 있던 책임을 Application 계층별로 옮기는 단계입니다.
+
+### 강의 예제가 미니 프로젝트로 이동하는 방법
+
+| 강의 파일의 표현 | 미니 프로젝트의 위치 | 확장되는 책임 |
+| --- | --- | --- |
+| `weather_agent()` 같은 함수 | `backend/app/agents/*_agent.py` | Agent별 Goal·지시문·Tool 권한 선언 |
+| 파일 안의 Agent 목록 | `backend/app/agents/registry.py` | Agent ID 등록과 조회 |
+| 한 Agent의 LLM 호출 | `backend/app/agents/runtime.py` | Provider·MCP Tool·출력 계약 공통 실행 |
+| Pattern 실행 함수 | `backend/app/orchestration/engine.py` | 순서·분기·Join·반복·종료 통제 |
+| Provider별 호출 코드 | `backend/app/providers/registry.py` | GPT·Gemini·Llama·Gemma 호출 방식 통일 |
+| 출력용 `dict` | `backend/app/schemas/runs.py` | HTTP 요청·응답 Pydantic 검증 |
+| 직접 함수 Tool | `backend/app/mcp/client.py` | HTTP MCP Server 호출 |
+| Tool 구현과 데이터 | `mcp_server/tools`, `database`, `weather` | JSON·PostgreSQL·실제 날씨 Source 분리 |
+| `print()` 결과 | `frontend/app.py` | 왼쪽 메뉴·Agent 결과·Trace 시각화 |
+
+### 화면 메뉴와 강의 Lab 연결
+
+| 미니 프로젝트 메뉴 | 연결되는 강의 파일 | 화면에서 확인할 것 |
+| --- | --- | --- |
+| 01 Single AI Agent | `01_single_ai_agent.py` | 하나의 Agent와 선택 Provider |
+| 02 Independent Agents | `02_independent_specialists.py` | 네 Agent 결과와 전체 Join 부재 |
+| 03 Agent 분리 판단 | `03_split_decision.py` | Goal·권한·평가 근거 Check |
+| 04 아키텍처 비용 비교 | `04_compare_architectures.py` | 호출 수와 실패 지점 증가 |
+| 05 Context와 Tool 권한 | `05_context_and_permission_boundaries.py` | Agent별 전달 Key와 Tool Allowlist |
+| 06 Orchestration 비교 | `06_orchestration_preview.py` | 독립 실행과 조정 실행의 Trace 차이 |
+| 07 Sequential | `07_sequential_orchestration.py` | 앞 출력이 다음 입력으로 전달되는 과정 |
+| 08 Parallel + Join | `08_parallel_and_join.py` | Specialist 결과와 최종 Join |
+| 09 Router | `09_router_orchestration.py` | 선택된 Worker 하나와 선택 이유 |
+| 10 Supervisor–Worker | `10_supervisor_worker.py` | 중간 상태·다음 Worker·최대 단계 |
+| 11 Handoff | `11_handoff_preview.py` | 이전 책임·대상·최소 Context |
+| 12 Evaluator–Reviser | `12_evaluator_reviser.py` | 평가 결과·수정 Feedback·최대 5회 종료 |
+| 13 Provider Failover | `13_provider_failover.py` | Primary 오류와 Secondary 시도 기록 |
+
+### 미니 프로젝트에서 추가로 배우는 것
+
+강의 파일은 Pattern의 핵심만 읽기 쉽게 한 파일에 둡니다. 미니 프로젝트에서는 다음과 같은
+실제 Application 경계를 추가합니다.
+
+```text
+사용자
+→ Streamlit Frontend :8501
+→ FastAPI Backend :8000
+→ Pattern Engine
+   ├→ Agent Registry와 Runtime
+   ├→ GPT·Gemini·Llama·Gemma
+   └→ MCP Client
+→ Learning MCP Server :8010
+   ├→ 여행 Tool
+   ├→ 고객지원 Tool
+   └→ 콘텐츠 Tool
+```
+
+- Agent Profile과 API Schema를 분리합니다.
+- Agent 실행과 Orchestration 실행을 분리합니다.
+- Tool 구현을 Backend에서 분리해 MCP Server로 실행합니다.
+- 네 LLM Provider가 같은 Agent 계약을 사용하게 합니다.
+- 최종 답변뿐 아니라 단계별 Trace, Provider, Model, 오류, 종료 이유를 화면에 표시합니다.
+- JSON 데이터에서 실제 Open-Meteo 또는 PostgreSQL로 Source를 바꿀 수 있게 합니다.
+
+### 권장 연결 실습
+
+1. 강의 파일 `01~05`로 Single/Multi 분리 기준을 먼저 설명합니다.
+2. 강의 파일 `06~13`을 하나씩 실행해 Pattern의 입력과 출력을 확인합니다.
+3. 미니 프로젝트에서 같은 번호의 왼쪽 메뉴를 실행합니다.
+4. 강의 파일의 함수가 미니 프로젝트의 어떤 Module로 이동했는지 표를 따라 찾습니다.
+5. 화면 Trace와 터미널 `print()` 결과가 같은 실행 단계를 표현하는지 비교합니다.
+6. Agent별 Provider를 바꾸어도 Pattern 계약이 유지되는지 확인합니다.
+7. `WEATHER_DATA_SOURCE=live`로 실제 날씨 Tool을 연결합니다.
+8. 준비된 PostgreSQL 환경에서는 `SUPPORT_DATA_SOURCE=postgresql`로 고객지원 조회를 연결합니다.
+
+### 이 단원의 최종 도착점
+
+```text
+Single Agent를 무조건 Multi-Agent로 바꾸는 것          X
+많은 Agent와 복잡한 Pattern을 사용하는 것              X
+
+분리 근거가 없으면 Single Agent를 유지하고,
+책임·Context·권한·평가 기준이 달라질 때 Agent를 분리하며,
+의존성·실패·종료 조건에 맞는 최소 Orchestration을 선택한다. O
+```
+
+미니 프로젝트를 실행할 수 있다는 것만으로 완료하지 않습니다. 화면에서 각 Pattern의 선택
+이유, 증가한 비용과 실패 지점, Python이 통제하는 종료 조건을 설명할 수 있어야 01 과정이
+완료됩니다.

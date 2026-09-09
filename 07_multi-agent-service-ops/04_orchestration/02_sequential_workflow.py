@@ -1,4 +1,4 @@
-"""Lab 04-02: 실제 LLM Agent 결과를 다음 Agent 입력으로 순서대로 전달합니다.
+"""Lab 04-02: 실제 AI Agent 결과를 다음 Agent 입력으로 순서대로 전달합니다.
 
 시나리오:
     부산 소개 콘텐츠를 만들기 위해 Gemini Research Agent가 핵심 내용을 정리하고,

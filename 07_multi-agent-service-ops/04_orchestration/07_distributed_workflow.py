@@ -1,4 +1,4 @@
-"""Lab 04-07: 실제 네 LLM Agent의 병렬 실행, Join, State와 Trace를 통합합니다.
+"""Lab 04-07: 실제 네 AI Agent의 병렬 실행, Join, State와 Trace를 통합합니다.
 
 시나리오:
     Gemini Weather, Llama Place, GPT Budget Agent가 부산 여행 요청을 병렬 처리합니다.

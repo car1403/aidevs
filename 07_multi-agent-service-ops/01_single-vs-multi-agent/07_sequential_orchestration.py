@@ -9,7 +9,7 @@
     이전 Agent의 결과가 다음 Agent의 필수 입력일 때 어떤 실행 구조가 적합할까요?
 
 범위:
-    세 실제 LLM Agent를 사용하고 Python은 순서·결과 전달·실패 중단을 담당합니다.
+    세 실제 AI Agent를 사용하고 Python은 순서·결과 전달·실패 중단을 담당합니다.
 """
 
 from shared.travel_llm import run_learning_agent

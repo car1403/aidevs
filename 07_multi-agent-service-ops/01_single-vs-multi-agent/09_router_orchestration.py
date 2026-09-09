@@ -2,7 +2,7 @@
 
 시나리오:
     고객지원 서비스에 배송, 환불, 기술지원 Agent가 있습니다. 모든 문의에 세 Agent를
-    실행하지 않고 GPT Router Agent가 한 Agent를 선택합니다. 선택된 실제 LLM Agent만
+    실행하지 않고 GPT Router Agent가 한 Agent를 선택합니다. 선택된 실제 AI Agent만
     사용자 요청을 처리합니다.
 
 학습 질문:

@@ -1,6 +1,6 @@
 """
 [시나리오]
-실제 LLM Agent 세 개가 안전한 여행 예약 안내문을 반복해서 개선합니다.
+실제 AI Agent 세 개가 안전한 여행 예약 안내문을 반복해서 개선합니다.
 
 1. OpenAI Writer Agent가 최초 안내문을 작성합니다.
 2. Gemini Evaluator Agent가 필수 안전 문구와 응답 품질을 평가합니다.

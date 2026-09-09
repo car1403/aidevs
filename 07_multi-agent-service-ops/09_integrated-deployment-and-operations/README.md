@@ -20,7 +20,7 @@ Open-Meteo MCP Tool을 사용하며 Provider 또는 Network 오류를 Mock 성�
 
 ```text
 사용자 → Frontend → API → Redis Queue → Worker
-                                    ├─ 실제 LLM Agent
+                                    ├─ 실제 AI Agent
                                     ├─ HTTP MCP :8010
                                     └─ PostgreSQL 실행 이력
 

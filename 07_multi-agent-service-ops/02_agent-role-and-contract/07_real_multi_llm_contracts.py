@@ -1,4 +1,4 @@
-"""Lab 02-07: 네 실제 LLM Agent가 역할별 출력 계약을 지키는지 확인합니다.
+"""Lab 02-07: 네 실제 AI Agent가 역할별 출력 계약을 지키는지 확인합니다.
 
 시나리오:
     하나의 부산 여행 요청을 Weather, Place, Budget, Safety Agent가 각자의 관점에서
