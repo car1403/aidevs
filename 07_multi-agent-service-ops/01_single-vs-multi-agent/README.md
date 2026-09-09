@@ -175,6 +175,100 @@ LLM에게 “적절히 반복하다 끝내라”라고만 지시하면 무한 �
 - Evaluator가 통과 기준 없이 취향에 따라 반복합니다.
 - Failover가 첫 오류를 숨겨 정상 Provider처럼 표시합니다.
 
+### 여기서 계약(Contract)이란 무엇인가
+
+이 과정에서 말하는 계약은 법률 계약서가 아니라, **Agent와 Agent 또는 Agent와 Tool 사이에서
+무엇을 입력받고 무엇을 반환하며 어떤 조건을 지켜야 하는지 정한 명시적인 규칙**입니다.
+
+```text
+보내는 Agent
+→ 정해진 입력 형식
+→ 받는 Agent
+→ 정해진 출력 형식
+→ Orchestrator가 검증
+```
+
+예를 들어 Support Agent가 Refund Agent에게 업무를 넘긴다면 “환불을 처리해 주세요”라는
+문장만 전달하는 것으로는 부족합니다. 최소한 다음 내용이 정해져 있어야 합니다.
+
+| 계약 항목 | 확인할 질문 | 환불 Handoff 예 |
+| --- | --- | --- |
+| 입력 | 받는 Agent에게 반드시 필요한 값은 무엇인가? | `order_id`, `reason`, `requested_amount` |
+| 출력 | 성공과 실패를 어떤 형태로 반환하는가? | `status`, `refund_id`, `error` |
+| 자료형 | 문자열·숫자·목록 중 어떤 형식인가? | 금액은 0 이상의 숫자 |
+| 필수 여부 | 누락되면 실행을 중단할 값은 무엇인가? | `order_id`는 필수 |
+| 허용 값 | 선택 가능한 값의 범위는 무엇인가? | `status`: proposed·approved·rejected |
+| 권한 | 어떤 Tool을 실행할 수 있는가? | 정책 조회는 가능, 실제 환불은 승인 후 가능 |
+| 책임 | Handoff 후 현재 담당자는 누구인가? | Refund Agent가 환불 검토 책임을 가짐 |
+| 종료 조건 | 언제 성공·실패·재시도로 끝나는가? | 정책 검증 실패 시 rejected로 종료 |
+
+### Prompt와 계약의 차이
+
+Prompt는 AI Agent에게 기대하는 행동을 자연어로 설명합니다. 계약은 실제 실행 경계에서
+입력과 출력이 규칙을 지키는지 검사합니다.
+
+```text
+Prompt
+"주문번호와 환불 사유를 확인하고 안전하게 처리하세요."
+
+계약
+order_id: 비어 있지 않은 문자열
+reason: 필수 문자열
+requested_amount: 0 이상의 숫자
+status: proposed | approved | rejected 중 하나
+```
+
+Prompt만 있으면 AI Agent가 필드를 빠뜨리거나 이름을 다르게 만들 수 있습니다. 계약이 있으면
+Orchestrator가 다음 Agent를 실행하기 전에 누락·형식·허용 값 오류를 발견하고 중단할 수
+있습니다.
+
+### 문자열 약속과 실행 가능한 계약
+
+다음은 사람이 읽을 수는 있지만 프로그램이 검증하기 어려운 문자열 약속입니다.
+
+```python
+handoff_message = "Refund Agent에게 주문번호와 환불 사유를 전달한다."
+```
+
+다음처럼 구조화된 Model을 사용하면 필수 값과 허용 범위를 실행 시점에 검사할 수 있습니다.
+
+```python
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
+
+class RefundHandoff(BaseModel):
+    from_agent: Literal["support_agent"]
+    to_agent: Literal["refund_agent"]
+    order_id: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+    requested_amount: int = Field(ge=0)
+```
+
+이 Model에서 `order_id`가 없거나 `requested_amount`가 음수이면 Handoff를 실행하지 않습니다.
+즉, 계약은 문서에만 적어 두는 설명이 아니라 Python과 Pydantic이 확인할 수 있는 실행 규칙이
+되어야 합니다.
+
+### Multi-Agent에서 계약이 중요한 이유
+
+Single Agent 안에서는 이전 단계의 결과를 같은 Prompt Context에서 계속 사용할 수 있습니다.
+Multi-Agent에서는 결과가 다른 Agent, 다른 Process 또는 다른 Server로 이동하므로 경계마다
+정보가 누락되거나 잘못 해석될 가능성이 커집니다.
+
+- Sequential에서는 앞 Agent의 출력이 다음 Agent의 필수 입력 계약이 됩니다.
+- Parallel + Join에서는 Join에 필요한 결과가 모두 도착했는지 계약으로 확인합니다.
+- Router에서는 선택 결과가 허용된 Worker ID인지 검사합니다.
+- Supervisor에서는 다음 Worker와 최대 단계가 계약 범위 안인지 확인합니다.
+- Handoff에서는 대상, 이전할 책임, 최소 Context를 계약으로 남깁니다.
+- Evaluator에서는 점수, 통과 여부, 수정 Feedback의 형식을 고정합니다.
+- Failover에서는 Primary와 Secondary가 같은 출력 계약을 반환해야 합니다.
+
+좋은 계약은 Agent가 자유롭게 생성할 수 있는 내용과 Python이 반드시 통제할 규칙을 분리합니다.
+자연어 답변 내용은 AI Agent가 만들 수 있지만, 권한·금액 범위·허용 대상·반복 횟수·종료 상태는
+코드가 검증해야 합니다. 이 개념은 다음 단원 `02_agent-role-and-contract`에서 Pydantic 입력·출력
+Model로 더 자세히 실습합니다.
+
 ## 실행
 
 모든 명령은 과정 루트 `C:\aidevs\07_multi-agent-service-ops`에서 실행합니다. 처음
@@ -429,14 +523,14 @@ Gemma Primary ── 실패 → GPT Secondary
 
 ## 어떤 Pattern을 선택할까요?
 
-| 상황 | 먼저 검토할 Pattern |
-| --- | --- |
-| 앞 결과가 다음 입력에 반드시 필요 | Sequential |
-| 여러 작업이 독립적이고 결과를 모두 사용 | Parallel + Join |
-| 요청마다 담당 Agent 하나가 다름 | Router |
-| 중간 결과에 따라 다음 역할이 달라짐 | Supervisor–Worker |
-| 업무 책임 자체를 다른 Agent에게 이전 | Handoff |
-| 생성 결과를 독립 기준으로 반복 개선 | Evaluator–Reviser |
+| 상황 | 먼저 검토할 Pattern | 실사용 예 |
+| --- | --- | --- |
+| 앞 결과가 다음 입력에 반드시 필요 | Sequential | ① Research Agent의 조사 결과로 Writer Agent가 보고서 작성<br>② 요구사항 분석 후 Developer Agent가 코드를 생성하고 Reviewer Agent가 검토 |
+| 여러 작업이 독립적이고 결과를 모두 사용 | Parallel + Join | ① 날씨·장소·예산을 동시에 조사한 뒤 여행 일정으로 통합<br>② 여러 문서의 요약을 독립적으로 만든 뒤 하나의 종합 보고서로 통합 |
+| 요청마다 담당 Agent 하나가 다름 | Router | ① 고객 문의를 배송·환불·기술지원 Agent 중 하나에게 전달<br>② 질문을 재무·법률·인사 Agent 중 적합한 담당자에게 전달 |
+| 중간 결과에 따라 다음 역할이 달라짐 | Supervisor–Worker | ① 장애 분석 결과에 따라 Database·Network·Application Agent 중 다음 담당자를 선택<br>② 코드 분석 결과에 따라 Developer를 호출하거나 바로 Reviewer에게 전달 |
+| 업무 책임 자체를 다른 Agent에게 이전 | Handoff | ① 배송 상담 중 환불 요청이 확인되면 Refund Agent에게 주문 Context와 책임 이전<br>② 일반 상담에서 보안 사고가 확인되면 Security Agent에게 사건 처리 책임 이전 |
+| 생성 결과를 독립 기준으로 반복 개선 | Evaluator–Reviser | ① Writer의 안내문을 Policy Evaluator가 검사하고 실패 항목을 Reviser가 수정<br>② 생성된 SQL을 Safety Evaluator가 검토하고 위험 Query면 제한 횟수 안에서 다시 작성 |
 
 Pattern 이름부터 선택하지 않습니다. 의존성, 책임, Context, 권한, 실패와 종료 조건을
 먼저 그린 뒤 가장 단순한 구조를 선택합니다.
