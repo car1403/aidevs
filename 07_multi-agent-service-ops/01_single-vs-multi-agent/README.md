@@ -14,9 +14,9 @@ Single AI Agent
 
 Multi AI Agent Orchestration
 └─ 위 Agent의 선택·순서·결과 전달·실패·전체 종료까지 통제
-```
+``` 
 
-## 이 단원에서 먼저 답해야 할 질문
+## 이 단원에서 먼저 답해야 할 질문 
 
 이 단원은 Agent를 많이 만드는 방법부터 시작하지 않습니다. 다음 질문에 답하면서 하나의
 Agent를 유지할지, 여러 Agent로 분리할지, Orchestrator까지 둘지를 결정합니다.
