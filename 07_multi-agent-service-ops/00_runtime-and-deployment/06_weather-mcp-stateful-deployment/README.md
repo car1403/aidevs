@@ -289,6 +289,93 @@ Workflow는 Git 저장소 루트의 다음 위치에 있어야 GitHub가 인식�
 .github/workflows/07-weather-stateful-cicd.yml
 ```
 
+### 6-1. 05 Workflow를 비활성화하고 06으로 전환
+
+05와 06은 같은 EC2의 Host Port `8000`, `8501`을 사용합니다. 두 Workflow가 동시에 배포하면
+한 프로젝트가 다른 프로젝트를 덮어쓰거나 Port 충돌이 발생할 수 있습니다. 06 실습을
+시작하기 전에 05 Workflow를 GitHub UI에서 비활성화합니다.
+
+```text
+GitHub 저장소
+→ Actions
+→ 07 Weather MCP CI CD
+→ 오른쪽 위 ···
+→ Disable workflow
+```
+
+`Disable workflow`는 `.github/workflows/07-weather-mcp-cicd.yml` 파일을 삭제하지 않습니다.
+GitHub에서 실행만 잠시 중지하므로 05 수업 자료와 Git 이력은 그대로 남습니다. 비활성화된
+Workflow는 Push Trigger와 `Run workflow` 모두 실행하지 않습니다.
+
+06 Workflow는 다음 경로에서 활성화 상태인지 확인합니다.
+
+```text
+Actions
+→ 07 Stateful Weather CI CD
+```
+
+`Enable workflow` 버튼이 보이면 눌러 활성화합니다. 버튼이 없고 실행 목록과 `Run workflow`
+버튼이 보이면 이미 활성화된 상태입니다.
+
+수업 단계별 권장 상태는 다음과 같습니다.
+
+| 현재 실습 | 05 Workflow | 06 Workflow |
+| --- | --- | --- |
+| 05 Stateless 배포 | Enabled | 아직 실행하지 않음 |
+| 06 Stateful 배포 | Disabled | Enabled |
+| 다시 05로 전환 | Enabled | Disabled |
+
+Workflow 파일을 삭제하거나 이름을 바꾸는 방식은 사용하지 않습니다. 프로젝트를 전환할 때는
+실행 중인 Container를 먼저 내리고 다음 Workflow를 활성화합니다.
+
+### 6-2. 자동 실행과 수동 실행 구분
+
+Workflow는 다음 두 실행 방식을 모두 지원합니다.
+
+```text
+Application·Compose 변경을 main에 Push → CI/CD 자동 실행
+Actions에서 Run workflow 선택       → 사용자가 CI 또는 CI/CD 수동 실행
+```
+
+README와 배포 설명서만 수정하면 실제 서버를 다시 배포할 필요가 없으므로 자동 Trigger에서
+제외했습니다. 따라서 Workflow와 문서만 수정한 Commit을 Push했을 때
+`deploy-stateful-service`가 실행되지 않는 것은 정상입니다.
+
+수동 실행은 `deploy` 선택값에 따라 달라집니다.
+
+| Run workflow 선택 | `test-and-build` | `deploy-stateful-service` |
+| --- | --- | --- |
+| `deploy=false` | 실행 | `Skipped` |
+| `deploy=true` | 실행 | CI 성공 후 실행 또는 승인 대기 |
+
+06을 처음 자동 배포할 때는 다음과 같이 실행합니다.
+
+```text
+Actions
+→ 07 Stateful Weather CI CD
+→ Run workflow
+→ Use workflow from: main
+→ Deploy 06 infrastructure and application to AWS EC2: 체크
+→ Run workflow
+```
+
+Job 상태의 의미는 다음과 같습니다.
+
+| 상태 | 의미 |
+| --- | --- |
+| `Skipped` | `deploy=false`이거나 배포 조건이 일치하지 않음 |
+| `Waiting` | `production` Environment 승인 대기 |
+| `Queued` | GitHub Runner 할당 대기 |
+| `In progress` | Test·Build 또는 EC2 배포 실행 중 |
+| `Failure` | 처음 실패한 Step의 Log 확인 필요 |
+| `Success` | Backend Readiness까지 성공 |
+
+`Waiting`이면 `Review deployments → production → Approve and deploy` 순서로 승인합니다.
+GitHub 요금제나 Environment 설정에 Required reviewer 기능이 없다면 승인 없이 바로 실행될
+수 있습니다.
+
+### 6-3. 자동 Trigger 범위
+
 다음 Trigger는 README 같은 문서 변경을 제외하고 06 Application·Infrastructure 파일이
 변경될 때 자동 실행되도록 제한합니다. Workflow 파일 자체를 수정한 직후에는 Actions의
 `Run workflow`로 검사합니다.
@@ -305,8 +392,12 @@ on:
       - ".../06_weather-mcp-stateful-deployment/compose.application.yml"
   pull_request:
     paths:
-      - "07_multi-agent-service-ops/00_runtime-and-deployment/06_weather-mcp-stateful-deployment/**"
-      - ".github/workflows/07-weather-stateful-cicd.yml"
+      - ".../06_weather-mcp-stateful-deployment/backend/**"
+      - ".../06_weather-mcp-stateful-deployment/frontend/**"
+      - ".../06_weather-mcp-stateful-deployment/mcp_server/**"
+      - ".../06_weather-mcp-stateful-deployment/database/**"
+      - ".../06_weather-mcp-stateful-deployment/compose.infrastructure.yml"
+      - ".../06_weather-mcp-stateful-deployment/compose.application.yml"
   workflow_dispatch:
     inputs:
       deploy:
@@ -340,7 +431,7 @@ deploy-stateful-service:
 - 첫 실행에서는 PostgreSQL·Redis를 만들고, 이후에는 기존 Container와 Volume을 재사용한 뒤
   Application만 다시 Build·재생성합니다.
 
-### 개인 Branch에서 CI 실행
+### 6-4. 개인 Branch에서 CI 실행
 
 저장소 루트에서 실행합니다.
 
@@ -556,50 +647,7 @@ WEATHER_MCP_URL=http://weather-mcp:8010/mcp
 Workflow는 EC2의 `.env`를 복사하거나 덮어쓰지 않습니다. `.env`와 API Key를 Actions 로그에
 출력하지 않습니다.
 
-## 8단계: AWS Infrastructure 최초 실행
-
-EC2에서 Application보다 먼저 실행합니다.
-
-```bash
-cd ~/weather-stateful
-docker compose -f compose.infrastructure.yml config --quiet
-docker compose -f compose.infrastructure.yml up -d
-docker compose -f compose.infrastructure.yml ps
-```
-
-PostgreSQL과 Redis가 `healthy`인지 확인합니다.
-
-```bash
-docker compose -f compose.infrastructure.yml logs --tail=100 database redis
-docker compose -f compose.infrastructure.yml exec database pg_isready -U agent_user -d agent_db
-docker compose -f compose.infrastructure.yml exec redis redis-cli PING
-```
-
-Schema도 확인합니다.
-
-```bash
-docker compose -f compose.infrastructure.yml exec database psql -U agent_user -d agent_db -c "SELECT to_regclass('weather_agent.runs');"
-```
-
-이 단계에서 `weather-stateful` Network와 PostgreSQL·Redis Volume이 만들어집니다. 이후 자동
-배포에서 Infrastructure Compose에 `down`, `up --force-recreate`, `down -v`를 실행하지
-않습니다.
-
-### Application 최초 수동 검증
-
-자동 배포를 연결하기 전에 EC2에서 한 번 직접 실행합니다.
-
-```bash
-docker compose -f compose.application.yml config --quiet
-docker compose -f compose.application.yml up -d --build
-docker compose -f compose.application.yml ps
-curl --fail --retry 12 --retry-delay 5 http://127.0.0.1:8000/health/ready
-```
-
-Browser에서 `http://<EC2_PUBLIC_IP>:8501`을 열어 실제 날씨 조회, Progress Bar, Cache, 실행
-이력을 확인합니다. 최초 수동 실행이 실패하는 상태에서 CD부터 연결하지 않습니다.
-
-## 9단계: GitHub Production Environment
+## 8단계: GitHub Production Environment
 
 GitHub 저장소에서 다음 순서로 설정합니다.
 
@@ -616,7 +664,7 @@ GitHub 저장소에서 다음 순서로 설정합니다.
 | Secret | 값 |
 | --- | --- |
 | `AWS_HOST` | EC2 Public DNS 또는 Public IPv4 |
-| `AWS_USER` | Amazon Linux의 `ec2-user` |
+| `AWS_USER` | Ubuntu는 `ubuntu`, Amazon Linux는 `ec2-user` |
 | `AWS_SSH_PRIVATE_KEY` | 배포용 Private Key 전체 내용 |
 | `AWS_SSH_KNOWN_HOSTS` | Fingerprint를 검증한 EC2 known_hosts 한 줄 |
 
@@ -681,7 +729,7 @@ IP 없이 Stop·Start하여 Public IP가 바뀌면 `AWS_HOST`와 `AWS_SSH_KNOWN_
 
 검증 없이 Host Key 검사를 끄거나 `StrictHostKeyChecking=no`를 사용하지 않습니다.
 
-## 10단계: main 병합과 Application 자동 배포
+## 9단계: main 병합과 Infrastructure·Application 자동 배포
 
 ```text
 개인 Branch Push
@@ -691,7 +739,8 @@ IP 없이 Stop·Start하여 Public IP가 바뀌면 `AWS_HOST`와 `AWS_SSH_KNOWN_
 → main CI 재실행
 → production 승인
 → EC2로 Source 복사
-→ Application Compose만 Build·재생성
+→ Infrastructure가 없으면 PostgreSQL·Redis·Volume 생성
+→ Application Compose Build·재생성
 → Backend Readiness 검증
 ```
 
@@ -700,15 +749,37 @@ Deploy Job이 EC2에서 수행하는 핵심 명령은 다음과 같습니다.
 ```bash
 cd ~/weather-stateful
 test -f .env
+docker compose -f compose.infrastructure.yml config --quiet
 docker compose -f compose.application.yml config --quiet
+docker compose -f compose.infrastructure.yml up -d --wait --wait-timeout 120
 docker compose -f compose.application.yml up -d --build --force-recreate weather-mcp backend frontend
-curl --fail --retry 12 --retry-delay 5 http://127.0.0.1:8000/health/ready
+curl --fail --retry 18 --retry-delay 5 http://127.0.0.1:8000/health/ready
 ```
 
-`compose.infrastructure.yml`을 실행하지 않는 것이 중요합니다. Application Container는 교체되지만
-PostgreSQL·Redis Container, Network, Volume은 유지됩니다.
+첫 배포의 `compose.infrastructure.yml up -d`는 PostgreSQL·Redis, 공용 Network와 Volume을
+생성합니다. 이후 같은 명령은 기존 Infrastructure를 재사용하며 `down -v`를 실행하지 않기
+때문에 Volume을 삭제하지 않습니다. Application Container만 `--force-recreate`로 교체됩니다.
 
-## 11단계: 배포 후 데이터 보존 검증
+따라서 기본 수업 흐름에서는 Infrastructure나 Application을 EC2에서 미리 수동 실행하지
+않습니다. 05에서 Docker와 06 전용 `.env` 준비까지 마친 뒤 `Run workflow`에서
+`deploy=true`를 선택하면 최초 설치부터 Health 확인까지 Workflow가 수행합니다.
+
+### 선택 진단: 자동 배포 후 EC2에서 직접 확인
+
+자동 배포가 실패했거나 내부 상태를 학습하려는 경우에만 다음 명령을 사용합니다.
+
+```bash
+cd ~/weather-stateful
+docker compose -f compose.infrastructure.yml ps
+docker compose -f compose.infrastructure.yml logs --tail=100 database redis
+docker compose -f compose.infrastructure.yml exec database pg_isready -U agent_user -d agent_db
+docker compose -f compose.infrastructure.yml exec redis redis-cli PING
+docker compose -f compose.infrastructure.yml exec database psql -U agent_user -d agent_db -c "SELECT to_regclass('weather_agent.runs');"
+docker compose -f compose.application.yml ps
+curl --fail http://127.0.0.1:8000/health/ready
+```
+
+## 10단계: 배포 후 데이터 보존 검증
 
 EC2에서 두 Compose 상태를 따로 확인합니다.
 
@@ -733,7 +804,7 @@ Redis Key도 확인할 수 있습니다.
 docker compose -f compose.infrastructure.yml exec redis redis-cli --scan --pattern "weather:*"
 ```
 
-## 12단계: 배포 실패 진단과 복구
+## 11단계: 배포 실패 진단과 복구
 
 | 증상 | 먼저 확인 | 해결 방향 |
 | --- | --- | --- |
@@ -765,8 +836,8 @@ Volume 역할을 하는 Docker Volume이 EC2 Disk 안에 있다는 점을 기억
 [ ] 로컬 pytest, 두 Compose 검사, Application Image Build를 통과했다.
 [ ] Fake MCP·LLM·Store를 CI에서 사용하는 이유를 설명할 수 있다.
 [ ] 개인 Branch와 Pull Request에서 CI 결과를 확인했다.
-[ ] EC2에서 Infrastructure를 먼저 한 번 실행하고 Schema를 확인했다.
-[ ] EC2에서 Application 최초 수동 실행과 실제 통합을 확인했다.
+[ ] 첫 `deploy=true` 실행으로 Infrastructure와 Application이 자동 생성되었다.
+[ ] 자동 배포 후 EC2에서 Schema와 Readiness를 확인했다.
 [ ] GitHub production Environment와 네 개의 Secret을 설정했다.
 [ ] 개인 브랜치와 Pull Request에서는 배포되지 않음을 확인했다.
 [ ] main 배포가 PostgreSQL·Redis Container를 재생성하지 않음을 확인했다.

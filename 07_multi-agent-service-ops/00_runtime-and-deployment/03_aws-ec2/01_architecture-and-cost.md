@@ -6,7 +6,7 @@
 Internet → TCP 8501 → EC2 Security Group
                          │
                          ▼
-EC2 Amazon Linux 2023
+EC2 Linux(Ubuntu Server 24.04 LTS 권장)
 ├─ frontend :8501 → Host :8501
 ├─ backend  :8000 → 선택한 실제 LLM API HTTPS
 ├─ redis    :6379, 외부 비공개
@@ -30,7 +30,7 @@ EC2 Amazon Linux 2023
 현재 표시를 확인합니다. 특정 Instance Type을 항상 무료라고 문서에 고정하지 않습니다.
 
 ```text
-AMI           Amazon Linux 2023 또는 Ubuntu Server 24.04 LTS x86_64
+AMI           Ubuntu Server 24.04 LTS x86_64 권장
 Instance Type t3.small
 Storage       16 GiB gp3 Root EBS
 Public IP     Frontend 실습을 위해 활성화
@@ -41,6 +41,10 @@ Elastic IP    만들지 않음
 세 Application Container만 실행될 수 있더라도 06에서 PostgreSQL·Redis까지 추가하고 Image를
 Build할 때 메모리가 부족할 가능성이 큽니다. 안정적인 수업 진행이 더 중요하면 강사의 승인
 후 `t3.medium`을 선택합니다.
+
+Amazon Linux 2023도 Docker Application 구조상 사용할 수 있지만 계정·리전 정책 때문에
+선택할 수 없는 경우가 있습니다. 본 실습의 명령과 GitHub Secret 예시는 Ubuntu의 기본 사용자
+`ubuntu`를 기준으로 하며, Amazon Linux를 선택한 경우에만 `ec2-user`로 바꿉니다.
 
 ## 공식 문서
 

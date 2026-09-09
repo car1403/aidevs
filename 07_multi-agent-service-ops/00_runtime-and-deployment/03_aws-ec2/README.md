@@ -1,11 +1,11 @@
 # 03 Simple AWS Deployment
 
-로컬에서 검증한 동일한 Multi-LLM 여행 Chat Compose를 AWS EC2 한 대에서 수동 실행합니다.
-AWS 서비스를 많이 배우는 단계가 아니라 **같은 Container 구성이 다른 컴퓨터에서도
-실행되는지** 확인하는 단계입니다.
+로컬에서 검증한 Docker Compose Application을 AWS EC2 한 대에서 실행하는 공통 절차를
+배웁니다. AWS 서비스를 많이 배우는 단계가 아니라 **같은 Container 구성이 다른 컴퓨터에서도
+실행되는지** 확인하고, 이후 GitHub Actions 자동 배포에 필요한 서버 기반을 준비하는 단계입니다.
 
 ```text
-EC2 한 대
+EC2 한 대(Ubuntu 24.04 LTS 권장)
 ├─ Streamlit Frontend
 ├─ FastAPI Backend → 선택한 실제 LLM API
 ├─ Redis
@@ -13,7 +13,8 @@ EC2 한 대
 ```
 
 사용하는 AWS 리소스는 EC2, Root EBS, Security Group, Key Pair뿐입니다. ECS, ECR,
-RDS, ElastiCache, Load Balancer, 자동 배포는 사용하지 않습니다.
+RDS, ElastiCache, Load Balancer는 사용하지 않습니다. 이 폴더는 수동 실행 원리를 설명하고,
+05·06 프로젝트 README가 같은 EC2를 이용한 GitHub Actions 자동 배포를 이어서 설명합니다.
 
 이 EC2 실습은 Container와 Network를 직접 확인하기 위한 초보자용 첫 단계입니다. 완료 후
 09에서는 같은 책임을 ECR·ECS·RDS·ElastiCache·CloudWatch에 대응시키며, EC2 Compose를
@@ -39,9 +40,16 @@ Ollama는 기본 실행에서 제외하고 OpenAI 또는 Gemini API를 사용합
 6. [리소스 정리](./06_cleanup.md)
 
 이 폴더의 명령은 `01_simple-multi-llm-compose`를 기준으로 설명하는 공통 EC2 입문
-절차입니다. `05_weather-mcp-deployment-project`를 배포할 때는 EC2·VPC·SSH·Docker의 공통
-개념은 이 순서를 따르고, 실제 프로젝트 경로·Compose 파일·환경 변수·GitHub Actions는
-`05_weather-mcp-deployment-project/README.md`의 6단계 이후를 따릅니다.
+절차입니다. 프로젝트별 실행 방식은 다음처럼 구분합니다.
+
+| 대상 | 이 문서에서 사용하는 내용 | 프로젝트 README에서 이어갈 내용 |
+| --- | --- | --- |
+| `01_simple-multi-llm-compose` | EC2 생성부터 수동 Compose 실행까지 전체 | 없음 |
+| `05_weather-mcp-deployment-project` | VPC·EC2·보안 그룹·SSH·Docker | 05 README의 환경 파일·CI/CD 자동 배포 |
+| `06_weather-mcp-stateful-deployment` | 05에서 만든 EC2를 그대로 재사용 | 06 README의 Workflow 전환·상태 보존 배포 |
+
+05·06에서는 Ubuntu Server 24.04 LTS, `t3.small`, `16 GiB gp3`를 기본값으로 사용합니다.
+05를 완료한 뒤 EC2를 삭제하지 않고 Application만 중지하여 06에서 재사용합니다.
 
 ## 수업 전 체크
 

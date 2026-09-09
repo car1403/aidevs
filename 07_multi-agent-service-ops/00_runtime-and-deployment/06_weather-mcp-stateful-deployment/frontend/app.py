@@ -13,7 +13,7 @@ BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
 st.set_page_config(page_title="Weather MCP Agent", page_icon="🌦️", layout="wide")
 st.sidebar.title("학습 메뉴")
 page = st.sidebar.radio("이동", ["Weather Agent", "실행 이력", "구조 이해", "Health Check"])
-st.title("Stateful Weather MCP Deployment")
+st.title("Stateful Weather MCP aws Deployment")
 
 if page == "Weather Agent":
     city = st.text_input("도시", "서울")

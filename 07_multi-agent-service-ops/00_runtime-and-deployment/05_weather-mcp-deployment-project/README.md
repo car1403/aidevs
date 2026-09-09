@@ -48,8 +48,9 @@ MCP `8010`과 Backend `8000`은 Host·Security Group에 공개하지 않고, Bro
 1. Backend·MCP·Frontend 구현
 2. 로컬 Compose와 Health Check
 3. CI: Test·Compose 검사·Image Build
-4. EC2 수동 배포
-5. production 승인형 GitHub Actions 배포
+4. EC2·Security Group·Docker·배포용 `.env` 준비
+5. production 승인형 GitHub Actions 최초 자동 배포
+6. 선택 실습: 장애 진단이 필요할 때만 EC2에서 수동 Compose 확인
 
 ## 프로젝트 구조
 
@@ -373,8 +374,8 @@ AWS Console에서 다음 기준으로 생성합니다. AWS 화면과 제공 Inst
 
 1. EC2의 `Instances`에서 `Launch instances`를 선택합니다.
 2. 이름을 `weather-mcp-deployment`로 입력합니다.
-3. Amazon Linux 2023 x86_64 AMI를 선택합니다. 사용할 수 없다면 Ubuntu Server 24.04 LTS
-   x86_64를 선택합니다.
+3. Ubuntu Server 24.04 LTS x86_64 AMI를 선택합니다. Amazon Linux 2023을 사용해야 하는
+   교육 환경이라면 이후 명령의 사용자와 Package Manager를 해당 운영체제에 맞춥니다.
 4. 05와 06에서 계속 사용할 공통 사양으로 Instance Type `t3.small`, Root EBS
    `16 GiB gp3`를 선택합니다.
 5. 새 Key Pair를 만들거나 지정된 Key Pair를 선택합니다.
@@ -401,15 +402,15 @@ EC2에서 직접 Build하고 06에서는 PostgreSQL·Redis까지 추가합니다
 | --- | --- |
 | Region | 수업에서 선택한 Region(이 실습 예: Seoul `ap-northeast-2`) |
 | Name | `weather-mcp-deployment` |
-| AMI | Amazon Linux 2023 x86_64 또는 Ubuntu Server 24.04 LTS x86_64 |
+| AMI | Ubuntu Server 24.04 LTS x86_64 권장 |
 | Instance Type | `t3.small` 고정 실습값 |
 | Root EBS | `16 GiB gp3` |
 | Public IPv4 | Enable |
 | Inbound | SSH `22` My IP, Streamlit `8501` My IP |
 
 EC2 생성 후 먼저 SSH로 접속하여 Docker를 설치하고 EC2 전용 `.env`를 준비합니다. Source를
-수동 전송하여 Compose를 확인하는 단계는 선택 사항입니다. 이번 과정처럼 CI까지 이미
-검증했다면 수동 Source 전송을 생략하고 GitHub Actions가 처음 배포하게 할 수 있습니다.
+수동 전송하는 단계는 선택 사항입니다. 기본 수업 흐름은 수동 Source 전송을 생략하고 GitHub
+Actions가 Source 복사, Image Build, Compose 실행과 Health 확인을 처음부터 수행하게 합니다.
 
 `Advanced details`는 IAM Instance Profile `None`, Shutdown behavior `Stop`, Detailed
 CloudWatch monitoring `Disable`, Metadata version `V2 only`, User data는 빈 값으로 둡니다.
