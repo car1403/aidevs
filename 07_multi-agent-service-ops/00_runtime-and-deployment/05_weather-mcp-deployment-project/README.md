@@ -365,11 +365,47 @@ AWS Console에서 다음 기준으로 생성합니다. AWS 화면과 제공 Inst
 
 1. EC2의 `Instances`에서 `Launch instances`를 선택합니다.
 2. 이름을 `weather-mcp-deployment`로 입력합니다.
-3. Amazon Linux 2023 x86_64 AMI를 선택합니다.
-4. 수업에서 지정한 Instance Type과 Storage를 선택합니다.
+3. Amazon Linux 2023 x86_64 AMI를 선택합니다. 사용할 수 없다면 Ubuntu Server 24.04 LTS
+   x86_64를 선택합니다.
+4. 초보자 수업의 권장값으로 Instance Type `t3.small`, Root EBS `16 GiB gp3`를 선택합니다.
 5. 새 Key Pair를 만들거나 지정된 Key Pair를 선택합니다.
 6. Public IPv4가 할당되는 Network인지 확인합니다.
 7. 생성 후 Instance ID, Public IPv4, Public DNS를 기록합니다.
+
+AMI는 `ami-06259b63260eddc13`과 같은 ID를 직접 입력하거나 다른 Region의 문서에서 복사하지
+않습니다. AMI ID는 Region마다 다르고 교체될 수 있습니다. 현재 선택한 Region의 EC2
+`Launch instances` 화면에서 `Quick Start`를 열어 Image를 새로 선택합니다. `AMI가 더 이상
+존재하지 않거나 다른 계정 또는 리전 전용`이라는 오류가 나오면 이전 Launch Template 또는
+최근 설정에 남은 AMI를 사용한 것이므로 새 Instance 생성 화면으로 돌아가 AMI를 다시
+선택합니다.
+
+이 프로젝트는 Ollama·PostgreSQL·Redis를 설치하지 않지만 세 Application Container를
+EC2에서 직접 Build합니다. `t3.micro`도 실행될 수 있으나 1 GiB 메모리에서는 Build 도중
+메모리가 부족할 수 있습니다. 계정의 비용 한도나 강사가 지정한 사양이 있다면 그 값을
+우선하고, 실습하지 않을 때는 Instance를 중지합니다.
+
+상세한 Console 화면 순서는 `03_aws-ec2/02_create-ec2.md`를 따르되 다음 값만 이 프로젝트
+기준으로 사용합니다.
+
+| 항목 | 입력값 |
+| --- | --- |
+| Region | 수업에서 선택한 Region(예: Sydney `ap-southeast-2`) |
+| Name | `weather-mcp-deployment` |
+| AMI | Amazon Linux 2023 x86_64 또는 Ubuntu Server 24.04 LTS x86_64 |
+| Instance Type | `t3.small` 권장 |
+| Root EBS | `16 GiB gp3` |
+| Public IPv4 | Enable |
+| Inbound | SSH `22` My IP, Streamlit `8501` My IP |
+
+EC2 생성 후 곧바로 GitHub Actions CD를 실행하지 않습니다. 먼저 SSH로 접속하여 Docker를
+설치하고, 프로젝트를 한 번 수동으로 배포하여 Compose·환경 변수·Health Check가 정상인지
+확인합니다. 수동 배포 성공 후 GitHub `production` Environment와 Secret을 설정합니다.
+
+`Advanced details`는 IAM Instance Profile `None`, Shutdown behavior `Stop`, Detailed
+CloudWatch monitoring `Disable`, Metadata version `V2 only`, User data는 빈 값으로 둡니다.
+이번 단계에서는 User data로 설치를 자동화하지 않고 SSH로 Docker 설치 과정을 직접
+확인합니다. T 계열 CPU Credit은 비용 한도를 우선하며, `Unlimited`의 추가 비용을 피하려면
+선택 가능한 경우 `Standard`를 사용합니다.
 
 Private Key는 Git, 메신저, README 또는 EC2 안에 올리지 않습니다. Windows 예시 경로는
 다음과 같습니다.
@@ -379,6 +415,20 @@ C:\Users\<사용자>\.ssh\weather-mcp-course.pem
 ```
 
 ### 6-2. Security Group
+
+이번 입문 프로젝트는 현재 Region의 `default VPC`를 사용합니다. EC2 Network settings에서
+VPC 이름 옆에 `(default)`가 표시되면 새 VPC를 만들지 않습니다. 기본 Public Subnet을
+선택하고 `Auto-assign public IP`를 `Enable`로 설정합니다.
+
+현재 Region에 default VPC가 없다면 VPC Console의 `Your VPCs → Actions → Create default
+VPC`로 기본 VPC를 만든 뒤 EC2 생성 화면을 새로고침합니다. 이 실습에서는 Custom VPC,
+Private Subnet, NAT Gateway를 만들지 않습니다. NAT Gateway는 비용이 발생하며 단일 EC2
+배포의 학습 목표에도 필요하지 않습니다.
+
+Security Group의 `My IP`는 현재 Public IP를 자동 입력하고, `Custom`은 IP/CIDR을 직접
+입력합니다. 예를 들어 `121.170.161.1/32`는 해당 Public IP 하나를 허용한다는 뜻이지
+노트북 장치 자체를 식별한다는 뜻은 아닙니다. SSH `22`와 Streamlit `8501` 모두 `My IP`를
+선택하고, 네트워크 변경 후 접속되지 않으면 현재 IP로 두 Rule을 갱신합니다.
 
 | Port | Source | 목적 |
 | ---: | --- | --- |
@@ -395,6 +445,11 @@ Backend `8000`과 MCP `8010`은 인터넷에 공개하지 않습니다. 특히 `
 CI까지만 자동화하고 EC2 배포 명령은 강사가 수동으로 시연합니다.
 
 ### 6-3. EC2 접속과 Docker 설치
+
+선택한 AMI에 따라 아래 절차 중 하나만 실행합니다. Amazon Linux의 기본 SSH 사용자는
+`ec2-user`, Ubuntu의 기본 SSH 사용자는 `ubuntu`입니다.
+
+#### 방법 A: Amazon Linux 2023
 
 로컬 PowerShell에서 실제 Key 경로와 DNS로 바꿉니다.
 
@@ -413,6 +468,24 @@ sudo usermod -a -G docker ec2-user
 exit
 ```
 
+#### 방법 B: Ubuntu Server 24.04 LTS
+
+로컬 PowerShell에서 접속합니다.
+
+```powershell
+ssh -i "C:\Users\<사용자>\.ssh\weather-mcp-course.pem" ubuntu@<PUBLIC_DNS>
+```
+
+EC2 터미널에서 실행합니다.
+
+```bash
+sudo apt update
+sudo apt install -y docker.io docker-compose-v2 git curl
+sudo systemctl enable --now docker
+sudo usermod -aG docker ubuntu
+exit
+```
+
 SSH로 다시 접속하여 권한과 Compose를 확인합니다.
 
 ```bash
@@ -420,17 +493,86 @@ docker info
 docker compose version
 ```
 
-`docker compose`가 없다면 다음을 시도합니다.
+Amazon Linux에서 `docker compose`가 없다면 다음을 시도합니다.
 
 ```bash
 sudo yum install -y docker-compose-plugin
 docker compose version
 ```
 
+Ubuntu에서 `docker compose`가 없다면 다음을 사용합니다.
+
+```bash
+sudo apt update
+sudo apt install -y docker-compose-v2
+docker compose version
+```
+
 패키지를 찾지 못하면 임의 설치 Script를 실행하지 말고 Docker 공식 Compose Plugin 설치
 절차와 강사가 지정한 버전을 사용합니다.
 
-### 6-4. EC2 배포 폴더와 환경 파일
+### 6-4. 선택 실습: 첫 수동 배포를 위한 Source 전송
+
+이 단계는 필수가 아닙니다. EC2와 Compose 문제를 GitHub Actions 문제와 분리해 확인하고
+싶을 때만 진행합니다. 바로 CD를 실습한다면 이 절을 건너뛰고 6-5절에서 EC2 전용 `.env`만
+만듭니다.
+
+프로젝트 전체를 `scp -r`로 복사하면 로컬 `.venv`의 수많은 작은 파일 때문에 매우 오래
+걸리고, 복사하면 안 되는 `.env`까지 전송될 수 있습니다. 실행 중이라면 `Ctrl+C`로
+중단합니다. 수동 전송이 필요할 때는 배포에 필요한 항목만 선택합니다. 먼저 EC2 SSH 연결을
+종료하여 로컬 PowerShell로 돌아옵니다.
+
+```bash
+exit
+```
+
+로컬 PowerShell에서 EC2 배포 폴더를 만들고 프로젝트 폴더의 **내용**을 복사합니다.
+
+```powershell
+$keyPath = "C:\mini\weather-mcp-key.pem"
+$server = "ubuntu@<PUBLIC_IPV4_OR_DNS>"
+$source = "C:\aidevs\07_multi-agent-service-ops\00_runtime-and-deployment\05_weather-mcp-deployment-project"
+
+ssh -i $keyPath $server "mkdir -p ~/weather-mcp-deployment"
+scp -i $keyPath -r `
+  "$source\backend" `
+  "$source\frontend" `
+  "$source\mcp_server" `
+  "$source\compose.yml" `
+  "$source\.env.example" `
+  "${server}:~/weather-mcp-deployment/"
+```
+
+`<PUBLIC_IPV4_OR_DNS>`는 실제 EC2 Public IPv4 또는 Public DNS로 바꿉니다. `.venv`, `.env`,
+Python Cache, Git 이력은 전송하지 않습니다. 실제 API Key는 Source와 분리하여 다음 절에서
+EC2의 `.env`로 직접 만듭니다.
+
+다시 접속하여 구조를 확인합니다.
+
+```powershell
+ssh -i $keyPath $server
+```
+
+```bash
+cd ~/weather-mcp-deployment
+ls -la
+```
+
+다음 항목이 같은 위치에 보여야 합니다.
+
+```text
+backend
+frontend
+mcp_server
+compose.yml
+.env.example
+```
+
+`~/weather-mcp-deployment/05_weather-mcp-deployment-project`처럼 폴더가 한 단계 더 중첩됐다면
+그 상태로 실행하지 말고 파일 위치를 먼저 바로잡습니다. 이후 GitHub Actions도 정확히
+`~/weather-mcp-deployment`를 사용합니다.
+
+### 6-5. EC2 배포 폴더와 환경 파일
 
 EC2에서 최초 한 번 만듭니다.
 
@@ -448,8 +590,76 @@ GEMINI_API_KEY=<실제 Gemini API Key>
 GEMINI_MODEL=gemini-3.5-flash
 ```
 
+로컬의 05 프로젝트 전용 `.env`가 이미 올바르게 작성되어 있다면 `nano`로 다시 입력하지
+않고 SSH로 암호화하여 전송할 수 있습니다. 과정 루트의 `.env`가 아니라 아래의 정확한
+프로젝트 파일을 사용합니다.
+
+```powershell
+$keyPath = "C:\mini\weather-mcp-key.pem"
+$server = "ubuntu@<PUBLIC_IPV4_OR_DNS>"
+$localEnv = "C:\aidevs\07_multi-agent-service-ops\00_runtime-and-deployment\05_weather-mcp-deployment-project\.env"
+
+Test-Path $localEnv
+ssh -i $keyPath $server "mkdir -p ~/weather-mcp-deployment"
+scp -i $keyPath $localEnv "${server}:~/weather-mcp-deployment/.env"
+ssh -i $keyPath $server "chmod 600 ~/weather-mcp-deployment/.env && ls -l ~/weather-mcp-deployment/.env"
+```
+
+`Test-Path`가 `True`인지 확인한 뒤 전송합니다. 명령에는 API Key 문자열이 노출되지 않지만
+`.env` 자체는 Secret 파일이므로 Git에 Commit하거나 Actions Artifact로 올리지 않습니다.
+
 한 Provider만 사용한다면 해당 Key만 입력합니다. Workflow는 `.env`를 복사하거나 덮어쓰지
 않으며, 로그로 출력하지도 않습니다. `cat .env` 결과를 화면 공유하지 않습니다.
+
+### 6-6. 수동 배포 후 CD 전용 상태로 초기화
+
+첫 수동 배포로 화면, MCP, LLM과 Health Check를 확인한 뒤에는 수동으로 만든 Application을
+내리고 GitHub Actions가 다시 배포하게 할 수 있습니다. 이 과정에서는 다음 항목을
+구분합니다.
+
+| 유지 | 초기화 |
+| --- | --- |
+| EC2 Instance·VPC·Security Group | 수동 실행한 Application Container |
+| Docker Engine·Compose·Git·curl | 수동 Build한 프로젝트 Image |
+| `~/weather-mcp-deployment/.env` | 배포 Source 파일 |
+| SSH Key와 GitHub Environment Secret | 불필요한 Build Cache |
+
+먼저 수동 배포 폴더에서 Container를 내립니다.
+
+```bash
+cd ~/weather-mcp-deployment
+docker compose down --remove-orphans
+```
+
+즉시 삭제하는 대신 기존 폴더를 복구 가능한 이름으로 이동하고, 새 배포 폴더에는 `.env`만
+복사합니다.
+
+```bash
+cd ~
+mv weather-mcp-deployment weather-mcp-manual-backup
+mkdir weather-mcp-deployment
+cp weather-mcp-manual-backup/.env weather-mcp-deployment/.env
+chmod 600 weather-mcp-deployment/.env
+ls -la weather-mcp-deployment
+```
+
+이 상태에서 새 폴더에는 `.env`만 있어야 합니다. GitHub Actions는 Source를 이 폴더에
+복사하고 Image Build, Container 실행, Readiness 검증을 수행합니다. CD 성공과 실제 화면을
+확인하기 전에는 Backup 폴더를 삭제하지 않습니다.
+
+```text
+수동 검증 성공
+→ Container 중지
+→ Source 폴더 Backup
+→ 새 폴더에 .env만 보존
+→ GitHub Actions CD
+→ EC2 Health·화면 검증
+→ 필요하면 Backup 정리
+```
+
+Docker Engine과 EC2를 삭제하거나 `.env`까지 제거하는 것은 CD 검증이 아니라 Server를
+처음부터 Provisioning하는 별도 실습입니다. 현재 Workflow는 EC2와 Docker가 이미 준비되어
+있고 `.env`가 존재한다는 전제로 Application만 배포합니다.
 
 ## 7단계: GitHub Production Environment 설정
 
@@ -465,7 +675,7 @@ GitHub 저장소에서 다음 순서로 설정합니다.
 | Secret | 입력 내용 |
 | --- | --- |
 | `AWS_HOST` | EC2 Public DNS 또는 Public IPv4 |
-| `AWS_USER` | Amazon Linux 2023의 `ec2-user` |
+| `AWS_USER` | Amazon Linux는 `ec2-user`, Ubuntu는 `ubuntu` |
 | `AWS_SSH_PRIVATE_KEY` | 배포 전용 Private Key 전체 내용 |
 | `AWS_SSH_KNOWN_HOSTS` | 지문을 검증한 EC2의 known_hosts 한 줄 |
 
@@ -481,6 +691,40 @@ ssh-keyscan -H <PUBLIC_DNS>
 
 검증한 해당 한 줄을 Secret에 저장합니다. Workflow는 이 값을 `~/.ssh/known_hosts`에 넣어
 접속 대상이 예상한 EC2인지 확인합니다.
+
+Windows의 오래된 OpenSSH Client에서 `unsupported KEX method`가 발생하면 첫 수동 SSH
+접속 때 이미 검증하여 저장한 `known_hosts`를 조회합니다.
+
+```powershell
+ssh-keygen -F <PUBLIC_IPV4_OR_DNS> -f "$env:USERPROFILE\.ssh\known_hosts"
+```
+
+출력 중 `<PUBLIC_IPV4_OR_DNS> ssh-ed25519 ...` 한 줄 전체를
+`AWS_SSH_KNOWN_HOSTS`에 등록합니다. `# Host ... found` 주석과 Private Key는 포함하지
+않습니다. EC2를 다시 만들면 Host Key도 달라지므로 새 Fingerprint를 검증하고 Secret을
+갱신합니다.
+
+다음 PowerShell 명령은 `ssh-ed25519` 항목 한 줄만 선택하여 화면에 표시하고 Clipboard에도
+복사합니다. `<PUBLIC_IPV4_OR_DNS>`는 실제 EC2 주소로 바꿉니다.
+
+```powershell
+$knownHost = ssh-keygen -F <PUBLIC_IPV4_OR_DNS> `
+  -f "$env:USERPROFILE\.ssh\known_hosts" |
+  Select-String "ssh-ed25519" |
+  ForEach-Object { $_.Line }
+
+$knownHost
+$knownHost | Set-Clipboard
+```
+
+출력은 `서버 주소`, `Key 알고리즘`, `서버 공개 Host Key`의 세 부분으로 구성됩니다.
+
+```text
+3.34.91.3 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA...
+```
+
+이 한 줄을 GitHub의 `AWS_SSH_KNOWN_HOSTS` 값에 붙여 넣습니다. 끝의 `...`는 설명을 위한
+축약이므로 실제 등록값에는 PowerShell이 출력한 긴 문자열 전체가 들어가야 합니다.
 
 ## 8단계: main 병합과 자동 배포
 
@@ -543,6 +787,9 @@ curl --fail http://127.0.0.1:8000/health/ready
 | Test 실패 | 최초 빨간 Test Step | 로컬 pytest로 같은 오류 재현 |
 | Production 승인 대기 | GitHub Environment | 승인자가 Commit 확인 후 승인 |
 | SSH timeout | Security Group·Network 경로 | Runner에서 EC2로 갈 수 있는 승인된 경로 준비 |
+| `172.31.x.x`로 SSH timeout | Private IPv4를 접속 주소로 사용 | EC2의 Public IPv4 또는 Public IPv4 DNS 사용 |
+| Public IPv4가 없음 | Public IP 자동 할당 비활성화 | Public Subnet·Internet Gateway 확인 후 Public IP가 있는 Instance 사용 |
+| `UNPROTECTED PRIVATE KEY FILE` | Windows PEM 권한이 너무 넓음 | 상속 제거 후 현재 사용자에게만 읽기 권한 부여 |
 | Host key 오류 | `AWS_SSH_KNOWN_HOSTS` | EC2 재생성 여부와 Fingerprint 재검증 |
 | `.env` 없음 | EC2 배포 폴더 | EC2에서 최초 환경 파일 생성·권한 `600` 설정 |
 | Backend Readiness 실패 | Backend·MCP 로그 | MCP Health, API Key, 내부 URL 확인 |

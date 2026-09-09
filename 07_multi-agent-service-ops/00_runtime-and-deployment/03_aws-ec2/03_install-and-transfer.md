@@ -8,10 +8,57 @@
 ssh -i "C:\Users\<사용자>\.ssh\multi-agent-course.pem" ec2-user@<PUBLIC_DNS>
 ```
 
+Ubuntu Server 24.04 LTS를 선택했다면 기본 사용자는 `ubuntu`입니다.
+
+```powershell
+ssh -i "C:\Users\<사용자>\.ssh\multi-agent-course.pem" ubuntu@<PUBLIC_DNS>
+```
+
 첫 연결에서는 서버 지문을 확인하는 질문이 나타날 수 있습니다. 대상 Public DNS가
 본인이 만든 인스턴스와 일치하는지 먼저 확인합니다.
 
+`172.31.x.x`, `10.x.x.x`, `192.168.x.x` 형식은 VPC 내부에서 사용하는 Private IP입니다.
+인터넷의 수강생 PC에서는 이 주소로 직접 SSH 접속하지 않습니다. EC2 상세 화면의 `Public
+IPv4 address` 또는 `Public IPv4 DNS`를 사용합니다.
+
+```powershell
+ssh -i "C:\Users\<사용자>\.ssh\multi-agent-course.pem" ubuntu@<PUBLIC_IPV4>
+```
+
+Public IPv4가 비어 있다면 다음을 확인합니다.
+
+1. Instance가 Public Subnet에 생성되었는지 확인합니다.
+2. Subnet Route Table에 `0.0.0.0/0 → Internet Gateway`가 있는지 확인합니다.
+3. 새 Instance를 만들 때 `Auto-assign public IP`를 `Enable`로 설정합니다.
+4. 기존 Instance를 유지해야 한다면 Elastic IP 할당·연결을 검토합니다. Elastic IP는 과금
+   조건이 있으므로 수업에서는 강사의 지시에 따릅니다.
+
+### Windows에서 `UNPROTECTED PRIVATE KEY FILE`이 표시될 때
+
+PEM 파일을 다른 로컬 사용자나 `BUILTIN\Users` 그룹도 읽을 수 있으면 Windows OpenSSH는
+Private Key를 무시합니다. 로컬 PowerShell에서 실제 Key 경로로 다음을 실행합니다.
+
+```powershell
+$keyPath = "C:\mini\weather-mcp-key.pem"
+icacls $keyPath /inheritance:r
+icacls $keyPath /grant:r "$($env:USERNAME):(R)"
+icacls $keyPath /remove:g "BUILTIN\Users"
+icacls $keyPath
+```
+
+`BUILTIN\Users` 제거 명령이 언어 설정 때문에 대상을 찾지 못하면 오류에 표시된 SID를
+사용합니다.
+
+```powershell
+icacls $keyPath /remove:g '*S-1-5-32-545'
+```
+
+현재 사용자에게 `(R)` 권한이 있고 일반 Users 그룹이 제거됐는지 확인한 후 다시
+접속합니다. PEM 내용은 열거나 화면에 출력하지 않습니다.
+
 ## 2. Docker Engine 설치
+
+### Amazon Linux 2023
 
 EC2 터미널에서 실행합니다.
 
@@ -21,6 +68,17 @@ sudo yum install -y docker git
 sudo service docker start
 sudo systemctl enable docker
 sudo usermod -a -G docker ec2-user
+```
+
+### Ubuntu Server 24.04 LTS
+
+Ubuntu를 선택했다면 다음 명령을 사용합니다.
+
+```bash
+sudo apt update
+sudo apt install -y docker.io docker-compose-v2 git curl
+sudo systemctl enable --now docker
+sudo usermod -aG docker ubuntu
 ```
 
 그룹 변경을 적용하려면 SSH 연결을 종료하고 다시 접속합니다.
@@ -46,11 +104,19 @@ docker info
 docker compose version
 ```
 
-명령이 없다면 RPM 기반 Linux의 Docker Compose Plugin 설치를 시도합니다.
+Amazon Linux에서 명령이 없다면 RPM 기반 Linux의 Docker Compose Plugin 설치를 시도합니다.
 
 ```bash
 sudo yum update -y
 sudo yum install -y docker-compose-plugin
+docker compose version
+```
+
+Ubuntu에서 명령이 없다면 다음을 사용합니다.
+
+```bash
+sudo apt update
+sudo apt install -y docker-compose-v2
 docker compose version
 ```
 
