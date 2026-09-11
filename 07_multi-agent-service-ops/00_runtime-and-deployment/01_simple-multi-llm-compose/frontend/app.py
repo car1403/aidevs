@@ -29,7 +29,7 @@ def show_error(error: Exception) -> None:
 
 
 st.set_page_config(page_title="Multi-LLM Runtime", page_icon="🐳", layout="wide")
-st.title("🐳 Multi-LLM 여행 준비 Chat")
+st.title("🐳 Multi-LLM 여행 준비 Chat2")
 st.caption("Frontend → Backend → 실제 OpenAI·Gemini·Ollama → Redis·PostgreSQL")
 
 if "session_id" not in st.session_state:
