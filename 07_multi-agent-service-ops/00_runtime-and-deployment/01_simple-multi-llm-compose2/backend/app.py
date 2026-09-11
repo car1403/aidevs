@@ -1,11 +1,14 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Annotated, Literal
 
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, Field
+from dotenv import load_dotenv
 
 from services import MultiLLMChatService, PostgresRepository, RedisSessionStore
 
+load_dotenv(Path(__file__).with_name(".env"))
 
 app = FastAPI(title="Multi-LLM Runtime Demo", version="2.0.0")
 

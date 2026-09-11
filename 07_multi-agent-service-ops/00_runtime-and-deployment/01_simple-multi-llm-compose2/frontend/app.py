@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from uuid import uuid4
 
 import httpx
 import streamlit as st
+from dotenv import load_dotenv
 
+load_dotenv(Path(__file__).with_name(".env"))
 
 BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
 
